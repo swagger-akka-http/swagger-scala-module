@@ -64,6 +64,14 @@ class ScalaModelTest extends FlatSpec with Matchers {
     prop.isInstanceOf[ArrayProperty] should be (true)
     prop.asInstanceOf[ArrayProperty].getItems.getType should be ("object")
   }
+
+  it should "read a model based on trait with public int val" in {
+    val schemas = ModelConverters.getInstance().readAll(classOf[ModelTraitWithInt]).asScala
+    val model = schemas("ModelTraitWithInt")
+    model.getProperties() should not be(null)
+    val prop = model.getProperties().get("x")
+    prop shouldBe an[IntegerProperty]
+  }
 }
 
 case class ModelWithVector (
@@ -74,3 +82,7 @@ case class ModelWithIntVector (ints: Vector[Int])
 case class ModelWithBooleanVector (bools: Vector[Boolean])
 
 case class SimpleUser (id: Long, name: String, @(ApiModelProperty @field)(value = "the birthdate") date: java.util.Date)
+
+trait ModelTraitWithInt {
+  val x: Int
+}
