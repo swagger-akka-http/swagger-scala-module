@@ -72,6 +72,22 @@ class ScalaModelTest extends FlatSpec with Matchers {
     val prop = model.getProperties().get("x")
     prop shouldBe an[IntegerProperty]
   }
+
+  it should "read a model based on an abstract class" in {
+    val schemas = ModelConverters.getInstance().readAll(classOf[Status]).asScala
+    val model = schemas("Status")
+    model.getProperties() should not be(null)
+    val prop = model.getProperties().get("id")
+    prop shouldBe an[StringProperty]
+  }
+
+  it should "read a model based on a scala object" in {
+    val schemas = ModelConverters.getInstance().readAll(New.getClass).asScala
+    val model = schemas("New$")
+    model.getProperties() should not be(null)
+    val prop = model.getProperties().get("id")
+    prop shouldBe an[StringProperty]
+  }
 }
 
 case class ModelWithVector (
@@ -86,3 +102,9 @@ case class SimpleUser (id: Long, name: String, @(ApiModelProperty @field)(value 
 trait ModelTraitWithInt {
   val x: Int
 }
+
+sealed abstract class Status(val id: String) {
+  def self: Status = this
+}
+case object New extends Status("new")
+case object Processed extends Status("processed")
