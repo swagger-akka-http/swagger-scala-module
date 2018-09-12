@@ -1,102 +1,141 @@
 package io.swagger.scala.converter
 
-import java.lang.annotation.Annotation
-import java.lang.reflect.Type
 import java.util.Iterator
 
+import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.`type`.ReferenceType
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import io.swagger.converter._
-import io.swagger.models.Model
-import io.swagger.models.properties._
-import io.swagger.util.{Json, PrimitiveType}
+import io.swagger.v3.core.converter._
+import io.swagger.v3.core.jackson.ModelResolver
+import io.swagger.v3.core.util.{Json, PrimitiveType}
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.models.media.{Schema, StringSchema}
+
+class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
   Json.mapper().registerModule(new DefaultScalaModule())
 }
 
-class SwaggerScalaModelConverter extends ModelConverter {
+class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
   SwaggerScalaModelConverter
 
-  override
-  def resolveProperty(`type`: Type, context: ModelConverterContext,
-    annotations: Array[Annotation] , chain: Iterator[ModelConverter]): Property = {
-    val javaType = Json.mapper().constructType(`type`)
+  override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: Iterator[ModelConverter]): Schema[_] = {
+    val javaType = _mapper.constructType(`type`.getType)
     val cls = javaType.getRawClass
 
-    if(cls != null) {
-      // handle scala enums
-      getEnumerationInstance(cls) match {
-        case Some(enumInstance) =>
-          if (enumInstance.values != null) {
-            val sp = new StringProperty()
-            for (v <- enumInstance.values)
-              sp._enum(v.toString)
-            sp.setRequired(true)
-            return sp
+    matchScalaPrimitives(`type`, cls).getOrElse {
+      // Unbox scala options
+      val annotatedOverrides = `type` match {
+        case _: AnnotatedTypeForOption => Seq.empty
+        case _ => {
+          nullSafeList(`type`.getCtxAnnotations).collect {
+            case p: Parameter => p.required()
           }
-        case None =>
-          if (cls.isAssignableFrom(classOf[BigDecimal])) {
-            val dp = PrimitiveType.DECIMAL.createProperty()
-            dp.setRequired(true)
-            return dp
-          } else if (cls.isAssignableFrom(classOf[BigInt])) {
-            val dp = PrimitiveType.INT.createProperty()
-            dp.setRequired(true)
-            return dp
+        }
+      }
+      if (_isOptional(`type`, cls)) {
+        val baseType = if (annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType() else new AnnotatedTypeForOption()
+        resolve(nextType(baseType, `type`, cls, javaType), context, chain)
+      } else if (!annotatedOverrides.headOption.getOrElse(true)) {
+        resolve(nextType(new AnnotatedTypeForOption(), `type`, cls, javaType), context, chain)
+      } else if (chain.hasNext) {
+        val nextResolved = Option(chain.next().resolve(`type`, context, chain))
+        nextResolved match {
+          case Some(property) => {
+            setRequired(`type`)
+            property
           }
+          case None => null
+        }
+      } else {
+        null
       }
     }
+  }
 
-    // Unbox scala options
-    `type` match {
-      case rt: ReferenceType if isOption(cls) =>
-        val nextType = rt.getContentType
-        val nextResolved = {
-          Option(resolveProperty(nextType, context, annotations, chain)) match {
-            case Some(p) => Some(p)
-            case None if chain.hasNext =>
-              Option(chain.next().resolveProperty(nextType, context, annotations, chain))
-            case _ => None
+  private def matchScalaPrimitives(`type`: AnnotatedType, nullableClass: Class[_]): Option[Schema[_]] = {
+    Option(nullableClass).flatMap { cls =>
+      // handle scala enums
+      getEnumerationInstance(cls) match {
+        case Some(enumInstance) => {
+          if (enumInstance.values != null) {
+            val sp = new StringSchema()
+            for (v <- enumInstance.values)
+              sp.addEnumItem(v.toString)
+            setRequired(`type`)
+            Some(sp)
+          } else {
+            None
           }
         }
-        nextResolved match {
-          case Some(property) =>
-            property.setRequired(false)
-            property
-          case None => null
+        case _ => {
+          if (cls == classOf[BigDecimal]) {
+            val dp = PrimitiveType.DECIMAL.createProperty()
+            setRequired(`type`)
+            Some(dp)
+          } else if (cls == classOf[BigInt]) {
+            val ip = PrimitiveType.INT.createProperty()
+            setRequired(`type`)
+            Some(ip)
+          } else {
+            None
+          }
         }
-      case t if chain.hasNext =>
-        val nextResolved = Option(chain.next().resolveProperty(t, context, annotations, chain))
-        nextResolved match {
-          case Some(property) =>
-            property.setRequired(true)
-            property
-          case None => null
-        }
-      case _ =>
-        null
+      }
     }
   }
 
-  override
-  def resolve(`type`: Type, context: ModelConverterContext, chain: Iterator[ModelConverter]): Model = {
-    val javaType = Json.mapper().constructType(`type`)
-    getEnumerationInstance(javaType.getRawClass) match {
-      case Some(enumInstance) => null // ignore scala enums
-      case None =>
-        if (chain.hasNext()) {
-          val next = chain.next()
-          next.resolve(`type`, context, chain)
-        }
-        else
-          null
+  def _isOptional(annotatedType: AnnotatedType, cls: Class[_]): Boolean = {
+    annotatedType.getType match {
+      case _: ReferenceType if isOption(cls) => true
+      case _ => false
     }
   }
-  private def getEnumerationInstance(cls: Class[_]): Option[Enumeration] =
-  {
-    if (cls.getFields.map(_.getName).contains("MODULE$"))
-    {
+
+  private def underlyingJavaType(annotatedType: AnnotatedType, cls: Class[_], javaType: JavaType): JavaType = {
+    annotatedType.getType match {
+      case rt: ReferenceType => rt.getContentType
+      case _ => javaType
+    }
+  }
+
+  private def nextType(baseType: AnnotatedType, `type`: AnnotatedType, cls: Class[_], javaType: JavaType): AnnotatedType = {
+    baseType.`type`(underlyingJavaType(`type`, cls, javaType))
+      .ctxAnnotations(`type`.getCtxAnnotations)
+      .parent(`type`.getParent)
+      .schemaProperty(`type`.isSchemaProperty)
+      .name(`type`.getName)
+      .propertyName(`type`.getPropertyName)
+      .resolveAsRef(`type`.isResolveAsRef)
+      .jsonViewAnnotation(`type`.getJsonViewAnnotation)
+      .skipOverride(true)
+  }
+
+  override def _isOptionalType(propType: JavaType): Boolean = {
+    isOption(propType.getRawClass) || super._isOptionalType(propType)
+  }
+
+  override def _isSetType(cls: Class[_]): Boolean = {
+    val setInterfaces = cls.getInterfaces.find { interface =>
+      interface == classOf[scala.collection.Set[_]]
+    }
+    setInterfaces.isDefined || super._isSetType(cls)
+  }
+
+  private def setRequired(annotatedType: AnnotatedType): Unit = annotatedType match {
+    case _: AnnotatedTypeForOption => // not required
+    case _ => {
+      Option(annotatedType.getParent).foreach { parent =>
+        Option(annotatedType.getPropertyName).foreach { n =>
+          addRequiredItem(parent, n)
+        }
+      }
+    }
+  }
+
+  private def getEnumerationInstance(cls: Class[_]): Option[Enumeration] = {
+    if (cls.getFields.map(_.getName).contains("MODULE$")) {
       val javaUniverse = scala.reflect.runtime.universe
       val m = javaUniverse.runtimeMirror(Thread.currentThread().getContextClassLoader)
       val moduleMirror = m.reflectModule(m.staticModule(cls.getName))
@@ -106,11 +145,13 @@ class SwaggerScalaModelConverter extends ModelConverter {
         case _ => None
       }
     }
-    else{
-      None
-    }
+    else None
   }
 
   private def isOption(cls: Class[_]): Boolean = cls == classOf[scala.Option[_]]
 
+  private def nullSafeList[T](array: Array[T]): List[T] = Option(array) match {
+    case None => List.empty[T]
+    case Some(arr) => arr.toList
+  }
 }
