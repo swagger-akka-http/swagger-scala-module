@@ -83,6 +83,7 @@ pomExtra := {
         <developer>
           <id>pjfanning</id>
           <name>PJ Fanning</name>
+          <url>https://github.com/pjfanning</url>
         </developer>
       </developers>
   )
