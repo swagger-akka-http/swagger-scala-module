@@ -4,7 +4,7 @@ import sbt._
 import Keys._
 import Defaults._
 
-organization := "io.swagger"
+organization := "com.github.swagger-akka-http"
 
 version := "2.0.0-SNAPSHOT"
 
@@ -55,7 +55,7 @@ pomIncludeRepository := { x => false }
 
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
-homepage := Some(new URL("https://github.com/swagger-api/swagger-scala-module"))
+homepage := Some(new URL("https://github.com/swagger-akka-http/swagger-scala-module"))
 
 parallelExecution in Test := false
 
@@ -66,9 +66,9 @@ licenses := Seq(("Apache License 2.0", new URL("http://www.apache.org/licenses/L
 pomExtra := {
   pomExtra.value ++ Group(
     <scm>
-      <connection>scm:git:git@github.com:swagger-api/swagger-scala-module.git</connection>
-      <developerConnection>scm:git:git@github.com:swagger-api/swagger-scala-module.git</developerConnection>
-      <url>https://github.com/swagger-api/swagger-scala-module</url>
+      <connection>scm:git:git@github.com:swagger-akka-http/swagger-scala-module.git</connection>
+      <developerConnection>scm:git:git@github.com:swagger-akka-http/swagger-scala-module.git</developerConnection>
+      <url>https://github.com/swagger-akka-http/swagger-scala-module</url>
     </scm>
       <issueManagement>
         <system>github</system>
@@ -79,6 +79,10 @@ pomExtra := {
           <id>fehguy</id>
           <name>Tony Tam</name>
           <email>fehguy@gmail.com</email>
+        </developer>
+        <developer>
+          <id>pjfanning</id>
+          <name>PJ Fanning</name>
         </developer>
       </developers>
   )

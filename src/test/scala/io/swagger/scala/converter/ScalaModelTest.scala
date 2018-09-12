@@ -1,3 +1,5 @@
+package io.swagger.scala.converter
+
 import io.swagger.v3.core.converter._
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.models.media.{ArraySchema, DateTimeSchema, IntegerSchema, StringSchema}
