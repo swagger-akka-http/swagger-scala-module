@@ -6,9 +6,9 @@ import Defaults._
 
 organization := "com.github.swagger-akka-http"
 
-scalaVersion := "2.11.12"
+scalaVersion := "2.12.6"
 
-crossScalaVersions := Seq("2.10.6", scalaVersion.value, "2.12.6")
+crossScalaVersions := Seq("2.10.6", "2.11.12", scalaVersion.value)
 
 organizationHomepage in ThisBuild := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -60,6 +60,8 @@ parallelExecution in Test := false
 startYear := Some(2014)
 
 licenses := Seq(("Apache License 2.0", new URL("http://www.apache.org/licenses/LICENSE-2.0.html")))
+
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
 
 pomExtra := {
   pomExtra.value ++ Group(
