@@ -1,4 +1,4 @@
-package io.swagger.scala.converter
+package com.github.swagger.scala.converter
 
 import java.util.Iterator
 

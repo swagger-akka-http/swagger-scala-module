@@ -1,4 +1,4 @@
-package io.swagger.scala.converter
+package com.github.swagger.scala.converter
 
 import io.swagger.v3.core.converter._
 import io.swagger.v3.oas.annotations.Parameter
