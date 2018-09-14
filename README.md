@@ -5,8 +5,6 @@
 
 This is a fork of https://github.com/swagger-api/swagger-scala-module. This version supports [OpenAPI](https://github.com/OAI/OpenAPI-Specification) 3.0.1 / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.4.
 
-Check out [Swagger-Spec](https://github.com/swagger-api/swagger-spec) for additional information about the Swagger project, including additional libraries with support for SpringMVC, other languages and more. 
-
 ## Usage
 To enable the swagger-scala-module, include the appropriate version in your project:
 
