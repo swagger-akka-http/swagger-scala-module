@@ -6,3 +6,7 @@ scala:
    - 2.10.6
    - 2.11.12
    - 2.12.6
+matrix:
+  exclude:
+    - jdk: openjdk11
+      scala: 2.10.6
