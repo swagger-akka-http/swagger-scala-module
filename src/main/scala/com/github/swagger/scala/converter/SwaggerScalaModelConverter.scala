@@ -9,6 +9,7 @@ import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.{Schema => SchemaAnnotation}
 import io.swagger.v3.oas.models.media.{Schema, StringSchema}
 
 class AnnotatedTypeForOption extends AnnotatedType
@@ -26,14 +27,7 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
 
     matchScalaPrimitives(`type`, cls).getOrElse {
       // Unbox scala options
-      val annotatedOverrides = `type` match {
-        case _: AnnotatedTypeForOption => Seq.empty
-        case _ => {
-          nullSafeList(`type`.getCtxAnnotations).collect {
-            case p: Parameter => p.required()
-          }
-        }
-      }
+      val annotatedOverrides = getRequiredSettings(`type`)
       if (_isOptional(`type`, cls)) {
         val baseType = if (annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType() else new AnnotatedTypeForOption()
         resolve(nextType(baseType, `type`, cls, javaType), context, chain)
@@ -50,6 +44,16 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
         }
       } else {
         null
+      }
+    }
+  }
+
+  private def getRequiredSettings(`type`: AnnotatedType): Seq[Boolean] = `type` match {
+    case _: AnnotatedTypeForOption => Seq.empty
+    case _ => {
+      nullSafeList(`type`.getCtxAnnotations).collect {
+        case p: Parameter => p.required()
+        case s: SchemaAnnotation => s.required()
       }
     }
   }
@@ -126,9 +130,12 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
   private def setRequired(annotatedType: AnnotatedType): Unit = annotatedType match {
     case _: AnnotatedTypeForOption => // not required
     case _ => {
-      Option(annotatedType.getParent).foreach { parent =>
-        Option(annotatedType.getPropertyName).foreach { n =>
-          addRequiredItem(parent, n)
+      val required = getRequiredSettings(annotatedType).headOption.getOrElse(true)
+      if (required) {
+        Option(annotatedType.getParent).foreach { parent =>
+          Option(annotatedType.getPropertyName).foreach { n =>
+            addRequiredItem(parent, n)
+          }
         }
       }
     }

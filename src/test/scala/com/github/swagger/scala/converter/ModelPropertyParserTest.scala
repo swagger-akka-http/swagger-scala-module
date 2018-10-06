@@ -119,8 +119,7 @@ class ModelPropertyParserTest extends FlatSpec with Matchers {
     val optInt = model.get.getProperties().get("optInt")
     optInt should not be (null)
     optInt shouldBe a [IntegerSchema]
-    //there is a bug that the override causes the field to be marked as required
-    //nullSafeList(model.get.getRequired) shouldBe empty
+    nullSafeList(model.get.getRequired) shouldBe empty
   }
   
   it should "process Model with Scala Option Boolean" in {
