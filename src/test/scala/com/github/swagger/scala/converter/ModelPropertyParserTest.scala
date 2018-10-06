@@ -92,9 +92,9 @@ class ModelPropertyParserTest extends FlatSpec with Matchers {
     val model = schemas.get("ModelWOptionBigInt")
     model should be ('defined)
     model.get.getProperties should not be (null)
-    val optBigDecimal = model.get.getProperties().get("optBigInt")
-    optBigDecimal should not be (null)
-    optBigDecimal shouldBe a [IntegerSchema]
+    val optBigInt = model.get.getProperties().get("optBigInt")
+    optBigInt should not be (null)
+    optBigInt shouldBe a [IntegerSchema]
     nullSafeList(model.get.getRequired) shouldBe empty
   }
 
@@ -110,6 +110,19 @@ class ModelPropertyParserTest extends FlatSpec with Matchers {
     nullSafeList(model.get.getRequired) shouldBe empty
   }
 
+  it should "process Model with Scala Option Int with Schema Override" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverride]).asScala.toMap
+    val model = schemas.get("ModelWOptionIntSchemaOverride")
+    model should be ('defined)
+    model.get.getProperties should not be (null)
+    val optInt = model.get.getProperties().get("optInt")
+    optInt should not be (null)
+    optInt shouldBe a [IntegerSchema]
+    //there is a bug that the override causes the field to be marked as required
+    //nullSafeList(model.get.getRequired) shouldBe empty
+  }
+  
   it should "process Model with Scala Option Boolean" in {
     val converter = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[ModelWOptionBoolean]).asScala.toMap
