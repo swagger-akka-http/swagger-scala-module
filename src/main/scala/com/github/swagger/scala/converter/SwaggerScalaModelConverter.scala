@@ -109,7 +109,7 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
       .propertyName(`type`.getPropertyName)
       .resolveAsRef(`type`.isResolveAsRef)
       .jsonViewAnnotation(`type`.getJsonViewAnnotation)
-      .skipOverride(true)
+      .skipOverride(`type`.isSkipOverride)
   }
 
   override def _isOptionalType(propType: JavaType): Boolean = {
