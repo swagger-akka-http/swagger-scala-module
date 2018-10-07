@@ -1,6 +1,7 @@
 package models
 
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema
 
 case class ModelWOptionString (
            stringOpt: Option[String],
@@ -14,3 +15,9 @@ case class ModelWithOptionAndNonOption(required: String,
                                        @Parameter(required = false) forcedOptional: String,
                                        @Parameter(required = true) forcedRequired: Option[String]
                                       )
+
+case class ModelWithOptionAndNonOption2(required: String,
+                                        optional: Option[String],
+                                        @Schema(required = false, implementation = classOf[String]) forcedOptional: String,
+                                        @Schema(required = true, implementation = classOf[String]) forcedRequired: Option[String]
+                                       )
