@@ -6,7 +6,7 @@ import Defaults._
 
 organization := "com.github.swagger-akka-http"
 
-scalaVersion := "2.12.7"
+scalaVersion := "2.12.8"
 
 crossScalaVersions := Seq("2.10.6", "2.11.12", scalaVersion.value)
 
