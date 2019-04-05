@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/swagger-akka-http/swagger-scala-module.svg?branch=develop)](https://travis-ci.org/swagger-akka-http/swagger-scala-module)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.12/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.12)
 
-This is a fork of https://github.com/swagger-api/swagger-scala-module. This version supports [OpenAPI](https://github.com/OAI/OpenAPI-Specification) 3.0.1 / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.4.
+This is a fork of https://github.com/swagger-api/swagger-scala-module. This version supports [OpenAPI](https://github.com/OAI/OpenAPI-Specification) 3.0.1 / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x.
 
 ## Usage
 To enable the swagger-scala-module, include the appropriate version in your project:
