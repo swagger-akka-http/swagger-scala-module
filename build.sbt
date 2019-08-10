@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
   "io.swagger.core.v3" % "swagger-core" % "2.0.8",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.9",
   "org.scalatest" %% "scalatest" % "3.0.8" % Test,
-  "org.slf4j" % "slf4j-simple" % "1.7.27" % Test
+  "org.slf4j" % "slf4j-simple" % "1.7.28" % Test
 )
 
 publishTo := {
