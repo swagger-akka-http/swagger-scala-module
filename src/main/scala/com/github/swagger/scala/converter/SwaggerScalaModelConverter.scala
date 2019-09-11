@@ -1,16 +1,17 @@
 package com.github.swagger.scala.converter
 
+import java.lang.reflect.ParameterizedType
 import java.util.Iterator
 
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.`type`.ReferenceType
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{Schema => SchemaAnnotation}
-import io.swagger.v3.oas.models.media.{Schema, StringSchema}
+import io.swagger.v3.oas.models.media.Schema
 
 class AnnotatedTypeForOption extends AnnotatedType
 
@@ -59,21 +60,23 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
   }
 
   private def matchScalaPrimitives(`type`: AnnotatedType, nullableClass: Class[_]): Option[Schema[_]] = {
-    Option(nullableClass).flatMap { cls =>
-      // handle scala enums
-      getEnumerationInstance(cls) match {
-        case Some(enumInstance) => {
-          if (enumInstance.values != null) {
-            val sp = new StringSchema()
-            for (v <- enumInstance.values)
-              sp.addEnumItem(v.toString)
-            setRequired(`type`)
-            Some(sp)
-          } else {
-            None
+    val annotations = Option(`type`.getCtxAnnotations).map(_.toSeq).getOrElse(Seq.empty)
+    annotations.collectFirst { case ann: JsonScalaEnumeration => ann } match {
+      case Some(enumAnnotation) => {
+        val pt = enumAnnotation.value().getGenericSuperclass.asInstanceOf[ParameterizedType]
+        val args = pt.getActualTypeArguments
+        val cls = args(0).asInstanceOf[Class[Enumeration]]
+        getEnumerationInstance(cls).map { enum =>
+          val sp: Schema[String] = PrimitiveType.STRING.createProperty().asInstanceOf[Schema[String]]
+          setRequired(`type`)
+          enum.values.iterator.foreach { v =>
+            sp.addEnumItemObject(v.toString)
           }
+          sp
         }
-        case _ => {
+      }
+      case _ => {
+        Option(nullableClass).flatMap { cls =>
           if (cls == classOf[BigDecimal]) {
             val dp = PrimitiveType.DECIMAL.createProperty()
             setRequired(`type`)
