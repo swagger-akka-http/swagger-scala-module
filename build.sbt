@@ -6,9 +6,9 @@ import Defaults._
 
 organization := "com.github.swagger-akka-http"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.13.0"
 
-crossScalaVersions := Seq("2.10.6", "2.11.12", scalaVersion.value, "2.13.0")
+crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.10", scalaVersion.value)
 
 organizationHomepage in ThisBuild := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
