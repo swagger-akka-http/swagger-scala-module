@@ -23,8 +23,7 @@ pomIncludeRepository := { x => false }
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "io.swagger.core.v3" % "swagger-core" % "2.0.9",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.10.0.pr3",
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.0.pr3",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.10.0",
   "org.scalatest" %% "scalatest" % "3.0.8" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.28" % Test
 )
