@@ -20,6 +20,8 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { x => false }
 
+Global / useGpg := false
+
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "io.swagger.core.v3" % "swagger-core" % "2.0.9",
@@ -39,9 +41,6 @@ credentials in ThisBuild += Credentials (Path.userHome / ".ivy2" / ".credentials
 
 resolvers in ThisBuild ++= Seq(
   Resolver.mavenLocal,
-  Resolver.typesafeRepo("releases"),
-  Resolver.typesafeRepo("snapshots"),
-  Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )
 
