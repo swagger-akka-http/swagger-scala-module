@@ -16,7 +16,11 @@ To enable the swagger-scala-module, include the appropriate version in your proj
 Including the library in your project allows the swagger extension module to discover this module, bringing in the appropriate jackson library in the process.  You can then use scala classes and objects in your swagger project.
 
 ## Treatment of `Option` and `required`
-All properties, besides those wrapped in `Option` or explicitly set via annotations `@ApiModelProperty(required = false)`, default to `required = true`  in the generated swagger model. See [#7](https://github.com/swagger-api/swagger-scala-module/issues/7)
+All properties, besides those wrapped in `Option` or explicitly set via annotations `@Schema(required = false, implementation = classOf[Int])`, default to `required = true`  in the generated swagger model. See [#7](https://github.com/swagger-api/swagger-scala-module/issues/7)
+
+```
+case class AddOptionRequest(number: Int, @Schema(required = false, implementation = classOf[Int]) number2: Option[Int] = None)
+```
 
 License
 -------
