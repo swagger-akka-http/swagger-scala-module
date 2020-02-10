@@ -61,32 +61,37 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
 
   private def matchScalaPrimitives(`type`: AnnotatedType, nullableClass: Class[_]): Option[Schema[_]] = {
     val annotations = Option(`type`.getCtxAnnotations).map(_.toSeq).getOrElse(Seq.empty)
-    annotations.collectFirst { case ann: JsonScalaEnumeration => ann } match {
-      case Some(enumAnnotation) => {
-        val pt = enumAnnotation.value().getGenericSuperclass.asInstanceOf[ParameterizedType]
-        val args = pt.getActualTypeArguments
-        val cls = args(0).asInstanceOf[Class[Enumeration]]
-        getEnumerationInstance(cls).map { enum =>
-          val sp: Schema[String] = PrimitiveType.STRING.createProperty().asInstanceOf[Schema[String]]
-          setRequired(`type`)
-          enum.values.iterator.foreach { v =>
-            sp.addEnumItemObject(v.toString)
-          }
-          sp
-        }
-      }
+    annotations.collectFirst { case ann: SchemaAnnotation => ann } match {
+      case Some(_) => None
       case _ => {
-        Option(nullableClass).flatMap { cls =>
-          if (cls == classOf[BigDecimal]) {
-            val dp = PrimitiveType.DECIMAL.createProperty()
-            setRequired(`type`)
-            Some(dp)
-          } else if (cls == classOf[BigInt]) {
-            val ip = PrimitiveType.INT.createProperty()
-            setRequired(`type`)
-            Some(ip)
-          } else {
-            None
+        annotations.collectFirst { case ann: JsonScalaEnumeration => ann } match {
+          case Some(enumAnnotation: JsonScalaEnumeration) => {
+            val pt = enumAnnotation.value().getGenericSuperclass.asInstanceOf[ParameterizedType]
+            val args = pt.getActualTypeArguments
+            val cls = args(0).asInstanceOf[Class[Enumeration]]
+            getEnumerationInstance(cls).map { enum =>
+              val sp: Schema[String] = PrimitiveType.STRING.createProperty().asInstanceOf[Schema[String]]
+              setRequired(`type`)
+              enum.values.iterator.foreach { v =>
+                sp.addEnumItemObject(v.toString)
+              }
+              sp
+            }
+          }
+          case _ => {
+            Option(nullableClass).flatMap { cls =>
+              if (cls == classOf[BigDecimal]) {
+                val dp = PrimitiveType.DECIMAL.createProperty()
+                setRequired(`type`)
+                Some(dp)
+              } else if (cls == classOf[BigInt]) {
+                val ip = PrimitiveType.INT.createProperty()
+                setRequired(`type`)
+                Some(ip)
+              } else {
+                None
+              }
+            }
           }
         }
       }
