@@ -108,6 +108,40 @@ class ModelPropertyParserTest extends FlatSpec with Matchers {
     optBoolean.getRequired should be (false)
   }
 
+  it should "process Model with Scala BigDecimal with annotation" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWBigDecimalAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWBigDecimalAnnotated")
+    model should be (defined)
+    model.get.getProperties should not be (null)
+    val field = model.get.getProperties.get("field")
+    field shouldBe a [properties.StringProperty]
+    field.getRequired should be (true)
+  }
+
+  it should "process Model with Scala BigInt with annotation" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWBigIntAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWBigIntAnnotated")
+    model should be (defined)
+    model.get.getProperties should not be (null)
+    val field = model.get.getProperties.get("field")
+    field shouldBe a [properties.StringProperty]
+    field.getRequired should be (true)
+  }
+
+  it should "process Model with Scala Enum with annotation" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWEnumAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWEnumAnnotated")
+    model should be (defined)
+    model.get.getProperties should not be (null)
+    val field = model.get.getProperties.get("field")
+    field shouldBe a [properties.StringProperty]
+    field.getRequired should be (true)
+  }
+
+
   it should "process all properties as required barring Option[_] or if overridden in annotation" in {
     val schemas = ModelConverters
       .getInstance()
