@@ -61,8 +61,8 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
 
   private def matchScalaPrimitives(`type`: AnnotatedType, nullableClass: Class[_]): Option[Schema[_]] = {
     val annotations = Option(`type`.getCtxAnnotations).map(_.toSeq).getOrElse(Seq.empty)
-    annotations.collectFirst { case ann: JsonScalaEnumeration => ann } match {
-      case Some(enumAnnotation) => {
+    annotations.headOption match {
+      case Some(enumAnnotation: JsonScalaEnumeration) => {
         val pt = enumAnnotation.value().getGenericSuperclass.asInstanceOf[ParameterizedType]
         val args = pt.getActualTypeArguments
         val cls = args(0).asInstanceOf[Class[Enumeration]]
@@ -75,6 +75,7 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
           sp
         }
       }
+      case Some(_) => None
       case _ => {
         Option(nullableClass).flatMap { cls =>
           if (cls == classOf[BigDecimal]) {
