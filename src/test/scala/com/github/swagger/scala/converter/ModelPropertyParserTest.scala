@@ -212,6 +212,39 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers {
     converter.readAll(classOf[Option[Int]])
   }
 
+  it should "process Model with Scala BigDecimal with annotation" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWBigDecimalAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWBigDecimalAnnotated")
+    model should be (defined)
+    model.get.getProperties should not be (null)
+    val field = model.get.getProperties.get("field")
+    field shouldBe a [StringSchema]
+    nullSafeList(model.get.getRequired) should not be empty
+  }
+
+  it should "process Model with Scala BigInt with annotation" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWBigIntAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWBigIntAnnotated")
+    model should be (defined)
+    model.get.getProperties should not be (null)
+    val field = model.get.getProperties.get("field")
+    field shouldBe a [StringSchema]
+    nullSafeList(model.get.getRequired) should not be empty
+  }
+
+  it should "process Model with Scala Enum with annotation" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWEnumAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWEnumAnnotated")
+    model should be (defined)
+    model.get.getProperties should not be (null)
+    val field = model.get.getProperties.get("field")
+    field shouldBe a [StringSchema]
+    nullSafeList(model.get.getRequired) should not be empty
+  }
+
   def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
