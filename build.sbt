@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "io.swagger.core.v3" % "swagger-core" % "2.1.1",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.10.2",
-  "org.scalatest" %% "scalatest" % "3.1.0" % Test,
+  "org.scalatest" %% "scalatest" % "3.1.1" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.30" % Test
 )
 
