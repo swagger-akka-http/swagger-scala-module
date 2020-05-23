@@ -31,9 +31,9 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
       val annotatedOverrides = getRequiredSettings(`type`)
       if (_isOptional(`type`, cls)) {
         val baseType = if (annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType() else new AnnotatedTypeForOption()
-        resolve(nextType(baseType, `type`, cls, javaType), context, chain)
+        resolve(nextType(baseType, `type`, javaType), context, chain)
       } else if (!annotatedOverrides.headOption.getOrElse(true)) {
-        resolve(nextType(new AnnotatedTypeForOption(), `type`, cls, javaType), context, chain)
+        resolve(nextType(new AnnotatedTypeForOption(), `type`, javaType), context, chain)
       } else if (chain.hasNext) {
         val nextResolved = Option(chain.next().resolve(`type`, context, chain))
         nextResolved match {
@@ -112,7 +112,7 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
     }
   }
 
-  private def nextType(baseType: AnnotatedType, `type`: AnnotatedType, cls: Class[_], javaType: JavaType): AnnotatedType = {
+  private def nextType(baseType: AnnotatedType, `type`: AnnotatedType, javaType: JavaType): AnnotatedType = {
     baseType.`type`(underlyingJavaType(`type`, javaType))
       .ctxAnnotations(`type`.getCtxAnnotations)
       .parent(`type`.getParent)
