@@ -41,10 +41,10 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
             setRequired(`type`)
             property
           }
-          case None => null
+          case None => None.orNull
         }
       } else {
-        null
+        None.orNull
       }
     }
   }
