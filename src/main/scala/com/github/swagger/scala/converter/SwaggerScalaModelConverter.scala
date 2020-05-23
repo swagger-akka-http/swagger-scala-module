@@ -105,7 +105,7 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
     }
   }
 
-  private def underlyingJavaType(annotatedType: AnnotatedType, cls: Class[_], javaType: JavaType): JavaType = {
+  private def underlyingJavaType(annotatedType: AnnotatedType, javaType: JavaType): JavaType = {
     annotatedType.getType match {
       case rt: ReferenceType => rt.getContentType
       case _ => javaType
@@ -113,7 +113,7 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
   }
 
   private def nextType(baseType: AnnotatedType, `type`: AnnotatedType, cls: Class[_], javaType: JavaType): AnnotatedType = {
-    baseType.`type`(underlyingJavaType(`type`, cls, javaType))
+    baseType.`type`(underlyingJavaType(`type`, javaType))
       .ctxAnnotations(`type`.getCtxAnnotations)
       .parent(`type`.getParent)
       .schemaProperty(`type`.isSchemaProperty)
