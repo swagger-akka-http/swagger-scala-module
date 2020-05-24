@@ -243,6 +243,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val field = model.value.getProperties.get("field")
     field shouldBe a [StringSchema]
+    val stringSchema = field.asInstanceOf[StringSchema]
+    stringSchema.getDescription shouldEqual "enum value"
     nullSafeList(model.value.getRequired) shouldEqual Seq("field")
   }
 
