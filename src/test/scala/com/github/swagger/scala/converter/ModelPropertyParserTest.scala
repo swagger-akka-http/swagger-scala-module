@@ -257,6 +257,20 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val stringsField = model.value.getProperties.get("strings")
     stringsField shouldBe a [ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getUniqueItems() shouldBe (null)
+    arraySchema.getItems shouldBe a [StringSchema]
+  }
+
+  it should "process Model with Scala Set" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWSetString]).asScala.toMap
+    val model = findModel(schemas, "ModelWSetString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [ArraySchema]
+    val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getUniqueItems() shouldBe true
     arraySchema.getItems shouldBe a [StringSchema]
   }
 
@@ -269,6 +283,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val stringsField = model.value.getProperties.get("strings")
     stringsField shouldBe a [ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getUniqueItems() shouldBe (null)
     arraySchema.getItems shouldBe a [StringSchema]
   }
 
