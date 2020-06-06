@@ -98,7 +98,7 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
     }
   }
 
-  def _isOptional(annotatedType: AnnotatedType, cls: Class[_]): Boolean = {
+  private def _isOptional(annotatedType: AnnotatedType, cls: Class[_]): Boolean = {
     annotatedType.getType match {
       case _: ReferenceType if isOption(cls) => true
       case _ => false
