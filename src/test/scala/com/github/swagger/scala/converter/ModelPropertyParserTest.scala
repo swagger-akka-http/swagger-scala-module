@@ -248,6 +248,30 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     nullSafeList(model.value.getRequired) shouldEqual Seq("field")
   }
 
+  it should "process Model with Scala Seq" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWSeqString]).asScala.toMap
+    val model = findModel(schemas, "ModelWSeqString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [ArraySchema]
+    val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getItems shouldBe a [StringSchema]
+  }
+
+  it should "process Model with Java List" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWJavaListString]).asScala.toMap
+    val model = findModel(schemas, "ModelWJavaListString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [ArraySchema]
+    val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getItems shouldBe a [StringSchema]
+  }
+
   def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
