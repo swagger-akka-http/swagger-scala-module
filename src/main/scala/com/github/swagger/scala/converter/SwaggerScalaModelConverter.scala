@@ -22,6 +22,12 @@ object SwaggerScalaModelConverter {
 class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
   SwaggerScalaModelConverter
 
+  private val OptionClass = classOf[scala.Option[_]]
+  private val IterableClass = classOf[scala.collection.Iterable[_]]
+  private val SetClass = classOf[scala.collection.Set[_]]
+  private val BigDecimalClass = classOf[BigDecimal]
+  private val BigIntClass = classOf[BigInt]
+
   override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: Iterator[ModelConverter]): Schema[_] = {
     val javaType = _mapper.constructType(`type`.getType)
     val cls = javaType.getRawClass
@@ -38,6 +44,13 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
         val nextResolved = Option(chain.next().resolve(`type`, context, chain))
         nextResolved match {
           case Some(property) => {
+            if (isIterable(cls)) {
+              //untidy solution for https://github.com/swagger-akka-http/swagger-scala-module/issues/48
+              property.getRequired.remove("traversableAgain")
+              val props = property.getProperties
+              props.remove("traversableAgain")
+              props.remove("empty")
+            }
             setRequired(`type`)
             property
           }
@@ -80,11 +93,11 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
           }
           case _ => {
             Option(nullableClass).flatMap { cls =>
-              if (cls == classOf[BigDecimal]) {
+              if (cls == BigDecimalClass) {
                 val dp = PrimitiveType.DECIMAL.createProperty()
                 setRequired(`type`)
                 Some(dp)
-              } else if (cls == classOf[BigInt]) {
+              } else if (cls == BigIntClass) {
                 val ip = PrimitiveType.INT.createProperty()
                 setRequired(`type`)
                 Some(ip)
@@ -130,7 +143,7 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
 
   override def _isSetType(cls: Class[_]): Boolean = {
     val setInterfaces = cls.getInterfaces.find { interface =>
-      interface == classOf[scala.collection.Set[_]]
+      interface == SetClass
     }
     setInterfaces.isDefined || super._isSetType(cls)
   }
@@ -163,7 +176,8 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
     else None
   }
 
-  private def isOption(cls: Class[_]): Boolean = cls == classOf[scala.Option[_]]
+  private def isOption(cls: Class[_]): Boolean = cls == OptionClass
+  private def isIterable(cls: Class[_]): Boolean = IterableClass.isAssignableFrom(cls)
 
   private def nullSafeList[T](array: Array[T]): List[T] = Option(array) match {
     case None => List.empty[T]

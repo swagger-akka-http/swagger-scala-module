@@ -259,6 +259,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
     arraySchema.getItems shouldBe a [StringSchema]
+    nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Scala Set" in {
@@ -272,6 +274,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe true
     arraySchema.getItems shouldBe a [StringSchema]
+    nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Java List" in {
@@ -285,9 +289,11 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
     arraySchema.getItems shouldBe a [StringSchema]
+    nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
 
-  def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
+  private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
       case None =>
@@ -298,8 +304,13 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     }
   }
 
-  def nullSafeList[T](list: java.util.List[T]): List[T] = Option(list) match {
+  private def nullSafeList[T](list: java.util.List[T]): List[T] = Option(list) match {
     case None => List[T]()
     case Some(l) => l.asScala.toList
+  }
+
+  private def nullSafeMap[K, V](map: java.util.Map[K, V]): Map[K, V] = Option(map) match {
+    case None => Map[K, V]()
+    case Some(m) => m.asScala.toMap
   }
 }
