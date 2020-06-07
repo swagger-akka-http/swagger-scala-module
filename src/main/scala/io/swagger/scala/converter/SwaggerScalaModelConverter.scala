@@ -18,6 +18,10 @@ object SwaggerScalaModelConverter {
 class SwaggerScalaModelConverter extends ModelConverter {
   SwaggerScalaModelConverter
 
+  private val OptionClass = classOf[scala.Option[_]]
+  private val BigDecimalClass = classOf[BigDecimal]
+  private val BigIntClass = classOf[BigInt]
+
   override
   def resolveProperty(`type`: Type, context: ModelConverterContext,
     annotations: Array[Annotation] , chain: Iterator[ModelConverter]): Property = {
@@ -36,11 +40,11 @@ class SwaggerScalaModelConverter extends ModelConverter {
             return sp
           }
         case None =>
-          if (cls == classOf[BigDecimal]) {
+          if (cls == BigDecimalClass) {
             val dp = PrimitiveType.DECIMAL.createProperty()
             dp.setRequired(true)
             return dp
-          } else if (cls == classOf[BigInt]) {
+          } else if (cls == BigIntClass) {
             val dp = PrimitiveType.INT.createProperty()
             dp.setRequired(true)
             return dp
@@ -61,21 +65,23 @@ class SwaggerScalaModelConverter extends ModelConverter {
           }
         }
         nextResolved match {
-          case Some(property) =>
+          case Some(property) => {
             property.setRequired(false)
             property
-          case None => null
+          }
+          case None => None.orNull
         }
       case t if chain.hasNext =>
         val nextResolved = Option(chain.next().resolveProperty(t, context, annotations, chain))
         nextResolved match {
-          case Some(property) =>
+          case Some(property) => {
             property.setRequired(true)
             property
-          case None => null
+          }
+          case None => None.orNull
         }
       case _ =>
-        null
+        None.orNull
     }
   }
 
@@ -111,6 +117,5 @@ class SwaggerScalaModelConverter extends ModelConverter {
     }
   }
 
-  private def isOption(cls: Class[_]): Boolean = cls == classOf[scala.Option[_]]
-
+  private def isOption(cls: Class[_]): Boolean = cls == OptionClass
 }

@@ -3,19 +3,18 @@ import java.lang.reflect.Type
 import java.util
 
 import io.swagger.converter._
-import io.swagger.models.Model
-import io.swagger.models.properties
+import io.swagger.models.{Model, properties}
 import io.swagger.models.properties._
 import io.swagger.scala.converter.SwaggerScalaModelConverter
 import models._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{FlatSpec, Matchers, OptionValues}
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.collection.JavaConverters._
 
 @RunWith(classOf[JUnitRunner])
-class ModelPropertyParserTest extends FlatSpec with Matchers {
+class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
   it should "verify swagger-core bug 814" in {
     val converter = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[CoreBug814])
@@ -147,7 +146,52 @@ class ModelPropertyParserTest extends FlatSpec with Matchers {
     converter.readAll(classOf[Option[Int]])
   }
 
-  def findModel(schemas: Map[String, Model], name: String): Option[Model] = {
+  it should "process Model with Scala Seq" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWSeqString]).asScala.toMap
+    val model = findModel(schemas, "ModelWSeqString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [ArrayProperty]
+    val arraySchema = stringsField.asInstanceOf[ArrayProperty]
+    arraySchema.getUniqueItems() shouldBe (null)
+    //arraySchema.getItems shouldBe a [StringModel]
+    //nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    //nullSafeList(arraySchema.getRequired()) shouldBe empty
+  }
+
+  it should "process Model with Scala Set" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWSetString]).asScala.toMap
+    val model = findModel(schemas, "ModelWSetString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [ArrayProperty]
+    val arraySchema = stringsField.asInstanceOf[ArrayProperty]
+    arraySchema.getUniqueItems() shouldBe true
+    //arraySchema.getItems shouldBe a [StringSchema]
+    //nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    //nullSafeList(arraySchema.getRequired()) shouldBe empty
+  }
+
+  it should "process Model with Java List" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWJavaListString]).asScala.toMap
+    val model = findModel(schemas, "ModelWJavaListString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [ArrayProperty]
+    val arraySchema = stringsField.asInstanceOf[ArrayProperty]
+    arraySchema.getUniqueItems() shouldBe (null)
+    //arraySchema.getItems shouldBe a [StringSchema]
+    //nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    //nullSafeList(arraySchema.getRequired()) shouldBe empty
+  }
+
+  private def findModel(schemas: Map[String, Model], name: String): Option[Model] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
       case None =>
