@@ -1,22 +1,14 @@
+import io.swagger.annotations.ApiModelProperty
 import io.swagger.converter._
-
-import models._
-import models.OrderSize._
-
-import io.swagger.util.Json
-import io.swagger.annotations.{ ApiModel, ApiModelProperty }
 import io.swagger.models.properties._
+import models._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-import scala.collection.JavaConverters._
 import scala.annotation.meta.field
+import scala.collection.JavaConverters._
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-
-@RunWith(classOf[JUnitRunner])
-class ScalaModelTest extends FlatSpec with Matchers {
+class ScalaModelTest extends AnyFlatSpec with Matchers {
   it should "extract a scala enum" in {
     val schemas = ModelConverters.getInstance().readAll(classOf[SModelWithEnum]).asScala
     val userSchema = schemas("SModelWithEnum")

@@ -25,9 +25,8 @@ pomIncludeRepository := { x => false }
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "io.swagger" % "swagger-core" % "1.6.0",
-  "org.scalatest" %% "scalatest" % "3.0.8" % "test",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.10.4",
-  "junit" % "junit" % "4.13" % "test"
+  "org.scalatest" %% "scalatest" % "3.1.2" % Test
 )
 
 publishTo := {

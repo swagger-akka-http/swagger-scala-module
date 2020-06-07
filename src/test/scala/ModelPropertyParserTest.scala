@@ -7,14 +7,13 @@ import io.swagger.models.{Model, properties}
 import io.swagger.models.properties._
 import io.swagger.scala.converter.SwaggerScalaModelConverter
 import models._
-import org.junit.runner.RunWith
-import org.scalatest.{FlatSpec, Matchers, OptionValues}
-import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.OptionValues
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.collection.JavaConverters._
 
-@RunWith(classOf[JUnitRunner])
-class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
+class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValues {
   it should "verify swagger-core bug 814" in {
     val converter = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[CoreBug814])
@@ -30,11 +29,11 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[ModelWOptionString]).asScala.toMap
     val model = schemas.get("ModelWOptionString")
     model should be ('defined)
-    val stringOpt = model.get.getProperties().get("stringOpt")
+    val stringOpt = model.value.getProperties().get("stringOpt")
     stringOpt should not be (null)
     stringOpt.isInstanceOf[StringProperty] should be (true)
     stringOpt.getRequired should be (false)
-    val stringWithDataType = model.get.getProperties().get("stringWithDataTypeOpt")
+    val stringWithDataType = model.value.getProperties().get("stringWithDataTypeOpt")
     stringWithDataType should not be (null)
     stringWithDataType.isInstanceOf[StringProperty] should be (true)
     stringWithDataType.getRequired should be (false)
@@ -45,7 +44,7 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[ModelWOptionModel]).asScala.toMap
     val model = schemas.get("ModelWOptionModel")
     model should be ('defined)
-    val modelOpt = model.get.getProperties().get("modelOpt")
+    val modelOpt = model.value.getProperties().get("modelOpt")
     modelOpt should not be (null)
     modelOpt.isInstanceOf[RefProperty] should be (true)
   }
@@ -57,7 +56,7 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[TestModelWithBigDecimal]).asScala.toMap
     val model = findModel(schemas, "TestModelWithBigDecimal")
     model should be ('defined)
-    val modelOpt = model.get.getProperties().get("field")
+    val modelOpt = model.value.getProperties().get("field")
     modelOpt shouldBe a [properties.DecimalProperty]
     modelOpt.getRequired should be (true)
   }
@@ -69,7 +68,7 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[TestModelWithBigInt]).asScala.toMap
     val model = findModel(schemas, "TestModelWithBigInt")
     model should be ('defined)
-    val modelOpt = model.get.getProperties().get("field")
+    val modelOpt = model.value.getProperties().get("field")
     modelOpt shouldBe a [properties.BaseIntegerProperty]
     modelOpt.getRequired should be (true)
   }
@@ -79,7 +78,7 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[ModelWOptionBigDecimal]).asScala.toMap
     val model = schemas.get("ModelWOptionBigDecimal")
     model should be ('defined)
-    val optBigDecimal = model.get.getProperties().get("optBigDecimal")
+    val optBigDecimal = model.value.getProperties().get("optBigDecimal")
     optBigDecimal should not be (null)
     optBigDecimal shouldBe a [properties.DecimalProperty]
     optBigDecimal.getRequired should be (false)
@@ -90,7 +89,7 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[ModelWOptionBigInt]).asScala.toMap
     val model = schemas.get("ModelWOptionBigInt")
     model should be ('defined)
-    val optBigDecimal = model.get.getProperties().get("optBigInt")
+    val optBigDecimal = model.value.getProperties().get("optBigInt")
     optBigDecimal should not be (null)
     optBigDecimal shouldBe a [properties.BaseIntegerProperty]
     optBigDecimal.getRequired should be (false)
@@ -101,7 +100,7 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[ModelWOptionBoolean]).asScala.toMap
     val model = schemas.get("ModelWOptionBoolean")
     model should be ('defined)
-    val optBoolean = model.get.getProperties().get("optBoolean")
+    val optBoolean = model.value.getProperties().get("optBoolean")
     optBoolean should not be (null)
     optBoolean shouldBe a [properties.ObjectProperty]
     optBoolean.getRequired should be (false)
@@ -112,8 +111,8 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[ModelWBigDecimalAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWBigDecimalAnnotated")
     model should be (defined)
-    model.get.getProperties should not be (null)
-    val field = model.get.getProperties.get("field")
+    model.value.getProperties should not be (null)
+    val field = model.value.getProperties.get("field")
     field shouldBe a [properties.StringProperty]
     field.getRequired should be (true)
   }
@@ -123,8 +122,8 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[ModelWBigIntAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWBigIntAnnotated")
     model should be (defined)
-    model.get.getProperties should not be (null)
-    val field = model.get.getProperties.get("field")
+    model.value.getProperties should not be (null)
+    val field = model.value.getProperties.get("field")
     field shouldBe a [properties.StringProperty]
     field.getRequired should be (true)
   }
@@ -134,8 +133,8 @@ class ModelPropertyParserTest extends FlatSpec with Matchers with OptionValues {
     val schemas = converter.readAll(classOf[ModelWEnumAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWEnumAnnotated")
     model should be (defined)
-    model.get.getProperties should not be (null)
-    val field = model.get.getProperties.get("field")
+    model.value.getProperties should not be (null)
+    val field = model.value.getProperties.get("field")
     field shouldBe a [properties.StringProperty]
     field.getRequired should be (true)
   }
