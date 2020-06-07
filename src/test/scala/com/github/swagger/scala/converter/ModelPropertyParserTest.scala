@@ -293,6 +293,34 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
 
+  it should "process Model with Scala Map" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWMapString]).asScala.toMap
+    val model = findModel(schemas, "ModelWMapString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [MapSchema]
+    val mapSchema = stringsField.asInstanceOf[MapSchema]
+    mapSchema.getUniqueItems() shouldBe (null)
+    nullSafeMap(mapSchema.getProperties()) shouldBe empty
+    nullSafeList(mapSchema.getRequired()) shouldBe empty
+  }
+
+  it should "process Model with Java Map" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWJavaMapString]).asScala.toMap
+    val model = findModel(schemas, "ModelWJavaMapString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [MapSchema]
+    val mapSchema = stringsField.asInstanceOf[MapSchema]
+    mapSchema.getUniqueItems() shouldBe (null)
+    nullSafeMap(mapSchema.getProperties()) shouldBe empty
+    nullSafeList(mapSchema.getRequired()) shouldBe empty
+  }
+
   private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
