@@ -46,7 +46,9 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
           case Some(property) => {
             if (isIterable(cls)) {
               //untidy solution for https://github.com/swagger-akka-http/swagger-scala-module/issues/48
-              property.getRequired.remove("traversableAgain")
+              val required = property.getRequired
+              required.remove("traversableAgain")
+              required.remove("empty")
               val props = property.getProperties
               props.remove("traversableAgain")
               props.remove("empty")
