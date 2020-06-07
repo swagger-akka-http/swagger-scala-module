@@ -6,11 +6,11 @@ import Defaults._
 
 organization := "com.github.swagger-akka-http"
 
-version := "1.0.7-SNAPSHOT"
+version := "1.1.0-SNAPSHOT"
 
 scalaVersion := "2.11.12"
 
-crossScalaVersions := Seq("2.10.6", scalaVersion.value, "2.12.6", "2.13.0")
+crossScalaVersions := Seq("2.10.7", scalaVersion.value, "2.12.11", "2.13.2")
 
 organizationHomepage in ThisBuild := Some(url("http://swagger.io"))
 
@@ -24,10 +24,10 @@ pomIncludeRepository := { x => false }
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "io.swagger" % "swagger-core" % "1.5.24",
+  "io.swagger" % "swagger-core" % "1.6.0",
   "org.scalatest" %% "scalatest" % "3.0.8" % "test",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.10",
-  "junit" % "junit" % "4.12" % "test"
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.10.4",
+  "junit" % "junit" % "4.13" % "test"
 )
 
 publishTo := {
