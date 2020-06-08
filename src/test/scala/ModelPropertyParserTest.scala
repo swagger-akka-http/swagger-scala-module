@@ -205,8 +205,6 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val arraySchema = stringsField.asInstanceOf[ArrayProperty]
     arraySchema.getUniqueItems() shouldBe true
     arraySchema.getItems shouldBe a [StringProperty]
-    //nullSafeMap(arraySchema.getProperties()) shouldBe empty
-    //nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Java List" in {
@@ -220,8 +218,6 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val arraySchema = stringsField.asInstanceOf[ArrayProperty]
     arraySchema.getUniqueItems() shouldBe (null)
     arraySchema.getItems shouldBe a [StringProperty]
-    //nullSafeMap(arraySchema.getProperties()) shouldBe empty
-    //nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Scala Map" in {
@@ -233,6 +229,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val stringsField = model.value.getProperties.get("strings")
     stringsField shouldBe a [MapProperty]
     val mapSchema = stringsField.asInstanceOf[MapProperty]
+    mapSchema.getAdditionalProperties shouldBe a[StringProperty]
   }
 
   it should "process Model with Java Map" in {
@@ -244,6 +241,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val stringsField = model.value.getProperties.get("strings")
     stringsField shouldBe a [MapProperty]
     val mapSchema = stringsField.asInstanceOf[MapProperty]
+    mapSchema.getAdditionalProperties shouldBe a[StringProperty]
   }
 
   private def findModel(schemas: Map[String, Model], name: String): Option[Model] = {
