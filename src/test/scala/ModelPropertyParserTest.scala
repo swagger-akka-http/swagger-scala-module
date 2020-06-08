@@ -3,7 +3,7 @@ import java.lang.reflect.Type
 import java.util
 
 import io.swagger.converter._
-import io.swagger.models.{Model, properties}
+import io.swagger.models.Model
 import io.swagger.models.properties._
 import io.swagger.scala.converter.SwaggerScalaModelConverter
 import models._
@@ -57,7 +57,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val model = findModel(schemas, "TestModelWithBigDecimal")
     model should be ('defined)
     val modelOpt = model.value.getProperties().get("field")
-    modelOpt shouldBe a [properties.DecimalProperty]
+    modelOpt shouldBe a [DecimalProperty]
     modelOpt.getRequired should be (true)
   }
 
@@ -69,7 +69,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val model = findModel(schemas, "TestModelWithBigInt")
     model should be ('defined)
     val modelOpt = model.value.getProperties().get("field")
-    modelOpt shouldBe a [properties.BaseIntegerProperty]
+    modelOpt shouldBe a [BaseIntegerProperty]
     modelOpt.getRequired should be (true)
   }
 
@@ -80,7 +80,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model should be ('defined)
     val optBigDecimal = model.value.getProperties().get("optBigDecimal")
     optBigDecimal should not be (null)
-    optBigDecimal shouldBe a [properties.DecimalProperty]
+    optBigDecimal shouldBe a [DecimalProperty]
     optBigDecimal.getRequired should be (false)
   }
 
@@ -91,7 +91,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model should be ('defined)
     val optBigDecimal = model.value.getProperties().get("optBigInt")
     optBigDecimal should not be (null)
-    optBigDecimal shouldBe a [properties.BaseIntegerProperty]
+    optBigDecimal shouldBe a [BaseIntegerProperty]
     optBigDecimal.getRequired should be (false)
   }
 
@@ -102,7 +102,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model should be ('defined)
     val optBoolean = model.value.getProperties().get("optBoolean")
     optBoolean should not be (null)
-    optBoolean shouldBe a [properties.ObjectProperty]
+    optBoolean shouldBe a [ObjectProperty]
     optBoolean.getRequired should be (false)
   }
 
@@ -113,7 +113,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model should be (defined)
     model.value.getProperties should not be (null)
     val field = model.value.getProperties.get("field")
-    field shouldBe a [properties.StringProperty]
+    field shouldBe a [StringProperty]
     field.getRequired should be (true)
   }
 
@@ -124,7 +124,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model should be (defined)
     model.value.getProperties should not be (null)
     val field = model.value.getProperties.get("field")
-    field shouldBe a [properties.StringProperty]
+    field shouldBe a [StringProperty]
     field.getRequired should be (true)
   }
 
@@ -135,7 +135,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model should be (defined)
     model.value.getProperties should not be (null)
     val field = model.value.getProperties.get("field")
-    field shouldBe a [properties.StringProperty]
+    field shouldBe a [StringProperty]
     field.getRequired should be (true)
   }
 
@@ -189,7 +189,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     stringsField shouldBe a [ArrayProperty]
     val arraySchema = stringsField.asInstanceOf[ArrayProperty]
     arraySchema.getUniqueItems() shouldBe (null)
-    //arraySchema.getItems shouldBe a [StringModel]
+    arraySchema.getItems shouldBe a [StringProperty]
     //nullSafeMap(arraySchema.getProperties()) shouldBe empty
     //nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
@@ -204,7 +204,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     stringsField shouldBe a [ArrayProperty]
     val arraySchema = stringsField.asInstanceOf[ArrayProperty]
     arraySchema.getUniqueItems() shouldBe true
-    //arraySchema.getItems shouldBe a [StringSchema]
+    arraySchema.getItems shouldBe a [StringProperty]
     //nullSafeMap(arraySchema.getProperties()) shouldBe empty
     //nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
@@ -219,9 +219,31 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     stringsField shouldBe a [ArrayProperty]
     val arraySchema = stringsField.asInstanceOf[ArrayProperty]
     arraySchema.getUniqueItems() shouldBe (null)
-    //arraySchema.getItems shouldBe a [StringSchema]
+    arraySchema.getItems shouldBe a [StringProperty]
     //nullSafeMap(arraySchema.getProperties()) shouldBe empty
     //nullSafeList(arraySchema.getRequired()) shouldBe empty
+  }
+
+  it should "process Model with Scala Map" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWMapString]).asScala.toMap
+    val model = findModel(schemas, "ModelWMapString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [MapProperty]
+    val mapSchema = stringsField.asInstanceOf[MapProperty]
+  }
+
+  it should "process Model with Java Map" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWJavaMapString]).asScala.toMap
+    val model = findModel(schemas, "ModelWJavaMapString")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("strings")
+    stringsField shouldBe a [MapProperty]
+    val mapSchema = stringsField.asInstanceOf[MapProperty]
   }
 
   private def findModel(schemas: Map[String, Model], name: String): Option[Model] = {
