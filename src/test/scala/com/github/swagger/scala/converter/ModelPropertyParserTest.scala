@@ -3,6 +3,7 @@ package com.github.swagger.scala.converter
 import java.util
 
 import io.swagger.v3.core.converter._
+import io.swagger.v3.core.util.Json
 import io.swagger.v3.oas.models.media._
 import models._
 import org.scalatest.OptionValues
@@ -239,13 +240,28 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val converter = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[ModelWEnumAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWEnumAnnotated")
-    model should be (defined)
+    model should be(defined)
     model.value.getProperties should not be (null)
     val field = model.value.getProperties.get("field")
-    field shouldBe a [StringSchema]
+    field shouldBe a[StringSchema]
     val stringSchema = field.asInstanceOf[StringSchema]
     stringSchema.getDescription shouldEqual "enum value"
     nullSafeList(model.value.getRequired) shouldEqual Seq("field")
+  }
+
+  it should "process ListReply Model" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ListReply[String]]).asScala.toMap
+    val model = findModel(schemas, "ListReply")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("items")
+    stringsField shouldBe a [ArraySchema]
+    val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getUniqueItems() shouldBe (null)
+    arraySchema.getItems shouldBe a [ObjectSchema] //probably type erasure - ideally this would eval as StringSchema
+    //next line used to fail (https://github.com/swagger-akka-http/swagger-akka-http/issues/171)
+    Json.mapper().writeValueAsString(model.value)
   }
 
   it should "process Model with Scala Seq" in {
