@@ -6,6 +6,7 @@ import io.swagger.converter._
 import io.swagger.models.Model
 import io.swagger.models.properties._
 import io.swagger.scala.converter.SwaggerScalaModelConverter
+import io.swagger.util.Json
 import models._
 import org.scalatest.OptionValues
 import org.scalatest.flatspec.AnyFlatSpec
@@ -177,6 +178,21 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     converter.addConverter(CustomConverter)
     converter.addConverter(new SwaggerScalaModelConverter)
     converter.readAll(classOf[Option[Int]])
+  }
+
+  it should "process ListReply Model" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ListReply[String]]).asScala.toMap
+    val model = findModel(schemas, "ListReply")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("items")
+    stringsField shouldBe a [ArrayProperty]
+    val arraySchema = stringsField.asInstanceOf[ArrayProperty]
+    arraySchema.getUniqueItems() shouldBe (null)
+    arraySchema.getItems shouldBe a [ObjectProperty]
+    //next line fails with jackson 2.10.3 and 2.10.4
+    Json.mapper().writeValueAsString(model.value)
   }
 
   it should "process Model with Scala Seq" in {
