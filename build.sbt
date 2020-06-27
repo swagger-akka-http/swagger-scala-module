@@ -10,7 +10,7 @@ version := "1.1.0-SNAPSHOT"
 
 scalaVersion := "2.11.12"
 
-crossScalaVersions := Seq("2.10.7", scalaVersion.value, "2.12.11", "2.13.2")
+crossScalaVersions := Seq("2.10.7", scalaVersion.value, "2.12.11", "2.13.3")
 
 organizationHomepage in ThisBuild := Some(url("http://swagger.io"))
 
@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "io.swagger" % "swagger-core" % "1.6.1",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.10.2",
-  "org.scalatest" %% "scalatest" % "3.1.2" % Test
+  "org.scalatest" %% "scalatest" % "3.2.0" % Test
 )
 
 publishTo := {
