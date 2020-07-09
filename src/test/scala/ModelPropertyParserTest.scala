@@ -191,7 +191,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val arraySchema = stringsField.asInstanceOf[ArrayProperty]
     arraySchema.getUniqueItems() shouldBe (null)
     arraySchema.getItems shouldBe a [ObjectProperty]
-    //next line fails with jackson 2.10.3 and 2.10.4
+    //next line fails with jackson 2.10.3, 2.10.4 and 2.11.1
     Json.mapper().writeValueAsString(model.value)
   }
 
