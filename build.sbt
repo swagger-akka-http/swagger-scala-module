@@ -24,7 +24,7 @@ Global / useGpg := false
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-  "io.swagger.core.v3" % "swagger-core" % "2.1.3",
+  "io.swagger.core.v3" % "swagger-core" % "2.1.4",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.11.1",
   "org.scalatest" %% "scalatest" % "3.2.0" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.30" % Test
