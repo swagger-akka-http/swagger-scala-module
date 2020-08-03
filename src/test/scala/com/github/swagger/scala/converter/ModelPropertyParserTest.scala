@@ -348,6 +348,22 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     }
   }
 
+  it should "process Array-Model with Scala nonOption Seq" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWStringSeq]).asScala.toMap
+    val model = findModel(schemas, "ModelWStringSeq")
+    model should be(defined)
+    nullSafeList(model.value.getRequired) shouldEqual Seq()
+  }
+
+  it should "process Array-Model with forced required Scala Option Seq" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWOptionStringSeq]).asScala.toMap
+    val model = findModel(schemas, "ModelWOptionStringSeq")
+    model should be(defined)
+    nullSafeList(model.value.getRequired) shouldEqual Seq("listOfStrings")
+  }
+
   private def nullSafeList[T](list: java.util.List[T]): List[T] = Option(list) match {
     case None => List[T]()
     case Some(l) => l.asScala.toList
