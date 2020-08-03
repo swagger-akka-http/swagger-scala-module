@@ -10,7 +10,7 @@ version := "1.1.0-SNAPSHOT"
 
 scalaVersion := "2.11.12"
 
-crossScalaVersions := Seq("2.10.7", scalaVersion.value, "2.12.11", "2.13.3")
+crossScalaVersions := Seq("2.10.7", scalaVersion.value, "2.12.12", "2.13.3")
 
 organizationHomepage in ThisBuild := Some(url("http://swagger.io"))
 
