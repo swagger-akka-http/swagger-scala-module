@@ -10,7 +10,7 @@ import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.{Schema => SchemaAnnotation}
+import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
 import io.swagger.v3.oas.models.media.Schema
 
 class AnnotatedTypeForOption extends AnnotatedType
@@ -74,6 +74,7 @@ class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
       nullSafeList(`type`.getCtxAnnotations).collect {
         case p: Parameter => p.required()
         case s: SchemaAnnotation => s.required()
+        case a: ArraySchema => a.arraySchema().required()
       }
     }
   }
