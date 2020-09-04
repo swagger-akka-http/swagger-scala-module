@@ -260,6 +260,19 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     mapSchema.getAdditionalProperties shouldBe a[StringProperty]
   }
 
+  it should "process EchoList" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[EchoList]).asScala.toMap
+    val model = findModel(schemas, "EchoList")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val val1Field = model.value.getProperties.get("val1")
+    val1Field shouldBe a [StringProperty]
+    val val1Schema = val1Field.asInstanceOf[StringProperty]
+    val1Schema.getRequired shouldBe true
+  }
+
+
   private def findModel(schemas: Map[String, Model], name: String): Option[Model] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
