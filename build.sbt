@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "io.swagger" % "swagger-core" % "1.6.2",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.11.2",
-  "org.scalatest" %% "scalatest" % "3.2.0" % Test
+  "org.scalatest" %% "scalatest" % "3.2.2" % Test
 )
 
 publishTo := {
