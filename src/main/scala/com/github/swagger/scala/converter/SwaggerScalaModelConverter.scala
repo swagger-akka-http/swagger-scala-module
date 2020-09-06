@@ -16,7 +16,7 @@ import io.swagger.v3.oas.models.media.Schema
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  Json.mapper().registerModule(new DefaultScalaModule())
+  Json.mapper().registerModule(DefaultScalaModule)
 }
 
 class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
