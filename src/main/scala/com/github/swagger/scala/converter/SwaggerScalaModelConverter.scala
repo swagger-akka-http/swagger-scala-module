@@ -1,5 +1,6 @@
 package com.github.swagger.scala.converter
 
+import java.lang.annotation.Annotation
 import java.lang.reflect.ParameterizedType
 import java.util.Iterator
 
@@ -79,16 +80,15 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
         val introspector = BeanIntrospector(cls)
         introspector.properties.foreach { property =>
-          getPropertyAnnotatedType(property) match {
-            case Some(annotatedPropertyType) => {
-              val propertyClass = getPropertyClass(property)
-              val required = getRequiredSettings(annotatedPropertyType).headOption
-                .getOrElse(!isOption(propertyClass))
-              if (required) addRequiredItem(schema, property.name)
-            }
-            case _ => {
+          getPropertyAnnotations(property) match {
+            case Seq() => {
               val propertyClass = getPropertyClass(property)
               if (!isOption(propertyClass)) addRequiredItem(schema, property.name)
+            }
+            case annotations => {
+              val required = getRequiredSettings(annotations).headOption
+                .getOrElse(!isOption(getPropertyClass(property)))
+              if (required) addRequiredItem(schema, property.name)
             }
           }
         }
@@ -110,8 +110,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def getRequiredSettings(annotatedType: java.lang.reflect.AnnotatedType): Seq[Boolean] = {
-    nullSafeList(annotatedType.getAnnotations).collect {
+  private def getRequiredSettings(annotations: Seq[Annotation]): Seq[Boolean] = {
+    annotations.collect {
       case p: Parameter => p.required()
       case s: SchemaAnnotation => s.required()
       case a: ArraySchema => a.arraySchema().required()
@@ -249,27 +249,27 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def getPropertyAnnotatedType(property: PropertyDescriptor): Option[java.lang.reflect.AnnotatedType] = {
+  private def getPropertyAnnotations(property: PropertyDescriptor): Seq[Annotation] = {
     property.param match {
       case Some(constructorParameter) => {
-        val types = constructorParameter.constructor.getAnnotatedParameterTypes
+        val types = constructorParameter.constructor.getParameterAnnotations
         if (constructorParameter.index > types.size) {
-          None
+          Seq.empty
         } else {
-          Some(types(constructorParameter.index))
+          types(constructorParameter.index).toSeq
         }
       }
       case _ => property.field match {
-        case Some(field) => Some(field.getAnnotatedType)
+        case Some(field) => field.getAnnotations.toSeq
         case _ => property.setter match {
           case Some(setter) if setter.getParameterCount == 1 => {
-            Some(setter.getAnnotatedParameterTypes()(0))
+            setter.getAnnotations().toSeq
           }
           case _ => property.beanSetter match {
             case Some(setter) if setter.getParameterCount == 1 => {
-              Some(setter.getAnnotatedParameterTypes()(0))
+              setter.getAnnotations().toSeq
             }
-            case _ => None
+            case _ => Seq.empty
           }
         }
       }
