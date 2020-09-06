@@ -337,6 +337,18 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     nullSafeList(mapSchema.getRequired()) shouldBe empty
   }
 
+  it should "process EchoList" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[EchoList]).asScala.toMap
+    val model = findModel(schemas, "EchoList")
+    model should be (defined)
+    model.value.getProperties should not be (null)
+    val val1Field = model.value.getProperties.get("val1")
+    val1Field shouldBe a [IntegerSchema]
+    val val2Field = model.value.getProperties.get("val2")
+    val2Field shouldBe a [IntegerSchema]
+  }
+
   private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
