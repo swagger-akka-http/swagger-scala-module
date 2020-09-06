@@ -79,8 +79,18 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
         val introspector = BeanIntrospector(cls)
         introspector.properties.foreach { property =>
-          val propertyClass = getPropertyClass(property)
-          if (!isOption(propertyClass)) addRequiredItem(schema, property.name)
+          getPropertyAnnotatedType(property) match {
+            case Some(annotatedPropertyType) => {
+              val propertyClass = getPropertyClass(property)
+              val required = getRequiredSettings(annotatedPropertyType).headOption
+                .getOrElse(!isOption(propertyClass))
+              if (required) addRequiredItem(schema, property.name)
+            }
+            case _ => {
+              val propertyClass = getPropertyClass(property)
+              if (!isOption(propertyClass)) addRequiredItem(schema, property.name)
+            }
+          }
         }
         schema
       }
@@ -89,14 +99,22 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def getRequiredSettings(`type`: AnnotatedType): Seq[Boolean] = `type` match {
+  private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
     case _: AnnotatedTypeForOption => Seq.empty
     case _ => {
-      nullSafeList(`type`.getCtxAnnotations).collect {
+      nullSafeList(annotatedType.getCtxAnnotations).collect {
         case p: Parameter => p.required()
         case s: SchemaAnnotation => s.required()
         case a: ArraySchema => a.arraySchema().required()
       }
+    }
+  }
+
+  private def getRequiredSettings(annotatedType: java.lang.reflect.AnnotatedType): Seq[Boolean] = {
+    nullSafeList(annotatedType.getAnnotations).collect {
+      case p: Parameter => p.required()
+      case s: SchemaAnnotation => s.required()
+      case a: ArraySchema => a.arraySchema().required()
     }
   }
 
@@ -225,6 +243,33 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               setter.getParameterTypes()(0)
             }
             case _ => AnyClass
+          }
+        }
+      }
+    }
+  }
+
+  private def getPropertyAnnotatedType(property: PropertyDescriptor): Option[java.lang.reflect.AnnotatedType] = {
+    property.param match {
+      case Some(constructorParameter) => {
+        val types = constructorParameter.constructor.getAnnotatedParameterTypes
+        if (constructorParameter.index > types.size) {
+          None
+        } else {
+          Some(types(constructorParameter.index))
+        }
+      }
+      case _ => property.field match {
+        case Some(field) => Some(field.getAnnotatedType)
+        case _ => property.setter match {
+          case Some(setter) if setter.getParameterCount == 1 => {
+            Some(setter.getAnnotatedParameterTypes()(0))
+          }
+          case _ => property.beanSetter match {
+            case Some(setter) if setter.getParameterCount == 1 => {
+              Some(setter.getAnnotatedParameterTypes()(0))
+            }
+            case _ => None
           }
         }
       }
