@@ -347,6 +347,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val1Field shouldBe a [IntegerSchema]
     val val2Field = model.value.getProperties.get("val2")
     val2Field shouldBe a [IntegerSchema]
+    //TODO try to fix this
+    //model.value.getRequired().asScala shouldEqual Seq("val1", "val2")
   }
 
   private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {

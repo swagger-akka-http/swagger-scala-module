@@ -16,10 +16,10 @@ import io.swagger.v3.oas.models.media.Schema
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  Json.mapper().registerModule(DefaultScalaModule)
+  val objectMapper = Json.mapper().registerModule(DefaultScalaModule)
 }
 
-class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
+class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverter.objectMapper) {
   SwaggerScalaModelConverter
 
   private val OptionClass = classOf[scala.Option[_]]
