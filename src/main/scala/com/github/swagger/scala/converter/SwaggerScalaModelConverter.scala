@@ -101,13 +101,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
 
   private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
     case _: AnnotatedTypeForOption => Seq.empty
-    case _ => {
-      nullSafeList(annotatedType.getCtxAnnotations).collect {
-        case p: Parameter => p.required()
-        case s: SchemaAnnotation => s.required()
-        case a: ArraySchema => a.arraySchema().required()
-      }
-    }
+    case _ => getRequiredSettings(nullSafeList(annotatedType.getCtxAnnotations))
   }
 
   private def getRequiredSettings(annotations: Seq[Annotation]): Seq[Boolean] = {
