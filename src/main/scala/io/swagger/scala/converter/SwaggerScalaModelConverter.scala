@@ -12,7 +12,7 @@ import io.swagger.models.properties._
 import io.swagger.util.{Json, PrimitiveType}
 
 object SwaggerScalaModelConverter {
-  Json.mapper().registerModule(new DefaultScalaModule())
+  Json.mapper().registerModule(DefaultScalaModule)
 }
 
 class SwaggerScalaModelConverter extends ModelConverter {
