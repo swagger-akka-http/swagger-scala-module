@@ -29,6 +29,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private val BigDecimalClass = classOf[BigDecimal]
   private val BigIntClass = classOf[BigInt]
   private val ProductClass = classOf[Product]
+  private val AnyClass = classOf[Any]
 
   override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: Iterator[ModelConverter]): Schema[_] = {
     val javaType = _mapper.constructType(`type`.getType)
@@ -208,7 +209,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       case Some(constructorParameter) => {
         val types = constructorParameter.constructor.getParameterTypes
         if (constructorParameter.index > types.size) {
-          classOf[Any]
+          AnyClass
         } else {
           types(constructorParameter.index)
         }
@@ -223,7 +224,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             case Some(setter) if setter.getParameterCount == 1 => {
               setter.getParameterTypes()(0)
             }
-            case _ => classOf[Any]
+            case _ => AnyClass
           }
         }
       }
