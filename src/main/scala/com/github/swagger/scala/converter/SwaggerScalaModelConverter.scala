@@ -2,22 +2,28 @@ package com.github.swagger.scala.converter
 
 import java.util.Iterator
 
-import com.fasterxml.jackson.databind.JavaType
-import com.fasterxml.jackson.databind.`type`.ReferenceType
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
+import com.fasterxml.jackson.databind.`type`.{ReferenceType, TypeFactory}
+import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
+import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
+import com.github.pjfanning.jackson.CaffeineLookupCache
+import com.typesafe.config.ConfigFactory
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
-import io.swagger.v3.core.util.{Json, PrimitiveType}
+import io.swagger.v3.core.util.PrimitiveType
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.models.media.{Schema, StringSchema}
 
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  Json.mapper().registerModule(new DefaultScalaModule())
+  private val config = ConfigFactory.defaultApplication()
+  private val cache = new CaffeineLookupCache[_, _](config.getInt("swagger-scala-module.jackson.type-cache.size"))
+  private val tf = TypeFactory.defaultInstance.withCache(cache)
+  val objectMapper = new ObjectMapper().setTypeFactory(tf).registerModule(DefaultScalaModule)
 }
 
-class SwaggerScalaModelConverter extends ModelResolver(Json.mapper()) {
+class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverter.objectMapper) {
   SwaggerScalaModelConverter
 
   override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: Iterator[ModelConverter]): Schema[_] = {
