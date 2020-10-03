@@ -6,9 +6,9 @@ import Defaults._
 
 organization := "com.github.swagger-akka-http"
 
-scalaVersion := "2.12.6"
+scalaVersion := "2.13.3"
 
-crossScalaVersions := Seq("2.10.6", "2.11.12", scalaVersion.value)
+crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.12", scalaVersion.value)
 
 organizationHomepage in ThisBuild := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -19,6 +19,8 @@ publishMavenStyle in ThisBuild := true
 publishArtifact in Test := false
 
 pomIncludeRepository := { x => false }
+
+Global / useGpg := false
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
@@ -41,9 +43,6 @@ credentials in ThisBuild += Credentials (Path.userHome / ".ivy2" / ".credentials
 
 resolvers in ThisBuild ++= Seq(
   Resolver.mavenLocal,
-  Resolver.typesafeRepo("releases"),
-  Resolver.typesafeRepo("snapshots"),
-  Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )
 

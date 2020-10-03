@@ -1,22 +1,31 @@
 # Swagger Scala Module
 
 [![Build Status](https://travis-ci.org/swagger-akka-http/swagger-scala-module.svg?branch=develop)](https://travis-ci.org/swagger-akka-http/swagger-scala-module)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.12/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.12)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.13/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.13)
 
-This is a fork of https://github.com/swagger-api/swagger-scala-module. This version supports [OpenAPI](https://github.com/OAI/OpenAPI-Specification) 3.0.1 / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.4.
+This is a fork of https://github.com/swagger-api/swagger-scala-module.
+
+| Release | Supports |
+| ------- | -------- |
+| 2.1.3 | [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
+| 1.1.0 | [OpenAPI 2](https://swagger.io/specification/v2/) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 1.6.x. |
 
 ## Usage
 To enable the swagger-scala-module, include the appropriate version in your project:
 
 ```
-  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.0.0"
+  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.1.3"
 ```
 
 ## How does it work?
 Including the library in your project allows the swagger extension module to discover this module, bringing in the appropriate jackson library in the process.  You can then use scala classes and objects in your swagger project.
 
 ## Treatment of `Option` and `required`
-All properties, besides those wrapped in `Option` or explicitly set via annotations `@ApiModelProperty(required = false)`, default to `required = true`  in the generated swagger model. See [#7](https://github.com/swagger-api/swagger-scala-module/issues/7)
+All properties, besides those wrapped in `Option` or explicitly set via annotations `@Schema(required = false, implementation = classOf[Int])`, default to `required = true`  in the generated swagger model. See [#7](https://github.com/swagger-api/swagger-scala-module/issues/7)
+
+```
+case class AddOptionRequest(number: Int, @Schema(required = false, implementation = classOf[Int]) number2: Option[Int] = None)
+```
 
 License
 -------
