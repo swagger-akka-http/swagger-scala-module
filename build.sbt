@@ -8,7 +8,7 @@ organization := "com.github.swagger-akka-http"
 
 scalaVersion := "2.13.3"
 
-crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.12", scalaVersion.value)
+crossScalaVersions := Seq("2.11.12", "2.12.12", scalaVersion.value)
 
 organizationHomepage in ThisBuild := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -25,7 +25,7 @@ Global / useGpg := false
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "io.swagger.core.v3" % "swagger-core" % "2.1.5",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.11.3",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.0-rc2",
   "org.scalatest" %% "scalatest" % "3.2.3" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.30" % Test
 )
