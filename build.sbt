@@ -50,8 +50,6 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { x => false }
 
-credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
-
 homepage := Some(new URL("https://github.com/swagger-akka-http/swagger-scala-module"))
 
 parallelExecution in Test := false
