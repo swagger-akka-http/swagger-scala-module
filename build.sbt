@@ -23,10 +23,11 @@ publishArtifact in Test := false
 pomIncludeRepository := { x => false }
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+  "org.slf4j" % "slf4j-api" % "1.7.30",
   "io.swagger" % "swagger-core" % "1.6.2",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.0",
-  "org.scalatest" %% "scalatest" % "3.2.3" % Test
+  "org.scalatest" %% "scalatest" % "3.2.3" % Test,
+  "org.slf4j" % "slf4j-simple" % "1.7.30" % Test
 )
 
 publishTo := {
@@ -40,8 +41,6 @@ credentials in ThisBuild += Credentials (Path.userHome / ".ivy2" / ".credentials
 
 resolvers in ThisBuild ++= Seq(
   Resolver.mavenLocal,
-  Resolver.typesafeRepo("releases"),
-  Resolver.typesafeRepo("snapshots"),
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )

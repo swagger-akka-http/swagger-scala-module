@@ -3,13 +3,15 @@ package io.swagger.scala.converter
 import java.lang.annotation.Annotation
 import java.lang.reflect.Type
 import java.util.Iterator
-
 import com.fasterxml.jackson.databind.`type`.ReferenceType
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import io.swagger.converter._
 import io.swagger.models.Model
 import io.swagger.models.properties._
 import io.swagger.util.{Json, PrimitiveType}
+import org.slf4j.LoggerFactory
+
+import scala.util.control.NonFatal
 
 object SwaggerScalaModelConverter {
   Json.mapper().registerModule(DefaultScalaModule)
@@ -18,6 +20,7 @@ object SwaggerScalaModelConverter {
 class SwaggerScalaModelConverter extends ModelConverter {
   SwaggerScalaModelConverter
 
+  private val logger = LoggerFactory.getLogger(classOf[SwaggerScalaModelConverter])
   private val OptionClass = classOf[scala.Option[_]]
   private val BigDecimalClass = classOf[BigDecimal]
   private val BigIntClass = classOf[BigInt]
@@ -29,26 +32,31 @@ class SwaggerScalaModelConverter extends ModelConverter {
     val cls = javaType.getRawClass
 
     if(cls != null) {
-      // handle scala enums
-      getEnumerationInstance(cls) match {
-        case Some(enumInstance) =>
-          if (enumInstance.values != null) {
-            val sp = new StringProperty()
-            for (v <- enumInstance.values)
-              sp._enum(v.toString)
-            sp.setRequired(true)
-            return sp
+      if (isEnumerationInstance(javaType.getRawClass)) {
+        val sp = new StringProperty()
+        sp.setRequired(true)
+        try {
+          val valueMethods = cls.getMethods.toSeq.filter { m =>
+            m.getReturnType.getName == "scala.Enumeration$Value" && m.getParameterCount == 0
           }
-        case None =>
-          if (cls == BigDecimalClass) {
-            val dp = PrimitiveType.DECIMAL.createProperty()
-            dp.setRequired(true)
-            return dp
-          } else if (cls == BigIntClass) {
-            val dp = PrimitiveType.INT.createProperty()
-            dp.setRequired(true)
-            return dp
+          val enumValues = valueMethods.map(_.getName).filterNot(_ == "Value")
+          enumValues.foreach { v =>
+            sp._enum(v)
           }
+        } catch {
+          case NonFatal(t) => logger.warn(s"Failed to get values for enum ${cls.getName}", t)
+        }
+        return sp
+      } else {
+        if (cls == BigDecimalClass) {
+          val dp = PrimitiveType.DECIMAL.createProperty()
+          dp.setRequired(true)
+          return dp
+        } else if (cls == BigIntClass) {
+          val dp = PrimitiveType.INT.createProperty()
+          dp.setRequired(true)
+          return dp
+        }
       }
     }
 
@@ -88,34 +96,20 @@ class SwaggerScalaModelConverter extends ModelConverter {
   override
   def resolve(`type`: Type, context: ModelConverterContext, chain: Iterator[ModelConverter]): Model = {
     val javaType = Json.mapper().constructType(`type`)
-    getEnumerationInstance(javaType.getRawClass) match {
-      case Some(enumInstance) => null // ignore scala enums
-      case None =>
-        if (chain.hasNext()) {
-          val next = chain.next()
-          next.resolve(`type`, context, chain)
-        }
-        else
-          null
-    }
-  }
-  private def getEnumerationInstance(cls: Class[_]): Option[Enumeration] =
-  {
-    if (cls.getFields.map(_.getName).contains("MODULE$"))
-    {
-      val javaUniverse = scala.reflect.runtime.universe
-      val m = javaUniverse.runtimeMirror(Thread.currentThread().getContextClassLoader)
-      val moduleMirror = m.reflectModule(m.staticModule(cls.getName))
-      moduleMirror.instance match
-      {
-        case enumInstance: Enumeration => Some(enumInstance)
-        case _ => None
+    if (isEnumerationInstance(javaType.getRawClass)) {
+      null // ignore scala enums
+    } else {
+      if (chain.hasNext()) {
+        val next = chain.next()
+        next.resolve(`type`, context, chain)
       }
-    }
-    else{
-      None
+      else
+        null
     }
   }
+
+  private def isEnumerationInstance(cls: Class[_]): Boolean =
+    cls.getFields.map(_.getName).contains("MODULE$")
 
   private def isOption(cls: Class[_]): Boolean = cls == OptionClass
 }
