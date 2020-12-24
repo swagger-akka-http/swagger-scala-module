@@ -21,6 +21,7 @@ class SwaggerScalaModelConverter extends ModelConverter {
   SwaggerScalaModelConverter
 
   private val logger = LoggerFactory.getLogger(classOf[SwaggerScalaModelConverter])
+  private val EnumClass = classOf[scala.Enumeration]
   private val OptionClass = classOf[scala.Option[_]]
   private val BigDecimalClass = classOf[BigDecimal]
   private val BigIntClass = classOf[BigInt]
@@ -37,9 +38,10 @@ class SwaggerScalaModelConverter extends ModelConverter {
         sp.setRequired(true)
         try {
           val valueMethods = cls.getMethods.toSeq.filter { m =>
-            m.getReturnType.getName == "scala.Enumeration$Value" && m.getParameterCount == 0
+            m.getDeclaringClass != EnumClass &&
+              m.getReturnType.getName == "scala.Enumeration$Value" && m.getParameterCount == 0
           }
-          val enumValues = valueMethods.map(_.getName).filterNot(_ == "Value")
+          val enumValues = valueMethods.map(_.getName)
           enumValues.foreach { v =>
             sp._enum(v)
           }
