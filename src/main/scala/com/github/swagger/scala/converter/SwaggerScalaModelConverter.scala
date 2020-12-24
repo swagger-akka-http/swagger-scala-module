@@ -3,7 +3,6 @@ package com.github.swagger.scala.converter
 import java.lang.annotation.Annotation
 import java.lang.reflect.ParameterizedType
 import java.util.Iterator
-
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.`type`.ReferenceType
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
@@ -14,6 +13,9 @@ import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
 import io.swagger.v3.oas.models.media.Schema
+import org.slf4j.LoggerFactory
+
+import scala.util.control.NonFatal
 
 class AnnotatedTypeForOption extends AnnotatedType
 
@@ -24,6 +26,7 @@ object SwaggerScalaModelConverter {
 class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverter.objectMapper) {
   SwaggerScalaModelConverter
 
+  private val logger = LoggerFactory.getLogger(classOf[SwaggerScalaModelConverter])
   private val OptionClass = classOf[scala.Option[_]]
   private val IterableClass = classOf[scala.collection.Iterable[_]]
   private val SetClass = classOf[scala.collection.Set[_]]
@@ -121,15 +124,21 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           case Some(enumAnnotation: JsonScalaEnumeration) => {
             val pt = enumAnnotation.value().getGenericSuperclass.asInstanceOf[ParameterizedType]
             val args = pt.getActualTypeArguments
-            val cls = args(0).asInstanceOf[Class[Enumeration]]
-            getEnumerationInstance(cls).map { enum =>
-              val sp: Schema[String] = PrimitiveType.STRING.createProperty().asInstanceOf[Schema[String]]
-              setRequired(`type`)
-              enum.values.iterator.foreach { v =>
-                sp.addEnumItemObject(v.toString)
+            val cls = args(0).asInstanceOf[Class[_]]
+            val sp: Schema[String] = PrimitiveType.STRING.createProperty().asInstanceOf[Schema[String]]
+            setRequired(`type`)
+            try {
+              val valueMethods = cls.getMethods.toSeq.filter { m =>
+                m.getReturnType.getName == "scala.Enumeration$Value" && m.getParameterCount == 0
               }
-              sp
+              val enumValues = valueMethods.map(_.getName).filterNot(_ == "Value")
+              enumValues.foreach { v =>
+                sp.addEnumItemObject(v)
+              }
+            } catch {
+              case NonFatal(t) => logger.warn(s"Failed to get values for enum ${cls.getName}", t)
             }
+            Some(sp)
           }
           case _ => {
             Option(nullableClass).flatMap { cls =>
@@ -200,20 +209,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         }
       }
     }
-  }
-
-  private def getEnumerationInstance(cls: Class[_]): Option[Enumeration] = {
-    if (cls.getFields.map(_.getName).contains("MODULE$")) {
-      val javaUniverse = scala.reflect.runtime.universe
-      val m = javaUniverse.runtimeMirror(Thread.currentThread().getContextClassLoader)
-      val moduleMirror = m.reflectModule(m.staticModule(cls.getName))
-      moduleMirror.instance match
-      {
-        case enumInstance: Enumeration => Some(enumInstance)
-        case _ => None
-      }
-    }
-    else None
   }
 
   private def getPropertyClass(property: PropertyDescriptor): Class[_] = {
