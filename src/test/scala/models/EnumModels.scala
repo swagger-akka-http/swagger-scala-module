@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.`type`.TypeReference
 import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import io.swagger.v3.oas.annotations.media.Schema
 import models.OrderSize.OrderSize
+import models.TestEnum.TestEnum
 
 import scala.annotation.meta.field
 
@@ -20,4 +21,13 @@ case object OrderSize extends Enumeration {
   val TALL = Value("TALL")
   val GRANDE = Value("GRANDE")
   val VENTI = Value("VENTI")
+}
+
+class TestEnumTypeClass extends TypeReference[TestEnum.type]
+case class ModelWithTestEnum(@JsonScalaEnumeration(classOf[TestEnumTypeClass]) enum: TestEnum = TestEnum.AEnum)
+
+object TestEnum extends Enumeration {
+  type TestEnum = Value
+  val AEnum = Value("a")
+  val BEnum = Value("b")
 }
