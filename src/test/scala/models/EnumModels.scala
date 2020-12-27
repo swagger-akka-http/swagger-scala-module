@@ -1,7 +1,6 @@
 package models
 
 import com.fasterxml.jackson.core.`type`.TypeReference
-import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import io.swagger.annotations.{ApiModel, ApiModelProperty}
 import models.OrderSize.OrderSize
 import models.TestEnum.TestEnum
@@ -20,7 +19,7 @@ case object OrderSize extends Enumeration(0) {
 }
 
 class TestEnumTypeClass extends TypeReference[TestEnum.type]
-case class ModelWithTestEnum(@JsonScalaEnumeration(classOf[TestEnumTypeClass]) enum: TestEnum = TestEnum.AEnum)
+case class ModelWithTestEnum(@(ApiModelProperty @field)(value = "Order Size", dataType = "models.TestEnum$") enum: TestEnum = TestEnum.AEnum)
 
 object TestEnum extends Enumeration {
   type TestEnum = Value

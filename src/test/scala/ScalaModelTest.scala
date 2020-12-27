@@ -20,7 +20,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     sp.getEnum().asScala.toSet shouldEqual Set("TALL", "GRANDE", "VENTI")
   }
 
-  it should "extract a scala enum with custom value names (jackson annotated)" in {
+  it should "extract a scala enum with custom value names" in {
     val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithTestEnum]).asScala
     val userSchema = schemas("ModelWithTestEnum")
 
