@@ -18,7 +18,7 @@ This project is compatible with [swagger-core](https://github.com/swagger-api/sw
 To enable the swagger-scala-module, include the appropriate version in your project:
 
 ```
-  "com.github.swagger-akka-http" %% "swagger-scala-module" % "1.0.6"
+  "com.github.swagger-akka-http" %% "swagger-scala-module" % "1.3.0"
 ```
 
 Which will include the proper cross-publish version of swagger-scala-module.
