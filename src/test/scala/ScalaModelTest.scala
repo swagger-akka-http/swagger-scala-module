@@ -24,10 +24,10 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithTestEnum]).asScala
     val userSchema = schemas("ModelWithTestEnum")
 
-    val orderSize = userSchema.getProperties().get("enum")
-    orderSize should not be null
-    orderSize shouldBe a [StringProperty]
-    val sp = orderSize.asInstanceOf[StringProperty]
+    val enum = userSchema.getProperties().get("enum")
+    enum should not be null
+    enum shouldBe a [StringProperty]
+    val sp = enum.asInstanceOf[StringProperty]
     Option(sp.getEnum) shouldBe defined
     sp.getEnum().asScala.toSet shouldEqual Set("a", "b")
   }
