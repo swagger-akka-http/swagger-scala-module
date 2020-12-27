@@ -11,6 +11,7 @@ import io.swagger.models.properties._
 import io.swagger.util.{Json, PrimitiveType}
 import org.slf4j.LoggerFactory
 
+import scala.util.Try
 import scala.util.control.NonFatal
 
 object SwaggerScalaModelConverter {
@@ -37,13 +38,14 @@ class SwaggerScalaModelConverter extends ModelConverter {
         val sp = new StringProperty()
         sp.setRequired(true)
         try {
-          val valueMethods = cls.getMethods.toSeq.filter { m =>
+          val mainClass = getMainClass(cls)
+          val valueMethods = mainClass.getMethods.toSeq.filter { m =>
             m.getDeclaringClass != EnumClass &&
               m.getReturnType.getName == "scala.Enumeration$Value" && m.getParameterCount == 0
           }
-          val enumValues = valueMethods.map(_.getName)
+          val enumValues = valueMethods.map(_.invoke(None.orNull))
           enumValues.foreach { v =>
-            sp._enum(v)
+            sp._enum(v.toString)
           }
         } catch {
           case NonFatal(t) => logger.warn(s"Failed to get values for enum ${cls.getName}", t)
@@ -99,14 +101,14 @@ class SwaggerScalaModelConverter extends ModelConverter {
   def resolve(`type`: Type, context: ModelConverterContext, chain: Iterator[ModelConverter]): Model = {
     val javaType = Json.mapper().constructType(`type`)
     if (isEnumerationInstance(javaType.getRawClass)) {
-      null // ignore scala enums
+      None.orNull // ignore scala enums
     } else {
       if (chain.hasNext()) {
         val next = chain.next()
         next.resolve(`type`, context, chain)
       }
       else
-        null
+        None.orNull
     }
   }
 
@@ -114,4 +116,13 @@ class SwaggerScalaModelConverter extends ModelConverter {
     cls.getFields.map(_.getName).contains("MODULE$")
 
   private def isOption(cls: Class[_]): Boolean = cls == OptionClass
+
+  private def getMainClass(clazz: Class[_]): Class[_] = {
+    val cname = clazz.getName
+    if (cname.endsWith("$")) {
+      Try(Class.forName(cname.substring(0, cname.length - 1))).getOrElse(clazz)
+    } else {
+      clazz
+    }
+  }
 }
