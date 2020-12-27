@@ -26,3 +26,5 @@ object TestEnum extends Enumeration {
   val AEnum = Value("a")
   val BEnum = Value("b")
 }
+
+case class ModelWithJavaEnum(level: Level)
