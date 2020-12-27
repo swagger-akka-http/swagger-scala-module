@@ -53,9 +53,9 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val userSchema = schemas("ModelWithJavaEnum")
 
     val level = userSchema.getProperties().get("level")
-    level shouldBe a[StringProperty]
+    level shouldBe a[StringSchema]
 
-    val sp = level.asInstanceOf[StringProperty]
+    val sp = level.asInstanceOf[StringSchema]
     sp.getEnum().asScala.toSet shouldEqual Set("LOW", "MEDIUM", "HIGH")
   }
 
