@@ -6,7 +6,7 @@ import Defaults._
 
 organization := "com.github.swagger-akka-http"
 
-version := "1.3.0-SNAPSHOT"
+version := "1.3.0"
 
 scalaVersion := "2.13.4"
 
