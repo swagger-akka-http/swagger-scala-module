@@ -1,13 +1,15 @@
 package models
 
-import io.swagger.annotations.{ ApiModel, ApiModelProperty }
+import com.fasterxml.jackson.core.`type`.TypeReference
+import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
+import io.swagger.annotations.{ApiModel, ApiModelProperty}
 import models.OrderSize.OrderSize
+import models.TestEnum.TestEnum
 
 import scala.annotation.meta.field
 
 @ApiModel(description = "Scala model containing an Enumeration Value that is annotated with the dataType of the Enumeration class")
 case class SModelWithEnum(
-  // @(ApiModelProperty @field)(value = "Textual label") label: Option[String] = None,
   @(ApiModelProperty @field)(value = "Order Size", dataType = "models.OrderSize$") orderSize: OrderSize = OrderSize.TALL)
 
 case object OrderSize extends Enumeration(0) {
@@ -15,4 +17,13 @@ case object OrderSize extends Enumeration(0) {
   val TALL = Value("TALL")
   val GRANDE = Value("GRANDE")
   val VENTI = Value("VENTI")
+}
+
+class TestEnumTypeClass extends TypeReference[TestEnum.type]
+case class ModelWithTestEnum(@JsonScalaEnumeration(classOf[TestEnumTypeClass]) enum: TestEnum = TestEnum.AEnum)
+
+object TestEnum extends Enumeration {
+  type TestEnum = Value
+  val AEnum = Value("a")
+  val BEnum = Value("b")
 }
