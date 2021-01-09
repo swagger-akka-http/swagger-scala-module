@@ -1,20 +1,20 @@
 # Swagger Scala Module
 
-[![Build Status](https://travis-ci.org/swagger-akka-http/swagger-scala-module.svg?branch=develop)](https://travis-ci.org/swagger-akka-http/swagger-scala-module)
+[![Build Status](https://travis-ci.com/swagger-akka-http/swagger-scala-module.svg?branch=develop)](https://travis-ci.com/swagger-akka-http/swagger-scala-module)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.13/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.13)
 
 This is a fork of https://github.com/swagger-api/swagger-scala-module.
 
 | Release | Supports |
 | ------- | -------- |
-| 2.2.0 | [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
+| 2.3.0 | [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
 | 1.3.0 | [OpenAPI 2](https://swagger.io/specification/v2/) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 1.6.x. |
 
 ## Usage
 To enable the swagger-scala-module, include the appropriate version in your project:
 
 ```
-  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.2.0"
+  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.3.0"
 ```
 
 ## How does it work?
