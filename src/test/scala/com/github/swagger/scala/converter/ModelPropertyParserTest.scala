@@ -350,6 +350,30 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getRequired().asScala shouldEqual Seq("val1", "val2")
   }
 
+  it should "process Array-Model with Scala nonOption Seq (annotated)" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWStringSeqAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWStringSeqAnnotated")
+    model should be(defined)
+    nullSafeList(model.value.getRequired) shouldBe empty
+  }
+
+  it should "process Array-Model with forced required Scala Option Seq (annotated)" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWOptionStringSeqAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWOptionStringSeqAnnotated")
+    model should be(defined)
+    nullSafeList(model.value.getRequired) shouldEqual Seq("listOfStrings")
+  }
+
+  it should "process Array-Model with forced required Scala Option Seq" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWOptionStringSeq]).asScala.toMap
+    val model = findModel(schemas, "ModelWOptionStringSeq")
+    model should be(defined)
+    nullSafeList(model.value.getRequired) shouldBe empty
+  }
+
   private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
@@ -359,22 +383,6 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
           case None => schemas.values.headOption
         }
     }
-  }
-
-  it should "process Array-Model with Scala nonOption Seq" in {
-    val converter = ModelConverters.getInstance()
-    val schemas = converter.readAll(classOf[ModelWStringSeq]).asScala.toMap
-    val model = findModel(schemas, "ModelWStringSeq")
-    model should be(defined)
-    nullSafeList(model.value.getRequired) shouldBe empty
-  }
-
-  it should "process Array-Model with forced required Scala Option Seq" in {
-    val converter = ModelConverters.getInstance()
-    val schemas = converter.readAll(classOf[ModelWOptionStringSeq]).asScala.toMap
-    val model = findModel(schemas, "ModelWOptionStringSeq")
-    model should be(defined)
-    nullSafeList(model.value.getRequired) shouldEqual Seq("listOfStrings")
   }
 
   private def nullSafeList[T](list: java.util.List[T]): List[T] = Option(list) match {
