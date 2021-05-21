@@ -24,7 +24,7 @@ case object OrderSize extends Enumeration {
 }
 
 class TestEnumTypeClass extends TypeReference[TestEnum.type]
-case class ModelWithTestEnum(@JsonScalaEnumeration(classOf[TestEnumTypeClass]) enum: TestEnum = TestEnum.AEnum)
+case class ModelWithTestEnum(@JsonScalaEnumeration(classOf[TestEnumTypeClass]) enumValue: TestEnum = TestEnum.AEnum)
 
 object TestEnum extends Enumeration {
   type TestEnum = Value
