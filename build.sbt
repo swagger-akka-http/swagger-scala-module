@@ -7,7 +7,7 @@ organization := "com.github.swagger-akka-http"
 
 scalaVersion := "2.13.6"
 
-crossScalaVersions := Seq("2.11.12", "2.12.13", scalaVersion.value)
+crossScalaVersions := Seq("2.11.12", "2.12.13", scalaVersion.value, "3.0.0")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -19,10 +19,12 @@ Test / publishArtifact := false
 
 pomIncludeRepository := { x => false }
 
+resolvers += Resolver.sonatypeRepo("snapshots")
+
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.30",
   "io.swagger.core.v3" % "swagger-core" % "2.1.9",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.3",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.0-SNAPSHOT",
   "org.scalatest" %% "scalatest" % "3.2.9" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.30" % Test
 )
