@@ -11,7 +11,31 @@ crossScalaVersions := Seq("2.11.12", "2.12.14", scalaVersion.value, "3.0.1")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
-ThisBuild / scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked")
+val scalaReleaseVersion = SettingKey[Int]("scalaReleaseVersion")
+scalaReleaseVersion := {
+  val v = scalaVersion.value
+  CrossVersion.partialVersion(v).map(_._1.toInt).getOrElse {
+    throw new RuntimeException(s"could not get Scala release version from $v")
+  }
+}
+
+val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
+scalaMajorVersion := {
+  val v = scalaVersion.value
+  CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
+    throw new RuntimeException(s"could not get Scala major version from $v")
+  }
+}
+
+ThisBuild / scalacOptions ++= {
+  val additionalSettings =
+    if (scalaReleaseVersion.value == 2 && scalaMajorVersion.value <= 12) {
+      Seq("-language:existentials")
+    } else {
+      Seq.empty[String]
+    }
+  Seq("-encoding", "UTF-8", "-deprecation", "-unchecked", "-feature") ++ additionalSettings
+}
 
 publishMavenStyle := true
 
