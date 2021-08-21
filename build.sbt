@@ -5,9 +5,9 @@ import Keys._
 
 organization := "com.github.swagger-akka-http"
 
-scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.6"
 
-crossScalaVersions := Seq("2.11.12", "2.12.14", scalaVersion.value, "3.0.1")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.14", "2.13.6", "3.0.1")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -100,3 +100,22 @@ pomExtra := {
       </developers>
   )
 }
+
+ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
+ThisBuild / githubWorkflowPublishTargetBranches := Seq(
+  RefPredicate.Equals(Ref.Branch("develop")),
+  RefPredicate.Equals(Ref.Branch("1.5")),
+  RefPredicate.StartsWith(Ref.Tag("v"))
+)
+
+ThisBuild / githubWorkflowPublish := Seq(
+  WorkflowStep.Sbt(
+    List("ci-release"),
+    env = Map(
+      "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
+      "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
+      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
+      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
+    )
+  )
+)
