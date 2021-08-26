@@ -37,6 +37,8 @@ ThisBuild / scalacOptions ++= {
   Seq("-encoding", "UTF-8", "-deprecation", "-unchecked", "-feature") ++ additionalSettings
 }
 
+ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+
 Test / publishArtifact := false
 
 pomIncludeRepository := { x => false }
