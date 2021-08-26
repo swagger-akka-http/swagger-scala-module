@@ -59,8 +59,6 @@ startYear := Some(2014)
 
 licenses := Seq(("Apache License 2.0", new URL("http://www.apache.org/licenses/LICENSE-2.0.html")))
 
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
-
 pomExtra := {
   pomExtra.value ++ Group(
       <issueManagement>
