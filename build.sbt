@@ -21,7 +21,7 @@ pomIncludeRepository := { x => false }
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.32",
   "io.swagger" % "swagger-core" % "1.6.2",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.4",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.5",
   "org.scalatest" %% "scalatest" % "3.2.9" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.32" % Test
 )
