@@ -29,7 +29,7 @@ scalaMajorVersion := {
 
 ThisBuild / scalacOptions ++= {
   val additionalSettings =
-    if (scalaReleaseVersion.value == 2 && scalaMajorVersion.value <= 12) {
+    if (scalaReleaseVersion.value == 2) {
       Seq("-language:existentials")
     } else {
       Seq.empty[String]
@@ -46,7 +46,7 @@ pomIncludeRepository := { x => false }
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.32",
   "io.swagger.core.v3" % "swagger-core" % "2.1.10",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.0-SNAPSHOT",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.0-rc2",
   "org.scalatest" %% "scalatest" % "3.2.9" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.32" % Test
 )
