@@ -57,16 +57,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           case Some(property) => {
             if (isIterable(cls)) {
               //untidy solution for https://github.com/swagger-akka-http/swagger-scala-module/issues/48
-              val required = property.getRequired
-              if (required != null) {
-                required.remove("traversableAgain")
-                required.remove("empty")
-              }
-              val props = property.getProperties
-              if (props != null) {
-                props.remove("traversableAgain")
-                props.remove("empty")
-              }
+              property.setRequired(null)
+              property.setProperties(null)
             }
             setRequired(`type`)
             property
