@@ -56,7 +56,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         nextResolved match {
           case Some(property) => {
             if (isIterable(cls)) {
-              //untidy solution for https://github.com/swagger-akka-http/swagger-scala-module/issues/48
               property.setRequired(null)
               property.setProperties(null)
             }
