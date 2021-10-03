@@ -19,7 +19,7 @@ case object OrderSize extends Enumeration(0) {
 }
 
 class TestEnumTypeClass extends TypeReference[TestEnum.type]
-case class ModelWithTestEnum(@(ApiModelProperty @field)(value = "Order Size", dataType = "models.TestEnum$") enum: TestEnum = TestEnum.AEnum)
+case class ModelWithTestEnum(@(ApiModelProperty @field)(value = "Order Size", dataType = "models.TestEnum$") testEnum: TestEnum = TestEnum.AEnum)
 
 object TestEnum extends Enumeration {
   type TestEnum = Value
