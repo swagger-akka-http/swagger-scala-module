@@ -97,6 +97,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               val required = getRequiredSettings(annotations).headOption
                 .getOrElse(!isOption(getPropertyClass(property)))
               if (required) addRequiredItem(schema, property.name)
+              val propertyClass = getPropertyClass(property)
+              if (!isOption(propertyClass)) addRequiredItem(schema, property.name)
             }
           }
         }

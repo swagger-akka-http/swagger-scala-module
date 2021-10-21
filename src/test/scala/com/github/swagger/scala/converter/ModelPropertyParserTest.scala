@@ -124,7 +124,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     optInt shouldBe a [IntegerSchema]
     nullSafeList(model.value.getRequired) shouldBe empty
   }
-  
+
   it should "process Model with Scala Option Boolean" in {
     val converter = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[ModelWOptionBoolean]).asScala.toMap
@@ -372,6 +372,15 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val model = findModel(schemas, "ModelWOptionStringSeq")
     model should be(defined)
     nullSafeList(model.value.getRequired) shouldBe empty
+  }
+
+  it should "process Model with required field annotated without required property" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWRequiredField]).asScala.toMap
+    val model = findModel(schemas, "ModelWRequiredField")
+    model should be(defined)
+    val reg = model.value.getRequired
+    nullSafeList(model.value.getRequired) shouldEqual Seq("requiredField")
   }
 
   private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
