@@ -3,6 +3,7 @@ import xml.Group
 import sbt._
 import Keys._
 import Defaults._
+import sbtghactions.UseRef.Public
 
 organization := "com.github.swagger-akka-http"
 
@@ -55,11 +56,16 @@ pomExtra := {
   )
 }
 
+ThisBuild / githubWorkflowBuild := Seq(WorkflowStep.Sbt(List("coverage", "test", "coverageReport")))
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.Equals(Ref.Branch("develop")),
   RefPredicate.Equals(Ref.Branch("1.5")),
   RefPredicate.StartsWith(Ref.Tag("v"))
+)
+
+ThisBuild / githubWorkflowBuildPostamble := Seq(
+  WorkflowStep.Use(Public("codecov", "codecov-action", "v2"), Map("fail_ci_if_error" -> "true"))
 )
 
 ThisBuild / githubWorkflowPublish := Seq(
