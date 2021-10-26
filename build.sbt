@@ -97,7 +97,7 @@ ThisBuild / githubWorkflowBuildPostamble := Seq(
   WorkflowStep.Use(Public("codecov", "codecov-action", "v2"),
     name = Some("Publish to Codecov.io"),
     params = Map("fail_ci_if_error" -> "true"),
-    cond = Some("!startsWith(matrix.scala, '2.13')")
+    cond = Some("startsWith(matrix.scala, '2.13')")
   )
 )
 

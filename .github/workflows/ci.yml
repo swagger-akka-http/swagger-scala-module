@@ -61,7 +61,7 @@ jobs:
         run: sbt ++${{ matrix.scala }} test
 
       - name: Publish to Codecov.io
-        if: '!startsWith(matrix.scala, ''2.13'')'
+        if: startsWith(matrix.scala, '2.13')
         uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
