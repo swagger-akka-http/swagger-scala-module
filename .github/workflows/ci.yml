@@ -50,11 +50,11 @@ jobs:
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
       - name: Scala 2 build
-        if: startsWith(${{ matrix.scala }}, "2")
+        if: startsWith(matrix.scala, "2")
         run: sbt ++${{ matrix.scala }} coverage test coverageReport
 
       - name: Scala 3 build
-        if: startsWith(${{ matrix.scala }}, "3")
+        if: startsWith(matrix.scal, "3")
         run: sbt ++${{ matrix.scala }} test
 
       - uses: codecov/codecov-action@v2
