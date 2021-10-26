@@ -4,12 +4,13 @@ import io.swagger.v3.core.converter._
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.models.media.{ArraySchema, DateTimeSchema, IntegerSchema, StringSchema}
 import models._
-import org.scalatest.{FlatSpec, Matchers}
 
 import scala.annotation.meta.field
 import scala.collection.JavaConverters._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class ScalaModelTest extends FlatSpec with Matchers {
+class ScalaModelTest extends AnyFlatSpec with Matchers {
   it should "extract a scala enum" in {
     val schemas = ModelConverters.getInstance().readAll(classOf[SModelWithEnum]).asScala
     val userSchema = schemas("SModelWithEnum")
@@ -21,6 +22,41 @@ class ScalaModelTest extends FlatSpec with Matchers {
     //
     //    val sp = orderSize.asInstanceOf[StringSchema]
     //    (sp.getEnum().asScala.toSet & Set("TALL", "GRANDE", "VENTI")) should have size 3
+  }
+
+  it should "extract a scala enum (jackson annotated)" in {
+    val schemas = ModelConverters.getInstance().readAll(classOf[SModelWithEnumJacksonAnnotated]).asScala
+    val userSchema = schemas("SModelWithEnumJacksonAnnotated")
+
+    val orderSize = userSchema.getProperties().get("orderSize")
+    orderSize should not be null
+    orderSize shouldBe a [StringSchema]
+    val sp = orderSize.asInstanceOf[StringSchema]
+    Option(sp.getEnum) shouldBe defined
+    sp.getEnum().asScala.toSet shouldEqual Set("TALL", "GRANDE", "VENTI")
+  }
+
+  it should "extract a scala enum with custom value names (jackson annotated)" in {
+    val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithTestEnum]).asScala
+    val userSchema = schemas("ModelWithTestEnum")
+
+    val enumModel = userSchema.getProperties().get("enumValue")
+    enumModel should not be null
+    enumModel shouldBe a [StringSchema]
+    val sp = enumModel.asInstanceOf[StringSchema]
+    Option(sp.getEnum) shouldBe defined
+    sp.getEnum().asScala.toSet shouldEqual Set("a", "b")
+  }
+
+  it should "extract a java enum" in {
+    val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithJavaEnum]).asScala
+    val userSchema = schemas("ModelWithJavaEnum")
+
+    val level = userSchema.getProperties().get("level")
+    level shouldBe a[StringSchema]
+
+    val sp = level.asInstanceOf[StringSchema]
+    sp.getEnum().asScala.toSet shouldEqual Set("LOW", "MEDIUM", "HIGH")
   }
 
   it should "read a scala case class with properties" in {

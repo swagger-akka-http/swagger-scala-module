@@ -2,73 +2,65 @@
 import xml.Group
 import sbt._
 import Keys._
-import Defaults._
 
 organization := "com.github.swagger-akka-http"
 
-scalaVersion := "2.12.6"
+ThisBuild / scalaVersion := "2.13.6"
 
-crossScalaVersions := Seq("2.10.6", "2.11.12", scalaVersion.value)
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.6", "3.0.2")
 
-organizationHomepage in ThisBuild := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
+ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
-scalacOptions in ThisBuild ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked")  
+val scalaReleaseVersion = SettingKey[Int]("scalaReleaseVersion")
+scalaReleaseVersion := {
+  val v = scalaVersion.value
+  CrossVersion.partialVersion(v).map(_._1.toInt).getOrElse {
+    throw new RuntimeException(s"could not get Scala release version from $v")
+  }
+}
 
-publishMavenStyle in ThisBuild := true
+val scalaMajorVersion = SettingKey[Int]("scalaMajorVersion")
+scalaMajorVersion := {
+  val v = scalaVersion.value
+  CrossVersion.partialVersion(v).map(_._2.toInt).getOrElse {
+    throw new RuntimeException(s"could not get Scala major version from $v")
+  }
+}
 
-publishArtifact in Test := false
+ThisBuild / scalacOptions ++= {
+  val additionalSettings =
+    if (scalaReleaseVersion.value == 2) {
+      Seq("-language:existentials")
+    } else {
+      Seq.empty[String]
+    }
+  Seq("-encoding", "UTF-8", "-deprecation", "-unchecked", "-feature") ++ additionalSettings
+}
+
+ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+
+Test / publishArtifact := false
 
 pomIncludeRepository := { x => false }
 
 libraryDependencies ++= Seq(
-  "io.swagger.core.v3" % "swagger-core" % "2.0.4",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.6",
-  "org.scalatest" %% "scalatest" % "3.0.5" % Test,
-  "org.slf4j" % "slf4j-simple" % "1.7.25" % Test
+  "org.slf4j" % "slf4j-api" % "1.7.32",
+  "io.swagger.core.v3" % "swagger-core-jakarta" % "2.1.11",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.0",
+  "org.scalatest" %% "scalatest" % "3.2.10" % Test,
+  "org.slf4j" % "slf4j-simple" % "1.7.32" % Test
 )
-
-publishTo := {
-  if (version.value.trim.endsWith("SNAPSHOT"))
-    Some("Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
-  else
-    Some("Sonatype Nexus Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
-}
-
-credentials in ThisBuild += Credentials (Path.userHome / ".ivy2" / ".credentials")
-
-resolvers in ThisBuild ++= Seq(
-  Resolver.mavenLocal,
-  Resolver.typesafeRepo("releases"),
-  Resolver.typesafeRepo("snapshots"),
-  Resolver.sonatypeRepo("releases"),
-  Resolver.sonatypeRepo("snapshots")
-)
-
-publishMavenStyle := true
-
-publishArtifact in Test := false
-
-pomIncludeRepository := { x => false }
-
-credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
 homepage := Some(new URL("https://github.com/swagger-akka-http/swagger-scala-module"))
 
-parallelExecution in Test := false
+Test / parallelExecution := false
 
 startYear := Some(2014)
 
 licenses := Seq(("Apache License 2.0", new URL("http://www.apache.org/licenses/LICENSE-2.0.html")))
 
-releasePublishArtifactsAction := PgpKeys.publishSigned.value
-
 pomExtra := {
   pomExtra.value ++ Group(
-    <scm>
-      <connection>scm:git:git@github.com:swagger-akka-http/swagger-scala-module.git</connection>
-      <developerConnection>scm:git:git@github.com:swagger-akka-http/swagger-scala-module.git</developerConnection>
-      <url>https://github.com/swagger-akka-http/swagger-scala-module</url>
-    </scm>
       <issueManagement>
         <system>github</system>
         <url>https://github.com/swagger-api/swagger-scala-module/issues</url>
@@ -87,3 +79,22 @@ pomExtra := {
       </developers>
   )
 }
+
+ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
+ThisBuild / githubWorkflowPublishTargetBranches := Seq(
+  RefPredicate.Equals(Ref.Branch("develop")),
+  RefPredicate.Equals(Ref.Branch("1.5")),
+  RefPredicate.StartsWith(Ref.Tag("v"))
+)
+
+ThisBuild / githubWorkflowPublish := Seq(
+  WorkflowStep.Sbt(
+    List("ci-release"),
+    env = Map(
+      "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
+      "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
+      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
+      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
+    )
+  )
+)
