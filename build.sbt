@@ -82,8 +82,8 @@ pomExtra := {
 }
 
 ThisBuild / githubWorkflowBuild := Seq(
-  WorkflowStep.Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2 build"), cond = Some("startsWith(matrix.scala, '2')")),
-  WorkflowStep.Sbt(List("test"), name = Some("Scala 3 build"), cond = Some("startsWith(matrix.scala, '3')")),
+  WorkflowStep.Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2.13 build"), cond = Some("startsWith(matrix.scala, '2.13')")),
+  WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13')")),
 )
 
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
@@ -96,7 +96,7 @@ ThisBuild / githubWorkflowPublishTargetBranches := Seq(
 ThisBuild / githubWorkflowBuildPostamble := Seq(
   WorkflowStep.Use(Public("codecov", "codecov-action", "v2"),
     params = Map("fail_ci_if_error" -> "true"),
-    cond = Some("startsWith(matrix.scala, '2')")
+    cond = Some("!startsWith(matrix.scala, '2.13')")
   )
 )
 
