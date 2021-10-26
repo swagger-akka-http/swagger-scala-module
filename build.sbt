@@ -90,7 +90,7 @@ ThisBuild / githubWorkflowPublishTargetBranches := Seq(
 )
 
 ThisBuild / githubWorkflowBuildPostamble := Seq(
-  WorkflowStep.Use(Public("codecov", "codecov-action", "v2"), Map("fail_ci_if_error" -> "true"))
+  WorkflowStep.Use(Public("codecov", "codecov-action", "v2"))
 )
 
 ThisBuild / githubWorkflowPublish := Seq(
