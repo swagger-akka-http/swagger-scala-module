@@ -58,6 +58,7 @@ jobs:
         run: sbt ++${{ matrix.scala }} test
 
       - uses: codecov/codecov-action@v2
+        if: startsWith(matrix.scala, '2')
 
       - name: Compress target directories
         run: tar cf targets.tar target project/target
