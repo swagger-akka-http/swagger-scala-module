@@ -1,7 +1,5 @@
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.6")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.9.1")
 
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
+addSbtPlugin("com.codecommit" % "sbt-github-actions" % "0.13.0")
 
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.0")
-
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.5.10")
