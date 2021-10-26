@@ -54,7 +54,7 @@ jobs:
         run: sbt ++${{ matrix.scala }} coverage test coverageReport
 
       - name: Scala 3 build
-        if: startsWith(matrix.scal, "3")
+        if: startsWith(matrix.scala, "3")
         run: sbt ++${{ matrix.scala }} test
 
       - uses: codecov/codecov-action@v2
