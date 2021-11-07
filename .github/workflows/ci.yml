@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.11.12, 2.12.15, 2.13.6, 3.1.0]
+        scala: [2.11.12, 2.12.15, 2.13.7, 3.0.2]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -52,8 +52,19 @@ jobs:
       - name: Check that workflows are up to date
         run: sbt ++${{ matrix.scala }} githubWorkflowCheck
 
-      - name: Build project
+      - name: Scala 2.13 build
+        if: startsWith(matrix.scala, '2.13')
+        run: sbt ++${{ matrix.scala }} coverage test coverageReport
+
+      - name: Scala build
+        if: '!startsWith(matrix.scala, ''2.13'')'
         run: sbt ++${{ matrix.scala }} test
+
+      - name: Publish to Codecov.io
+        if: startsWith(matrix.scala, '2.13')
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
 
       - name: Compress target directories
         run: tar cf targets.tar target project/target
@@ -71,7 +82,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.6]
+        scala: [2.13.7]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -117,12 +128,12 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.13.6)
+      - name: Download target directories (2.13.7)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-2.13.6-${{ matrix.java }}
+          name: target-${{ matrix.os }}-2.13.7-${{ matrix.java }}
 
-      - name: Inflate target directories (2.13.6)
+      - name: Inflate target directories (2.13.7)
         run: |
           tar xf targets.tar
           rm targets.tar
