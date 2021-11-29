@@ -5,7 +5,7 @@ import java.lang.reflect.ParameterizedType
 import java.util.Iterator
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.`type`.ReferenceType
-import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
+import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor, ScalaAnnotationIntrospectorModule}
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotat
 import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
+import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -75,22 +76,34 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
         val introspector = BeanIntrospector(cls)
-        introspector.properties.foreach { property =>
-          getPropertyAnnotations(property) match {
-            case Seq() => {
-              val propertyClass = getPropertyClass(property)
-              if (isOption(propertyClass) && schema.getRequired != null && schema.getRequired.contains(property.name)) {
-                schema.getRequired.remove(property.name)
+        val introspectorMap = introspector.properties.map { p =>
+          (p.name, p)
+        }.toMap
+        val schemaProperties = schema.getProperties.asScala
+        val newProperties = schemaProperties.map { case (propertyName, schemaProperty) =>
+          schemaProperties.get(propertyName)
+          introspectorMap.get(propertyName) match {
+            case Some(introspectorProperty) => {
+              getPropertyAnnotations(introspectorProperty) match {
+                case Seq() => {
+                  val propertyClass = getPropertyClass(introspectorProperty)
+                  if (isOption(propertyClass) && schema.getRequired != null && schema.getRequired.contains(propertyName)) {
+                    schema.getRequired.remove(propertyName)
+                  }
+                  if (!isOption(propertyClass)) addRequiredItem(schema, propertyName)
+                }
+                case annotations => {
+                  val required = getRequiredSettings(annotations).headOption
+                    .getOrElse(!isOption(getPropertyClass(introspectorProperty)))
+                  if (required) addRequiredItem(schema, propertyName)
+                }
               }
-              if (!isOption(propertyClass)) addRequiredItem(schema, property.name)
             }
-            case annotations => {
-              val required = getRequiredSettings(annotations).headOption
-                .getOrElse(!isOption(getPropertyClass(property)))
-              if (required) addRequiredItem(schema, property.name)
-            }
+            case _ =>
           }
-        }
+          (propertyName, schemaProperty)
+        }.toMap
+        schema.setProperties(newProperties.asJava)
         schema
       }
     } else {
