@@ -12,9 +12,10 @@ import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
-import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.{BooleanSchema, IntegerSchema, NumberSchema, ObjectSchema, Schema}
 import org.slf4j.LoggerFactory
 
+import java.math.BigInteger
 import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -81,7 +82,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         }.toMap
         val schemaProperties = schema.getProperties.asScala
         val newProperties = schemaProperties.map { case (propertyName, schemaProperty) =>
-          schemaProperties.get(propertyName)
           introspectorMap.get(propertyName) match {
             case Some(introspectorProperty) => {
               getPropertyAnnotations(introspectorProperty) match {
@@ -101,7 +101,16 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             }
             case _ =>
           }
-          (propertyName, schemaProperty)
+          val updatedProperty = ScalaAnnotationIntrospectorModule.getRegisteredReferencedValueType(cls, propertyName) match {
+            case Some(overrideType: Class[_]) => {
+              schemaProperty match {
+                case objectSchema: ObjectSchema => convertSchema(objectSchema, overrideType)
+                case _ => schemaProperty
+              }
+            }
+            case _ => schemaProperty
+          }
+          (propertyName, updatedProperty)
         }.toMap
         schema.setProperties(newProperties.asJava)
         schema
@@ -293,4 +302,84 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     case None => List.empty[T]
     case Some(arr) => arr.toList
   }
+
+  private def convertSchema(schema: ObjectSchema, formatClass: Class[_]): Schema[_] = {
+    if (formatClass.isAssignableFrom(classOf[Boolean]) || formatClass.isAssignableFrom(classOf[java.lang.Boolean])) {
+      convertToBooleanSchema(schema)
+    } else if (formatClass.isAssignableFrom(classOf[Long]) || formatClass.isAssignableFrom(classOf[java.lang.Long])
+      || formatClass.isAssignableFrom(BigIntClass) || formatClass.isAssignableFrom(classOf[BigInteger])) {
+      convertToIntegerSchema(schema, true)
+    } else if (formatClass.isAssignableFrom(classOf[Float]) || formatClass.isAssignableFrom(classOf[java.lang.Float])) {
+      convertToNumberSchema(schema, false)
+    } else if (formatClass.isAssignableFrom(classOf[Int]) || formatClass.isAssignableFrom(classOf[Integer])
+      || formatClass.isAssignableFrom(classOf[Short]) || formatClass.isAssignableFrom(classOf[java.lang.Short])
+      || formatClass.isAssignableFrom(classOf[Byte]) || formatClass.isAssignableFrom(classOf[java.lang.Byte])) {
+      convertToIntegerSchema(schema, false)
+    } else if (formatClass.isAssignableFrom(classOf[Number])) {
+      convertToNumberSchema(schema, true)
+    } else {
+      schema
+    }
+  }
+
+  private def convertToIntegerSchema(schema: ObjectSchema, longType: Boolean): IntegerSchema = {
+    val format = if (longType) "int64" else "int32"
+    val intSchema = new IntegerSchema()
+    copySchemaSettings(schema, intSchema)
+    intSchema.format(format)
+    intSchema
+  }
+
+  private def convertToNumberSchema(schema: ObjectSchema, doubleType: Boolean): NumberSchema = {
+    val format = if (doubleType) "double" else "float"
+    val numSchema = new NumberSchema()
+    copySchemaSettings(schema, numSchema)
+    numSchema.format(format)
+    numSchema
+  }
+
+
+  private def convertToBooleanSchema(schema: ObjectSchema): BooleanSchema = {
+    val boolSchema = new BooleanSchema()
+    copySchemaSettings(schema, boolSchema)
+    boolSchema
+  }
+
+  private def copySchemaSettings(fromSchema: Schema[_], toSchema: Schema[_]): Unit = {
+    toSchema
+      .name(fromSchema.getName)
+      .additionalProperties(fromSchema.getAdditionalProperties)
+      .deprecated(fromSchema.getDeprecated)
+      .description(fromSchema.getDescription)
+      .discriminator(fromSchema.getDiscriminator)
+      .example(fromSchema.getExample)
+      .exclusiveMaximum(fromSchema.getExclusiveMaximum)
+      .exclusiveMinimum(fromSchema.getExclusiveMinimum)
+      .extensions(fromSchema.getExtensions)
+      .externalDocs(fromSchema.getExternalDocs)
+      .format(fromSchema.getFormat)
+      .maximum(fromSchema.getMaximum)
+      .minimum(fromSchema.getMinimum)
+      .maxLength(fromSchema.getMaxLength)
+      .minLength(fromSchema.getMinLength)
+      .maxItems(fromSchema.getMaxItems)
+      .minItems(fromSchema.getMinItems)
+      .multipleOf(fromSchema.getMultipleOf)
+      .not(fromSchema.getNot)
+      .nullable(fromSchema.getNullable)
+      .pattern(fromSchema.getPattern)
+      .properties(fromSchema.getProperties)
+      .readOnly(fromSchema.getReadOnly)
+      .required(fromSchema.getRequired)
+      .title(fromSchema.getTitle)
+      .`type`(fromSchema.getType)
+      .uniqueItems(fromSchema.getUniqueItems)
+      .writeOnly(fromSchema.getWriteOnly)
+      .xml(fromSchema.getXml)
+      .$ref(fromSchema.get$ref())
+    //ignores enum settings due to typing issues
+    toSchema.setExampleSetFlag(fromSchema.getExampleSetFlag)
+  }
+
+
 }
