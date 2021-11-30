@@ -86,7 +86,7 @@ ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13')")),
 )
 
-ThisBuild / githubWorkflowJavaVersions := Seq("temurin@1.8")
+ThisBuild / githubWorkflowJavaVersions := Seq("zulu@1.8")
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.Equals(Ref.Branch("develop")),
