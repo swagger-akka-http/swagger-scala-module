@@ -133,7 +133,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model should be (defined)
     model.value.getProperties should not be (null)
     val optLong = model.value.getProperties().get("optLong")
-    optLong should not be (null)
+    optLong should be (null)
     optLong shouldBe a [Schema[_]]
     nullSafeList(model.value.getRequired) shouldBe empty
   }

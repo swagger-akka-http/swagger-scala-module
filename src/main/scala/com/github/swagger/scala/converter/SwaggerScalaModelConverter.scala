@@ -5,14 +5,14 @@ import java.lang.reflect.ParameterizedType
 import java.util.Iterator
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.`type`.ReferenceType
-import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
+import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor, ScalaAnnotationIntrospectorModule}
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
-import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.{ObjectSchema, Schema}
 import org.slf4j.LoggerFactory
 
 import scala.util.Try
@@ -79,6 +79,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           getPropertyAnnotations(property) match {
             case Seq() => {
               val propertyClass = getPropertyClass(property)
+              //ScalaAnnotationIntrospectorModule.getRegisteredReferencedValueType(cls, property.name)
+              //schema.getProperties.get(property.name)
               val optionalFlag = isOption(propertyClass)
               if (optionalFlag && schema.getRequired != null && schema.getRequired.contains(property.name)) {
                 schema.getRequired.remove(property.name)
