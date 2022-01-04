@@ -12,7 +12,7 @@ import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
-import io.swagger.v3.oas.models.media.{ObjectSchema, Schema}
+import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
 import scala.util.Try
@@ -79,8 +79,15 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           getPropertyAnnotations(property) match {
             case Seq() => {
               val propertyClass = getPropertyClass(property)
-              //ScalaAnnotationIntrospectorModule.getRegisteredReferencedValueType(cls, property.name)
-              //schema.getProperties.get(property.name)
+              ScalaAnnotationIntrospectorModule.getRegisteredReferencedValueType(cls, property.name) match {
+                case Some(refClass) => {
+                  val refSchema = schema.getProperties.get(property.name)
+                  println(s">>>>>> refSchema $refSchema")
+                  println(s">>>>>> refClass $refClass")
+                  val newSchema =
+                }
+                case _ =>
+              }
               val optionalFlag = isOption(propertyClass)
               if (optionalFlag && schema.getRequired != null && schema.getRequired.contains(property.name)) {
                 schema.getRequired.remove(property.name)
