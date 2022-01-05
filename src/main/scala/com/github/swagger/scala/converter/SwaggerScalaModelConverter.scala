@@ -15,6 +15,9 @@ import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotat
 import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
+import java.util
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -75,6 +78,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
         val introspector = BeanIntrospector(cls)
+        val modifiedProps = new mutable.HashMap[String, Schema[_]]()
         introspector.properties.foreach { property =>
           getPropertyAnnotations(property) match {
             case Seq() => {
@@ -82,9 +86,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               ScalaAnnotationIntrospectorModule.getRegisteredReferencedValueType(cls, property.name) match {
                 case Some(refClass) => {
                   val refSchema = schema.getProperties.get(property.name)
-                  println(s">>>>>> refSchema $refSchema")
-                  println(s">>>>>> refClass $refClass")
-                  val newSchema =
+                  val newSchema = SchemaModifier.convertSchema(refSchema, refClass)
+                  modifiedProps.addOne(property.name, newSchema)
                 }
                 case _ =>
               }
@@ -102,7 +105,17 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             }
           }
         }
-        schema
+        if (modifiedProps.isEmpty) {
+          schema
+        } else {
+          val linkedHashMap = new util.LinkedHashMap[String, Schema[_]]()
+          schema.getProperties.asScala.map { case (name, prop) =>
+            val newProp = modifiedProps.getOrElse(name, prop)
+            linkedHashMap.put(name, newProp)
+          }
+          schema.setProperties(linkedHashMap)
+          schema
+        }
       }
     } else {
       None
