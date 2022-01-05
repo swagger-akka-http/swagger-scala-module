@@ -87,7 +87,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
                 case Some(refClass) => {
                   val refSchema = schema.getProperties.get(property.name)
                   val newSchema = SchemaModifier.convertSchema(refSchema, refClass)
-                  modifiedProps.addOne(property.name, newSchema)
+                  modifiedProps.put(property.name, newSchema)
                 }
                 case _ =>
               }
