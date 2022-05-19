@@ -2,8 +2,8 @@
 import xml.Group
 import sbt._
 import Keys._
-import sbtghactions.JavaSpec.Distribution.Zulu
-import sbtghactions.UseRef.Public
+import org.typelevel.sbt.gha.JavaSpec.Distribution.Zulu
+import org.typelevel.sbt.gha.UseRef.Public
 
 organization := "com.github.swagger-akka-http"
 
@@ -39,7 +39,7 @@ ThisBuild / scalacOptions ++= {
   Seq("-encoding", "UTF-8", "-deprecation", "-unchecked", "-feature") ++ additionalSettings
 }
 
-ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+//ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
 Test / publishArtifact := false
 
@@ -48,7 +48,7 @@ pomIncludeRepository := { x => false }
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.0",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.3",
   "org.scalatest" %% "scalatest" % "3.2.11" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
@@ -88,7 +88,6 @@ ThisBuild / githubWorkflowBuild := Seq(
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec(Zulu, "8"))
-ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.Equals(Ref.Branch("develop")),
   RefPredicate.Equals(Ref.Branch("1.5")),
