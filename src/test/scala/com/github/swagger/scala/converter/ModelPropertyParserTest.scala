@@ -428,6 +428,17 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     nullSafeList(model.value.getRequired) shouldBe empty
   }
 
+  it should "process case class with Duration field" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWDuration]).asScala.toMap
+    val model = findModel(schemas, "ModelWDuration")
+    model should be(defined)
+    model.value.getRequired.asScala shouldEqual Seq("duration")
+    val props = model.value.getProperties.asScala.toMap
+    props should have size 1
+    props("duration") shouldBe a [Schema[_]]
+  }
+
   private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
