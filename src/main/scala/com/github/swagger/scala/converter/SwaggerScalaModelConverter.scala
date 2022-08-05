@@ -9,7 +9,7 @@ import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, Property
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
-import io.swagger.v3.core.util.{Json, PrimitiveType, ReflectionUtils}
+import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
 import io.swagger.v3.oas.models.media.Schema
@@ -39,23 +39,23 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private val ProductClass = classOf[Product]
   private val AnyClass = classOf[Any]
 
-  private def erasedOptionalPrimitives(cls: Class[_]) = {
+  private def erasedOptionalPrimitives(cls: Class[_]): Map[String, Schema[_]] = {
     val mirror = universe.runtimeMirror(cls.getClassLoader)
-    val sym = mirror.staticClass(cls.getName) // obtain class symbol for `c`
+    val sym = mirror.staticClass(cls.getName)
     val properties = sym.selfType.members
       .filterNot(_.isMethod)
       .filterNot(_.isClass)
       .map(prop => prop.name.toString.trim -> prop.typeSignature).toMap
 
-    properties.view.mapValues { typeSignature =>
+    properties.mapValues { typeSignature =>
       if (mirror.runtimeClass(typeSignature.typeSymbol.asClass) != OptionClass) {
         None
       } else {
         val typeArg = typeSignature.typeArgs.headOption
         typeArg.flatMap { signature =>
           if (signature.typeSymbol.isClass) {
-            val clazz = mirror.runtimeClass(signature.typeSymbol.asClass)
-            Option(PrimitiveType.fromType(clazz)).map(_.createProperty())
+            val runtimeClass = mirror.runtimeClass(signature.typeSymbol.asClass)
+            Option(PrimitiveType.fromType(runtimeClass)).map(_.createProperty())
           } else None
         }
       }
@@ -104,11 +104,12 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
         val introspector = BeanIntrospector(cls)
         introspector.properties.foreach { property =>
+          erasedProperties.get(property.name).foreach { schemaOverride =>
+            overrideImplementationOfAnnotationSchema(schema, schemaOverride, property.name)
+          }
           getPropertyAnnotations(property) match {
             case Seq() => {
               val propertyClass = getPropertyClass(property)
-              erasedProperties.get(property.name).foreach(schema.addProperty(property.name, _))
-
               val optionalFlag = isOption(propertyClass)
               if (optionalFlag && schema.getRequired != null && schema.getRequired.contains(property.name)) {
                 schema.getRequired.remove(property.name)
@@ -128,6 +129,13 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     } else {
       None
     }
+  }
+
+  private def overrideImplementationOfAnnotationSchema(schema: Schema[_], schemaOverride: Schema[_], propertyName: String) = {
+    val prop = schema.getProperties.get(propertyName)
+    val propAsString = objectMapper.writeValueAsString(prop)
+    val parsedSchema = objectMapper.readValue(propAsString, schemaOverride.getClass)
+    schema.addProperty(propertyName, parsedSchema)
   }
 
   private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {

@@ -53,6 +53,12 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.11" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
+libraryDependencies ++= {
+  CrossVersion.partialVersion(Keys.scalaVersion.value) match {
+    case Some((3, _)) => Seq()
+    case _ => Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+  }
+}
 
 homepage := Some(new URL("https://github.com/swagger-akka-http/swagger-scala-module"))
 
