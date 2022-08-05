@@ -70,7 +70,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
 
     val date = userSchema.getProperties().get("date")
     date shouldBe a [DateTimeSchema]
-    //date.getDescription should be ("the birthdate")
+//    date.getDescription should be ("the birthdate")
   }
 
   it should "read a model with vector property" in {

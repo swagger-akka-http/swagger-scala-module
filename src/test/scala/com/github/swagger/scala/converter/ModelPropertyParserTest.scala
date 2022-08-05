@@ -107,9 +107,10 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val model = schemas.get("ModelWOptionInt")
     model should be (defined)
     model.value.getProperties should not be (null)
-    val optInt = model.value.getProperties().get("optInt")
+    val optInt = model.value.getProperties.get("optInt")
     optInt should not be (null)
-    optInt shouldBe a [Schema[_]]
+    optInt shouldBe a [IntegerSchema]
+    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     nullSafeList(model.value.getRequired) shouldBe empty
   }
 
@@ -134,7 +135,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    optLong shouldBe a [Schema[_]]
+    optLong shouldBe a [IntegerSchema]
     nullSafeList(model.value.getRequired) shouldBe empty
   }
 

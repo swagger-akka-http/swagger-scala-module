@@ -9,12 +9,14 @@ import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, Property
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
-import io.swagger.v3.core.util.{Json, PrimitiveType}
+import io.swagger.v3.core.util.{Json, PrimitiveType, ReflectionUtils}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
 import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
+import java.util
+import scala.reflect.runtime.universe
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -36,6 +38,30 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private val BigIntClass = classOf[BigInt]
   private val ProductClass = classOf[Product]
   private val AnyClass = classOf[Any]
+
+  private def erasedOptionalPrimitives(cls: Class[_]) = {
+    val mirror = universe.runtimeMirror(cls.getClassLoader)
+    val sym = mirror.staticClass(cls.getName) // obtain class symbol for `c`
+    val properties = sym.selfType.members
+      .filterNot(_.isMethod)
+      .filterNot(_.isClass)
+      .map(prop => prop.name.toString.trim -> prop.typeSignature).toMap
+
+    properties.view.mapValues { typeSignature =>
+      if (mirror.runtimeClass(typeSignature.typeSymbol.asClass) != OptionClass) {
+        None
+      } else {
+        val typeArg = typeSignature.typeArgs.headOption
+        typeArg.flatMap { signature =>
+          if (signature.typeSymbol.isClass) {
+            val clazz = mirror.runtimeClass(signature.typeSymbol.asClass)
+            Option(PrimitiveType.fromType(clazz)).map(_.createProperty())
+          } else None
+        }
+      }
+    }.collect { case (k, Some(v)) => k -> v }.toMap
+  }
+
 
   override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: Iterator[ModelConverter]): Schema[_] = {
     val javaType = _mapper.constructType(`type`.getType)
@@ -71,7 +97,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def caseClassSchema(cls: Class[_], `type`: AnnotatedType, context: ModelConverterContext,
-                              chain: Iterator[ModelConverter]): Option[Schema[_]] = {
+                              chain: util.Iterator[ModelConverter]): Option[Schema[_]] = {
+    val erasedProperties = erasedOptionalPrimitives(cls)
+
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
         val introspector = BeanIntrospector(cls)
@@ -79,6 +107,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           getPropertyAnnotations(property) match {
             case Seq() => {
               val propertyClass = getPropertyClass(property)
+              erasedProperties.get(property.name).foreach(schema.addProperty(property.name, _))
+
               val optionalFlag = isOption(propertyClass)
               if (optionalFlag && schema.getRequired != null && schema.getRequired.contains(property.name)) {
                 schema.getRequired.remove(property.name)

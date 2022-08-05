@@ -49,6 +49,7 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.2",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.3",
+  "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scalatest" %% "scalatest" % "3.2.11" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
@@ -63,10 +64,10 @@ licenses := Seq(("Apache License 2.0", new URL("http://www.apache.org/licenses/L
 
 pomExtra := {
   pomExtra.value ++ Group(
-      <issueManagement>
-        <system>github</system>
-        <url>https://github.com/swagger-api/swagger-scala-module/issues</url>
-      </issueManagement>
+    <issueManagement>
+      <system>github</system>
+      <url>https://github.com/swagger-api/swagger-scala-module/issues</url>
+    </issueManagement>
       <developers>
         <developer>
           <id>fehguy</id>
