@@ -76,7 +76,10 @@ libraryDependencies ++= {
   if (scalaReleaseVersion.value == 2) {
     Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   } else {
-    Seq()
+    Seq(
+      "co.blocke" %% "scala-reflection" % "1.1.4",
+      "org.scala-lang" %% "scala3-staging" % scalaVersion.value
+    )
   }
 }
 
