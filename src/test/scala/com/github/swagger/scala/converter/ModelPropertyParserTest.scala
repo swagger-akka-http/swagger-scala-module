@@ -182,6 +182,19 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     nullSafeList(model.value.getRequired) shouldBe empty
   }
 
+  it should "process Model with Scala Option Long with Schema Int Override" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWOptionLongSchemaIntOverride]).asScala.toMap
+    val model = schemas.get("ModelWOptionLongSchemaIntOverride")
+    model should be(defined)
+    model.value.getProperties should not be (null)
+    val optLong = model.value.getProperties().get("optLong")
+    optLong should not be (null)
+    optLong shouldBe a[IntegerSchema]
+    optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
+    nullSafeList(model.value.getRequired) shouldBe empty
+  }
+
   it should "process Model with Scala Option Boolean" in {
     val converter = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[ModelWOptionBoolean]).asScala.toMap

@@ -29,6 +29,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   SwaggerScalaModelConverter
 
   private val logger = LoggerFactory.getLogger(classOf[SwaggerScalaModelConverter])
+  private val VoidClass = classOf[Void]
   private val EnumClass = classOf[scala.Enumeration]
   private val OptionClass = classOf[scala.Option[_]]
   private val IterableClass = classOf[scala.collection.Iterable[_]]
@@ -79,20 +80,24 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         val introspector = BeanIntrospector(cls)
         val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
         introspector.properties.foreach { property =>
-
           val propertyClass = getPropertyClass(property)
           val isOptional = isOption(propertyClass)
-
-          erasedProperties.get(property.name).foreach { erasedType =>
-            val primitiveType = PrimitiveType.fromType(erasedType)
-            if (primitiveType != null && isOptional) {
-              updateTypeOnSchema(schema, primitiveType, property.name)
-            }
-            if (primitiveType != null && isIterable(propertyClass) && !isMap(propertyClass)) {
-              updateTypeOnItemsSchema(schema, primitiveType, property.name)
+          val propertyAnnotations = getPropertyAnnotations(property)
+          val schemaOverrideClass = propertyAnnotations.collectFirst {
+            case s: SchemaAnnotation if s.implementation() != VoidClass => s.implementation()
+          }
+          if (schemaOverrideClass.isEmpty) {
+            erasedProperties.get(property.name).foreach { erasedType =>
+              val primitiveType = PrimitiveType.fromType(erasedType)
+              if (primitiveType != null && isOptional) {
+                updateTypeOnSchema(schema, primitiveType, property.name)
+              }
+              if (primitiveType != null && isIterable(propertyClass) && !isMap(propertyClass)) {
+                updateTypeOnItemsSchema(schema, primitiveType, property.name)
+              }
             }
           }
-          getPropertyAnnotations(property) match {
+          propertyAnnotations match {
             case Seq() => {
               if (isOptional && schema.getRequired != null && schema.getRequired.contains(property.name)) {
                 schema.getRequired.remove(property.name)
