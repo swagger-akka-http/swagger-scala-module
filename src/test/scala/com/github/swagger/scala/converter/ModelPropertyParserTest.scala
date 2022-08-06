@@ -350,7 +350,27 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    arraySchema.getItems shouldBe a[ObjectSchema]
+    arraySchema.getItems shouldBe a[IntegerSchema]
+    nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    nullSafeList(arraySchema.getRequired()) shouldBe empty
+  }
+
+  it should "process Model with Scala Seq Int (annotated)" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWSeqIntAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWSeqIntAnnotated")
+    model should be(defined)
+    model.value.getProperties should not be (null)
+
+    val stringsField = model.value.getProperties.get("ints")
+
+    stringsField shouldBe a[ArraySchema]
+    val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getUniqueItems() shouldBe (null)
+
+
+    arraySchema.getItems shouldBe a[IntegerSchema]
+    arraySchema.getItems.getDescription shouldBe "These are ints"
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
