@@ -59,7 +59,7 @@ jobs:
         run: sbt '++${{ matrix.scala }}' coverage test coverageReport
 
       - name: Scala build
-        if: '!startsWith(matrix.scala, ''2.13''))'
+        if: '!startsWith(matrix.scala, ''2.13'')'
         run: sbt '++${{ matrix.scala }}' test
 
       - name: Publish to Codecov.io
