@@ -73,9 +73,10 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
 libraryDependencies ++= {
-  CrossVersion.partialVersion(Keys.scalaVersion.value) match {
-    case Some((3, _)) => Seq()
-    case _ => Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+  if (scalaReleaseVersion.value == 2) {
+    Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+  } else {
+    Seq()
   }
 }
 
@@ -110,8 +111,7 @@ pomExtra := {
 
 ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep.Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2.13 build"), cond = Some("startsWith(matrix.scala, '2.13')")),
-  WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13') && !startsWith(matrix.scala, '3.0')")),
-  WorkflowStep.Sbt(List("compile"), name = Some("Scala compile"), cond = Some("startsWith(matrix.scala, '3.0')")),
+  WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13'))"))
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec(Zulu, "8"))
