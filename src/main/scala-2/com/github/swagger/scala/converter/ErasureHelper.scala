@@ -1,16 +1,15 @@
 package com.github.swagger.scala.converter
 
-import scala.reflect.runtime.universe.TermName
+import scala.reflect.runtime.universe
 
 object ErasureHelper {
 
   def erasedOptionalPrimitives(cls: Class[_]): Map[String, Class[_]] = {
-    import scala.reflect.runtime.universe
     val mirror = universe.runtimeMirror(cls.getClassLoader)
 
     val moduleSymbol = mirror.moduleSymbol(Class.forName(cls.getName))
     val ConstructorName = "apply"
-    val companion: universe.Symbol = moduleSymbol.typeSignature.member(TermName(ConstructorName))
+    val companion: universe.Symbol = moduleSymbol.typeSignature.member(universe.TermName(ConstructorName))
     val properties = if (companion.fullName.endsWith(ConstructorName)) {
       companion.asMethod.paramLists.flatten
     } else {
