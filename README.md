@@ -33,7 +33,7 @@ case class AddOptionRequest(number: Int, @Schema(required = false, implementatio
 
 Alternatively, you can non-primitive types like BigInt to avoid this requirement.
 
-Since v2.7.0 release, Scala 2 builds use scala-reflect jar to try to work out the class information for the inner types. Scala 3 builds cannot use this approach, and are therefore still affected by this issue.
+Since v2.7.0 release, Scala 2 builds use scala-reflect jar to try to work out the class information for the inner types. Scala 3 builds cannot use this approach, and are therefore still affected by this issue. See https://github.com/swagger-akka-http/swagger-scala-module/issues/117.
 
 License
 -------
