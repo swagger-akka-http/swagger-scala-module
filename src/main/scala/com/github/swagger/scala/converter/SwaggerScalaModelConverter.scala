@@ -29,6 +29,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   SwaggerScalaModelConverter
 
   private val logger = LoggerFactory.getLogger(classOf[SwaggerScalaModelConverter])
+  private val VoidClass = classOf[Void]
   private val EnumClass = classOf[scala.Enumeration]
   private val OptionClass = classOf[scala.Option[_]]
   private val IterableClass = classOf[scala.collection.Iterable[_]]
@@ -83,7 +84,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           val isOptional = isOption(propertyClass)
           val propertyAnnotations = getPropertyAnnotations(property)
           val schemaOverrideClass = propertyAnnotations.collectFirst {
-            case s: SchemaAnnotation => s.implementation()
+            case s: SchemaAnnotation if s.implementation() != VoidClass => s.implementation()
           }
           if (schemaOverrideClass.isEmpty) {
             erasedProperties.get(property.name).foreach { erasedType =>
