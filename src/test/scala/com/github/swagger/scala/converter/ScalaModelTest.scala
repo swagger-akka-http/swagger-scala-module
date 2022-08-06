@@ -70,7 +70,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
 
     val date = userSchema.getProperties().get("date")
     date shouldBe a [DateTimeSchema]
-    //date.getDescription should be ("the birthdate")
+//    date.getDescription should be ("the birthdate")
   }
 
   it should "read a model with vector property" in {
@@ -85,7 +85,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val model = schemas("ModelWithIntVector")
     val prop = model.getProperties().get("ints")
     prop shouldBe a [ArraySchema]
-    prop.asInstanceOf[ArraySchema].getItems.getType should be ("object")
+    prop.asInstanceOf[ArraySchema].getItems.getType should be ("integer")
   }
 
   it should "read a model with vector of booleans" in {
@@ -93,7 +93,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val model = schemas("ModelWithBooleanVector")
     val prop = model.getProperties().get("bools")
     prop shouldBe a [ArraySchema]
-    prop.asInstanceOf[ArraySchema].getItems.getType should be ("object")
+    prop.asInstanceOf[ArraySchema].getItems.getType should be ("boolean")
   }
 }
 

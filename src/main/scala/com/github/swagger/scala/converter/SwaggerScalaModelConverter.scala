@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotat
 import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
+import java.util
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -31,6 +32,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private val EnumClass = classOf[scala.Enumeration]
   private val OptionClass = classOf[scala.Option[_]]
   private val IterableClass = classOf[scala.collection.Iterable[_]]
+  private val MapClass = classOf[Map[_, _]]
   private val SetClass = classOf[scala.collection.Set[_]]
   private val BigDecimalClass = classOf[BigDecimal]
   private val BigIntClass = classOf[BigInt]
@@ -71,24 +73,37 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def caseClassSchema(cls: Class[_], `type`: AnnotatedType, context: ModelConverterContext,
-                              chain: Iterator[ModelConverter]): Option[Schema[_]] = {
+                              chain: util.Iterator[ModelConverter]): Option[Schema[_]] = {
+    val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
+
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
         val introspector = BeanIntrospector(cls)
         introspector.properties.foreach { property =>
+
+          val propertyClass = getPropertyClass(property)
+          val isOptional = isOption(propertyClass)
+
+          erasedProperties.get(property.name).foreach { erasedType =>
+            val primitiveType = PrimitiveType.fromType(erasedType)
+            if (primitiveType != null && isOptional) {
+              updateTypeOnSchema(schema, primitiveType, property.name)
+            }
+            if (primitiveType != null && isIterable(propertyClass) && !isMap(propertyClass)) {
+              updateTypeOnItemsSchema(schema, primitiveType, property.name)
+            }
+          }
           getPropertyAnnotations(property) match {
             case Seq() => {
-              val propertyClass = getPropertyClass(property)
-              val optionalFlag = isOption(propertyClass)
-              if (optionalFlag && schema.getRequired != null && schema.getRequired.contains(property.name)) {
+              if (isOptional && schema.getRequired != null && schema.getRequired.contains(property.name)) {
                 schema.getRequired.remove(property.name)
-              } else if (!optionalFlag) {
+              } else if (!isOptional) {
                 addRequiredItem(schema, property.name)
               }
             }
             case annotations => {
               val required = getRequiredSettings(annotations).headOption
-                .getOrElse(!isOption(getPropertyClass(property)))
+                .getOrElse(!isOptional)
               if (required) addRequiredItem(schema, property.name)
             }
           }
@@ -98,6 +113,28 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     } else {
       None
     }
+  }
+
+  private def updateTypeOnSchema(schema: Schema[_], primitiveType: PrimitiveType, propertyName: String) = {
+    val property = schema.getProperties.get(propertyName)
+    val updatedSchema = correctSchema(property, primitiveType)
+    schema.addProperty(propertyName, updatedSchema)
+  }
+
+  private def updateTypeOnItemsSchema(schema: Schema[_], primitiveType: PrimitiveType, propertyName: String) = {
+    val property = schema.getProperties.get(propertyName)
+    val updatedSchema = correctSchema(property.getItems, primitiveType)
+    property.setItems(updatedSchema)
+    schema.addProperty(propertyName, property)
+  }
+
+  private def correctSchema(itemSchema: Schema[_], primitiveType: PrimitiveType) = {
+    val primitiveProperty = primitiveType.createProperty()
+    val propAsString = objectMapper.writeValueAsString(itemSchema)
+    val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
+    correctedSchema.setType(primitiveProperty.getType)
+    correctedSchema.setFormat(primitiveProperty.getFormat)
+    correctedSchema
   }
 
   private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
@@ -276,6 +313,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
 
   private def isOption(cls: Class[_]): Boolean = cls == OptionClass
   private def isIterable(cls: Class[_]): Boolean = IterableClass.isAssignableFrom(cls)
+  private def isMap(cls: Class[_]): Boolean = MapClass.isAssignableFrom(cls)
   private def isCaseClass(cls: Class[_]): Boolean = ProductClass.isAssignableFrom(cls)
 
   private def nullSafeList[T](array: Array[T]): List[T] = Option(array) match {

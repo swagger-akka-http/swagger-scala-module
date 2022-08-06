@@ -107,9 +107,10 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val model = schemas.get("ModelWOptionInt")
     model should be (defined)
     model.value.getProperties should not be (null)
-    val optInt = model.value.getProperties().get("optInt")
+    val optInt = model.value.getProperties.get("optInt")
     optInt should not be (null)
-    optInt shouldBe a [Schema[_]]
+    optInt shouldBe a [IntegerSchema]
+    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     nullSafeList(model.value.getRequired) shouldBe empty
   }
 
@@ -123,7 +124,20 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     optInt should not be (null)
     optInt shouldBe a [IntegerSchema]
     optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
+    optInt.getDescription shouldBe "This is an optional int"
     nullSafeList(model.value.getRequired) shouldBe empty
+  }
+
+  it should "allow annotation to override required with Scala Option Int" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverrideForRequired]).asScala.toMap
+    val model = schemas.get("ModelWOptionIntSchemaOverrideForRequired")
+    model should be(defined)
+    model.value.getProperties should not be (null)
+    val optInt = model.value.getProperties().get("optInt")
+    optInt should not be (null)
+    optInt shouldBe an [IntegerSchema]
+    nullSafeList(model.value.getRequired) shouldEqual Seq("optInt")
   }
 
   it should "process Model with Scala Option Long" in {
@@ -134,7 +148,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    optLong shouldBe a [Schema[_]]
+    optLong shouldBe a [IntegerSchema]
     nullSafeList(model.value.getRequired) shouldBe empty
   }
 
@@ -320,6 +334,43 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
     arraySchema.getItems shouldBe a [StringSchema]
+    nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    nullSafeList(arraySchema.getRequired()) shouldBe empty
+  }
+
+  it should "process Model with Scala Seq Int" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWSeqInt]).asScala.toMap
+    val model = findModel(schemas, "ModelWSeqInt")
+    model should be(defined)
+    model.value.getProperties should not be (null)
+
+    val stringsField = model.value.getProperties.get("ints")
+
+    stringsField shouldBe a[ArraySchema]
+    val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getUniqueItems() shouldBe (null)
+    arraySchema.getItems shouldBe a[IntegerSchema]
+    nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    nullSafeList(arraySchema.getRequired()) shouldBe empty
+  }
+
+  it should "process Model with Scala Seq Int (annotated)" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWSeqIntAnnotated]).asScala.toMap
+    val model = findModel(schemas, "ModelWSeqIntAnnotated")
+    model should be(defined)
+    model.value.getProperties should not be (null)
+
+    val stringsField = model.value.getProperties.get("ints")
+
+    stringsField shouldBe a[ArraySchema]
+    val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getUniqueItems() shouldBe (null)
+
+
+    arraySchema.getItems shouldBe a[IntegerSchema]
+    arraySchema.getItems.getDescription shouldBe "These are ints"
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeList(arraySchema.getRequired()) shouldBe empty
   }

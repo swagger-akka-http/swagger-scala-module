@@ -72,6 +72,12 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.11" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
+libraryDependencies ++= {
+  CrossVersion.partialVersion(Keys.scalaVersion.value) match {
+    case Some((3, _)) => Seq()
+    case _ => Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+  }
+}
 
 homepage := Some(new URL("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -83,10 +89,10 @@ licenses := Seq(("Apache License 2.0", new URL("http://www.apache.org/licenses/L
 
 pomExtra := {
   pomExtra.value ++ Group(
-      <issueManagement>
-        <system>github</system>
-        <url>https://github.com/swagger-api/swagger-scala-module/issues</url>
-      </issueManagement>
+    <issueManagement>
+      <system>github</system>
+      <url>https://github.com/swagger-api/swagger-scala-module/issues</url>
+    </issueManagement>
       <developers>
         <developer>
           <id>fehguy</id>
@@ -104,7 +110,8 @@ pomExtra := {
 
 ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep.Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2.13 build"), cond = Some("startsWith(matrix.scala, '2.13')")),
-  WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13')")),
+  WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13') && !startsWith(matrix.scala, '3.0')")),
+  WorkflowStep.Sbt(List("compile"), name = Some("Scala compile"), cond = Some("startsWith(matrix.scala, '3.0')")),
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec(Zulu, "8"))
