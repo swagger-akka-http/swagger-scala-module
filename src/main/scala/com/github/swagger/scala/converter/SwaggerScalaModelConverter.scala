@@ -79,12 +79,14 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
         val introspector = BeanIntrospector(cls)
         introspector.properties.foreach { property =>
-          erasedProperties.get(property.name).foreach { schemaOverride =>
-            overrideImplementationOfAnnotationSchema(schema, schemaOverride, property.name)
+          val propertyClass = getPropertyClass(property)
+          erasedProperties.get(property.name).foreach { erasedType =>
+            if (isOption(propertyClass)) {
+              overrideImplementationOfAnnotationSchema(schema, erasedType, property.name)
+            }
           }
           getPropertyAnnotations(property) match {
             case Seq() => {
-              val propertyClass = getPropertyClass(property)
               val optionalFlag = isOption(propertyClass)
               if (optionalFlag && schema.getRequired != null && schema.getRequired.contains(property.name)) {
                 schema.getRequired.remove(property.name)
@@ -94,7 +96,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             }
             case annotations => {
               val required = getRequiredSettings(annotations).headOption
-                .getOrElse(!isOption(getPropertyClass(property)))
+                .getOrElse(!isOption(propertyClass))
               if (required) addRequiredItem(schema, property.name)
             }
           }
@@ -106,11 +108,16 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def overrideImplementationOfAnnotationSchema(schema: Schema[_], schemaOverride: Schema[_], propertyName: String) = {
-    val prop = schema.getProperties.get(propertyName)
-    val propAsString = objectMapper.writeValueAsString(prop)
-    val parsedSchema = objectMapper.readValue(propAsString, schemaOverride.getClass)
-    schema.addProperty(propertyName, parsedSchema)
+  private def overrideImplementationOfAnnotationSchema(schema: Schema[_], erasedType: Class[_], propertyName: String) = {
+    val primitiveType = PrimitiveType.fromType(erasedType)
+    if (primitiveType == null) {
+      schema
+    } else {
+      val prop = schema.getProperties.get(propertyName)
+      val propAsString = objectMapper.writeValueAsString(prop)
+      val parsedSchema = objectMapper.readValue(propAsString, primitiveType.createProperty().getClass)
+      schema.addProperty(propertyName, parsedSchema)
+    }
   }
 
   private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
