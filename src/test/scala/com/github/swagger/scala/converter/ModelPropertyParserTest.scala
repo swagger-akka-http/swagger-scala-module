@@ -3,6 +3,7 @@ package com.github.swagger.scala.converter
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.oas.models.media._
+import models.NestingObject.NestedModelWOptionInt
 import models._
 import org.scalatest.OptionValues
 import org.scalatest.flatspec.AnyFlatSpec
@@ -114,6 +115,41 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       optInt shouldBe a[IntegerSchema]
       optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     }
+    nullSafeList(model.value.getRequired) shouldBe empty
+  }
+
+  it should "process Model with nested Scala Option Int" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[NestedModelWOptionInt]).asScala.toMap
+    val model = schemas.get("NestedModelWOptionInt")
+    model should be(defined)
+    model.value.getProperties should not be (null)
+    val optInt = model.value.getProperties().get("optInt")
+    optInt should not be (null)
+    if (RuntimeUtil.isScala3()) {
+      optInt shouldBe a[ObjectSchema]
+    } else {
+      optInt shouldBe a[IntegerSchema]
+      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
+    }
+    nullSafeList(model.value.getRequired) shouldBe empty
+  }
+
+  it should "process Model with nested Scala Option Int with Schema Override" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverride]).asScala.toMap
+    val model = schemas.get("ModelWOptionIntSchemaOverride")
+    model should be(defined)
+    model.value.getProperties should not be (null)
+    val optInt = model.value.getProperties().get("optInt")
+    optInt should not be (null)
+    if (RuntimeUtil.isScala3()) {
+      optInt shouldBe a[ObjectSchema]
+    } else {
+      optInt shouldBe a[IntegerSchema]
+      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
+    }
+    optInt.getDescription shouldBe "This is an optional int"
     nullSafeList(model.value.getRequired) shouldBe empty
   }
 
