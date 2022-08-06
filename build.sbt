@@ -49,7 +49,6 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.2",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.3",
-  "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "org.scalatest" %% "scalatest" % "3.2.11" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
@@ -91,7 +90,8 @@ pomExtra := {
 
 ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep.Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2.13 build"), cond = Some("startsWith(matrix.scala, '2.13')")),
-  WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13')")),
+  WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13') && !startsWith(matrix.scala, '3.0')")),
+  WorkflowStep.Sbt(List("compile"), name = Some("Scala compile"), cond = Some("startsWith(matrix.scala, '3.0')")),
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec(Zulu, "8"))
