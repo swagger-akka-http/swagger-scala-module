@@ -1,6 +1,5 @@
 package com.github.swagger.scala.converter
 
-import com.fasterxml.jackson.module.scala.introspect.ScalaAnnotationIntrospectorModule
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.oas.models.media._
@@ -107,10 +106,14 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val model = schemas.get("ModelWOptionInt")
     model should be (defined)
     model.value.getProperties should not be (null)
-    val optInt = model.value.getProperties.get("optInt")
+    val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    optInt shouldBe a [IntegerSchema]
-    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
+    if (RuntimeUtil.isScala3()) {
+      optInt shouldBe a[ObjectSchema]
+    } else {
+      optInt shouldBe a[IntegerSchema]
+      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
+    }
     nullSafeList(model.value.getRequired) shouldBe empty
   }
 
@@ -122,8 +125,12 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    optInt shouldBe a [IntegerSchema]
-    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
+    if (RuntimeUtil.isScala3()) {
+      optInt shouldBe a[ObjectSchema]
+    } else {
+      optInt shouldBe a[IntegerSchema]
+      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
+    }
     optInt.getDescription shouldBe "This is an optional int"
     nullSafeList(model.value.getRequired) shouldBe empty
   }
@@ -136,7 +143,12 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    optInt shouldBe an [IntegerSchema]
+    if (RuntimeUtil.isScala3()) {
+      optInt shouldBe a[ObjectSchema]
+    } else {
+      optInt shouldBe a[IntegerSchema]
+      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
+    }
     nullSafeList(model.value.getRequired) shouldEqual Seq("optInt")
   }
 
@@ -148,27 +160,13 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    optLong shouldBe a [IntegerSchema]
-    nullSafeList(model.value.getRequired) shouldBe empty
-  }
-
-  //needs investigation
-  it should "process Model with Scala Option Long (with jackson model override)" ignore {
-    ScalaAnnotationIntrospectorModule.registerReferencedValueType(
-      classOf[ModelWOptionLong], "optLong", classOf[Long])
-    try {
-      val converter = ModelConverters.getInstance()
-      val schemas = converter.readAll(classOf[ModelWOptionLong]).asScala.toMap
-      val model = schemas.get("ModelWOptionLong")
-      model should be (defined)
-      model.value.getProperties should not be (null)
-      val optLong = model.value.getProperties().get("optLong")
-      optLong shouldBe a [IntegerSchema]
+    if (RuntimeUtil.isScala3()) {
+      optLong shouldBe a[ObjectSchema]
+    } else {
+      optLong shouldBe a[IntegerSchema]
       optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
-      nullSafeList(model.value.getRequired) shouldBe empty
-    } finally {
-      ScalaAnnotationIntrospectorModule.clearRegisteredReferencedTypes()
     }
+    nullSafeList(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala Option Long with Schema Override" in {
@@ -350,7 +348,11 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    arraySchema.getItems shouldBe a[IntegerSchema]
+    if (RuntimeUtil.isScala3()) {
+      arraySchema.getItems shouldBe a[ObjectSchema]
+    } else {
+      arraySchema.getItems shouldBe a[IntegerSchema]
+    }
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeList(arraySchema.getRequired()) shouldBe empty
   }
@@ -368,8 +370,11 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
 
-
-    arraySchema.getItems shouldBe a[IntegerSchema]
+    if (RuntimeUtil.isScala3()) {
+      arraySchema.getItems shouldBe a[ObjectSchema]
+    } else {
+      arraySchema.getItems shouldBe a[IntegerSchema]
+    }
     arraySchema.getItems.getDescription shouldBe "These are ints"
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeList(arraySchema.getRequired()) shouldBe empty
