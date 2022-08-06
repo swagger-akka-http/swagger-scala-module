@@ -74,11 +74,10 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
 
   private def caseClassSchema(cls: Class[_], `type`: AnnotatedType, context: ModelConverterContext,
                               chain: util.Iterator[ModelConverter]): Option[Schema[_]] = {
-    val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
-
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
         val introspector = BeanIntrospector(cls)
+        val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
         introspector.properties.foreach { property =>
 
           val propertyClass = getPropertyClass(property)
