@@ -86,14 +86,14 @@ Test / parallelExecution := false
 
 startYear := Some(2014)
 
-licenses := Seq(("Apache License 2.0", new URL("http://www.apache.org/licenses/LICENSE-2.0.html")))
+licenses := Seq(("Apache License 2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.html")))
 
 pomExtra := {
   pomExtra.value ++ Group(
-    <issueManagement>
-      <system>github</system>
-      <url>https://github.com/swagger-api/swagger-scala-module/issues</url>
-    </issueManagement>
+      <issueManagement>
+        <system>github</system>
+        <url>https://github.com/swagger-api/swagger-scala-module/issues</url>
+      </issueManagement>
       <developers>
         <developer>
           <id>fehguy</id>

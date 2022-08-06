@@ -1,6 +1,6 @@
 package com.github.swagger.scala.converter
 
-import com.fasterxml.jackson.module.scala.introspect.ScalaAnnotationIntrospector
+import com.fasterxml.jackson.module.scala.introspect.ScalaAnnotationIntrospectorModule
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.oas.models.media._
@@ -154,7 +154,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
 
   //needs investigation
   it should "process Model with Scala Option Long (with jackson model override)" ignore {
-    ScalaAnnotationIntrospector.registerReferencedValueType(
+    ScalaAnnotationIntrospectorModule.registerReferencedValueType(
       classOf[ModelWOptionLong], "optLong", classOf[Long])
     try {
       val converter = ModelConverters.getInstance()
@@ -167,7 +167,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
       nullSafeList(model.value.getRequired) shouldBe empty
     } finally {
-      ScalaAnnotationIntrospector.clearRegisteredReferencedTypes()
+      ScalaAnnotationIntrospectorModule.clearRegisteredReferencedTypes()
     }
   }
 
