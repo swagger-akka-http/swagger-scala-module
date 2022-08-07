@@ -34,7 +34,8 @@ private[converter] object ErasureHelper {
     } catch {
       case NonFatal(t) => {
         if (logger.isDebugEnabled) {
-          logger.debug("Unable to get type info {}", Option(cls.getName).getOrElse("null"), t)
+          //use this form because of Scala 2.11 & 2.12 compile issue
+          logger.debug(s"Unable to get type info ${Option(cls.getName).getOrElse("null")}", t)
         } else {
           logger.info("Unable to get type info {}", Option(cls.getName).getOrElse("null"))
         }
