@@ -1,6 +1,7 @@
 package com.github.swagger.scala.converter
 
 import scala.reflect.runtime.universe
+import scala.util.Try
 
 object ErasureHelper {
 
@@ -10,14 +11,13 @@ object ErasureHelper {
     val moduleSymbol = mirror.moduleSymbol(Class.forName(cls.getName))
     val ConstructorName = "apply"
     val companion: universe.Symbol = moduleSymbol.typeSignature.member(universe.TermName(ConstructorName))
-    val properties = if (companion.fullName.endsWith(ConstructorName)) {
-      companion.asMethod.paramLists.flatten
-    } else {
-      val sym = mirror.staticClass(cls.getName)
-      sym.selfType.members
-        .filterNot(_.isMethod)
-        .filterNot(_.isClass)
-    }
+    val properties =
+      Try(companion.asTerm.alternatives.head.asMethod.paramLists.flatten).getOrElse {
+        val sym = mirror.staticClass(cls.getName)
+        sym.selfType.members
+          .filterNot(_.isMethod)
+          .filterNot(_.isClass)
+      }
 
     properties.flatMap { prop: universe.Symbol =>
       val maybeClass: Option[Class[_]] = prop.typeSignature.typeArgs.headOption.flatMap { signature =>

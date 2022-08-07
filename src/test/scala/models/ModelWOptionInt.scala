@@ -6,6 +6,14 @@ case class ModelWOptionInt(optInt: Option[Int])
 
 object NestingObject {
   case class NestedModelWOptionInt(optInt: Option[Int])
+
+  object NestedModelWOptionInt {
+
+    def apply(nonOptional: Int): NestedModelWOptionInt = {
+      NestedModelWOptionInt(Some(nonOptional))
+    }
+  }
+
   case class NestedModelWOptionIntSchemaOverride(@Schema(description = "This is an optional int") optInt: Option[Int])
 }
 
