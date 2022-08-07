@@ -137,7 +137,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     val propAsString = objectMapper.writeValueAsString(itemSchema)
     val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
     correctedSchema.setType(primitiveProperty.getType)
-    correctedSchema.setFormat(primitiveProperty.getFormat)
+    if (itemSchema.getFormat == null) {
+      correctedSchema.setFormat(primitiveProperty.getFormat)
+    }
     correctedSchema
   }
 

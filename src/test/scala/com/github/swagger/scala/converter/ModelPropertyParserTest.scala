@@ -38,6 +38,13 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     stringWithDataType should not be (null)
     stringWithDataType shouldBe a [StringSchema]
     nullSafeList(stringWithDataType.getRequired) shouldBe empty
+
+    val ipAddress = model.value.getProperties().get("ipAddress")
+    ipAddress should not be (null)
+    ipAddress shouldBe a[StringSchema]
+    ipAddress.getDescription shouldBe "An IP address"
+    ipAddress.getFormat shouldBe "IPv4 or IPv6"
+    nullSafeList(ipAddress.getRequired) shouldBe empty
   }
 
   it should "process Option[Model] as Model" in {
