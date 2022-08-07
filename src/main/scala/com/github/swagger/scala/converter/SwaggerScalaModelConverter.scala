@@ -301,7 +301,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def nullSafeMap[K, V](map: java.util.Map[K, V]): Map[K, V] = Option(map) match {
-    case None => Map[K, V]()
+    case None => Map.empty[K, V]
     case Some(m) => m.asScala.toMap
   }
 }

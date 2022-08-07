@@ -33,18 +33,18 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val stringOpt = model.value.getProperties().get("stringOpt")
     stringOpt should not be (null)
     stringOpt.isInstanceOf[StringSchema] should be(true)
-    nullSafeList(stringOpt.getRequired) shouldBe empty
+    nullSafeSeq(stringOpt.getRequired) shouldBe empty
     val stringWithDataType = model.value.getProperties().get("stringWithDataTypeOpt")
     stringWithDataType should not be (null)
     stringWithDataType shouldBe a [StringSchema]
-    nullSafeList(stringWithDataType.getRequired) shouldBe empty
+    nullSafeSeq(stringWithDataType.getRequired) shouldBe empty
 
     val ipAddress = model.value.getProperties().get("ipAddress")
     ipAddress should not be (null)
     ipAddress shouldBe a[StringSchema]
     ipAddress.getDescription shouldBe "An IP address"
     ipAddress.getFormat shouldBe "IPv4 or IPv6"
-    nullSafeList(ipAddress.getRequired) shouldBe empty
+    nullSafeSeq(ipAddress.getRequired) shouldBe empty
   }
 
   it should "process Option[Model] as Model" in {
@@ -68,7 +68,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val field = model.value.getProperties().get("field")
     field shouldBe a [NumberSchema]
-    nullSafeList(model.value.getRequired) should not be empty
+    nullSafeSeq(model.value.getRequired) should not be empty
   }
 
   it should "process Model with Scala BigInt as Number" in {
@@ -81,7 +81,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val field = model.value.getProperties().get("field")
     field shouldBe a [IntegerSchema]
-    nullSafeList(model.value.getRequired) should not be empty
+    nullSafeSeq(model.value.getRequired) should not be empty
   }
 
   it should "process Model with Scala Option BigDecimal" in {
@@ -93,7 +93,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val optBigDecimal = model.value.getProperties().get("optBigDecimal")
     optBigDecimal should not be (null)
     optBigDecimal shouldBe a [NumberSchema]
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala Option BigInt" in {
@@ -105,7 +105,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val optBigInt = model.value.getProperties().get("optBigInt")
     optBigInt should not be (null)
     optBigInt shouldBe a [IntegerSchema]
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala Option Int" in {
@@ -122,7 +122,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       optInt shouldBe a[IntegerSchema]
       optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     }
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with nested Scala Option Int" in {
@@ -139,7 +139,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       optInt shouldBe a[IntegerSchema]
       optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     }
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model without any properties" in {
@@ -167,7 +167,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     }
     optInt.getDescription shouldBe "This is an optional int"
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala Option Int with Schema Override" in {
@@ -185,7 +185,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     }
     optInt.getDescription shouldBe "This is an optional int"
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "allow annotation to override required with Scala Option Int" in {
@@ -202,7 +202,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       optInt shouldBe a[IntegerSchema]
       optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     }
-    nullSafeList(model.value.getRequired) shouldEqual Seq("optInt")
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("optInt")
   }
 
   it should "process Model with Scala Option Long" in {
@@ -219,7 +219,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       optLong shouldBe a[IntegerSchema]
       optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
     }
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala Option Long with Schema Override" in {
@@ -232,7 +232,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     optLong should not be (null)
     optLong shouldBe a [IntegerSchema]
     optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala Option Long with Schema Int Override" in {
@@ -245,7 +245,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     optLong should not be (null)
     optLong shouldBe a[IntegerSchema]
     optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala Option Boolean" in {
@@ -257,7 +257,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val optBoolean = model.value.getProperties().get("optBoolean")
     optBoolean should not be (null)
     optBoolean shouldBe a [Schema[_]]
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala Option Boolean with Schema Override" in {
@@ -269,7 +269,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val optBoolean = model.value.getProperties().get("optBoolean")
     optBoolean should not be (null)
     optBoolean shouldBe a [BooleanSchema]
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process all properties as required barring Option[_] or if overridden in annotation" in {
@@ -294,7 +294,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val forcedOptional = model.getProperties().get("forcedOptional")
     forcedOptional should not be (null)
 
-    val requiredItems = nullSafeList(model.getRequired)
+    val requiredItems = nullSafeSeq(model.getRequired)
     requiredItems shouldBe List("forcedRequired", "required")
   }
 
@@ -320,7 +320,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val forcedOptional = model.getProperties().get("forcedOptional")
     forcedOptional should not be (null)
 
-    val requiredItems = nullSafeList(model.getRequired)
+    val requiredItems = nullSafeSeq(model.getRequired)
     requiredItems shouldBe List("forcedRequired", "required")
   }
 
@@ -345,7 +345,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val field = model.value.getProperties.get("field")
     field shouldBe a [StringSchema]
-    nullSafeList(model.value.getRequired) shouldEqual Seq("field")
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
   it should "process Model with Scala BigInt with annotation" in {
@@ -356,7 +356,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     model.value.getProperties should not be (null)
     val field = model.value.getProperties.get("field")
     field shouldBe a [StringSchema]
-    nullSafeList(model.value.getRequired) shouldEqual Seq("field")
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
   it should "process Model with Scala Enum with annotation" in {
@@ -369,7 +369,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     field shouldBe a[StringSchema]
     val stringSchema = field.asInstanceOf[StringSchema]
     stringSchema.getDescription shouldEqual "enum value"
-    nullSafeList(model.value.getRequired) shouldEqual Seq("field")
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
   it should "process ListReply Model" in {
@@ -399,7 +399,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     arraySchema.getUniqueItems() shouldBe (null)
     arraySchema.getItems shouldBe a [StringSchema]
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
-    nullSafeList(arraySchema.getRequired()) shouldBe empty
+    nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Scala Seq Int" in {
@@ -420,7 +420,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       arraySchema.getItems shouldBe a[IntegerSchema]
     }
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
-    nullSafeList(arraySchema.getRequired()) shouldBe empty
+    nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Scala Seq Int (annotated)" in {
@@ -443,7 +443,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     }
     arraySchema.getItems.getDescription shouldBe "These are ints"
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
-    nullSafeList(arraySchema.getRequired()) shouldBe empty
+    nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Scala Set" in {
@@ -458,7 +458,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     arraySchema.getUniqueItems() shouldBe true
     arraySchema.getItems shouldBe a [StringSchema]
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
-    nullSafeList(arraySchema.getRequired()) shouldBe empty
+    nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Java List" in {
@@ -473,7 +473,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     arraySchema.getUniqueItems() shouldBe (null)
     arraySchema.getItems shouldBe a [StringSchema]
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
-    nullSafeList(arraySchema.getRequired()) shouldBe empty
+    nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Scala Map" in {
@@ -487,7 +487,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val mapSchema = stringsField.asInstanceOf[MapSchema]
     mapSchema.getUniqueItems() shouldBe (null)
     nullSafeMap(mapSchema.getProperties()) shouldBe empty
-    nullSafeList(mapSchema.getRequired()) shouldBe empty
+    nullSafeSeq(mapSchema.getRequired()) shouldBe empty
   }
 
   it should "process Model with Java Map" in {
@@ -501,7 +501,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val mapSchema = stringsField.asInstanceOf[MapSchema]
     mapSchema.getUniqueItems() shouldBe (null)
     nullSafeMap(mapSchema.getProperties()) shouldBe empty
-    nullSafeList(mapSchema.getRequired()) shouldBe empty
+    nullSafeSeq(mapSchema.getRequired()) shouldBe empty
   }
 
   it should "process EchoList" in {
@@ -522,7 +522,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val schemas = converter.readAll(classOf[ModelWStringSeqAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWStringSeqAnnotated")
     model should be(defined)
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Array-Model with forced required Scala Option Seq (annotated)" in {
@@ -530,7 +530,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val schemas = converter.readAll(classOf[ModelWOptionStringSeqAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWOptionStringSeqAnnotated")
     model should be(defined)
-    nullSafeList(model.value.getRequired) shouldEqual Seq("listOfStrings")
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("listOfStrings")
   }
 
   it should "process scala Iterable[T] classes" in {
@@ -547,7 +547,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     val schemas = converter.readAll(classOf[ModelWOptionStringSeq]).asScala.toMap
     val model = findModel(schemas, "ModelWOptionStringSeq")
     model should be(defined)
-    nullSafeList(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process case class with Duration field" in {
@@ -572,13 +572,13 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     }
   }
 
-  private def nullSafeList[T](list: java.util.List[T]): List[T] = Option(list) match {
-    case None => List[T]()
-    case Some(l) => l.asScala.toList
+  private def nullSafeSeq[T](list: java.util.List[T]): Seq[T] = Option(list) match {
+    case None => List.empty[T]
+    case Some(l) => l.asScala.toSeq
   }
 
   private def nullSafeMap[K, V](map: java.util.Map[K, V]): Map[K, V] = Option(map) match {
-    case None => Map[K, V]()
+    case None => Map.empty[K, V]
     case Some(m) => m.asScala.toMap
   }
 }
