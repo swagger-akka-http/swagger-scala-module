@@ -15,6 +15,7 @@ import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
 import java.util
+import scala.collection.Seq
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -83,14 +84,18 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           val schemaOverrideClass = propertyAnnotations.collectFirst {
             case s: SchemaAnnotation if s.implementation() != VoidClass => s.implementation()
           }
-          if (schemaOverrideClass.isEmpty && schema.getProperties != null) {
-            erasedProperties.get(property.name).foreach { erasedType =>
+          val propertyName = property.name
+          if (schema.getProperties != null && schemaOverrideClass.isEmpty) {
+            erasedProperties.get(propertyName).foreach { erasedType =>
               val primitiveType = PrimitiveType.fromType(erasedType)
-              if (primitiveType != null && isOptional) {
-                updateTypeOnSchema(schema, primitiveType, property.name)
-              }
-              if (primitiveType != null && isIterable(propertyClass) && !isMap(propertyClass)) {
-                updateTypeOnItemsSchema(schema, primitiveType, property.name)
+              val property      = schema.getProperties.get(propertyName)
+              if (primitiveType != null && property != null) {
+                if (isOptional) {
+                  schema.addProperty(propertyName, updateTypeOnSchema(primitiveType, property))
+                }
+                if (isIterable(propertyClass) && !isMap(propertyClass)) {
+                  schema.addProperty(propertyName, updateTypeOnItemsSchema(primitiveType, property))
+                }
               }
             }
           }
@@ -116,17 +121,13 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def updateTypeOnSchema(schema: Schema[_], primitiveType: PrimitiveType, propertyName: String) = {
-    val property = schema.getProperties.get(propertyName)
-    val updatedSchema = correctSchema(property, primitiveType)
-    schema.addProperty(propertyName, updatedSchema)
-  }
+  private def updateTypeOnSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) =
+    correctSchema(propertySchema, primitiveType)
 
-  private def updateTypeOnItemsSchema(schema: Schema[_], primitiveType: PrimitiveType, propertyName: String) = {
-    val property = schema.getProperties.get(propertyName)
-    val updatedSchema = correctSchema(property.getItems, primitiveType)
-    property.setItems(updatedSchema)
-    schema.addProperty(propertyName, property)
+  private def updateTypeOnItemsSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) = {
+    val updatedSchema = correctSchema(propertySchema.getItems, primitiveType)
+    propertySchema.setItems(updatedSchema)
+    propertySchema
   }
 
   private def correctSchema(itemSchema: Schema[_], primitiveType: PrimitiveType) = {
