@@ -91,7 +91,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               val property      = schema.getProperties.get(propertyName)
               if (primitiveType != null && property != null) {
                 if (isOptional) {
-                  schema.addProperty(propertyName, updateTypeOnSchema(primitiveType, property))
+                  schema.addProperty(propertyName, correctSchema(property, primitiveType))
                 }
                 if (isIterable(propertyClass) && !isMap(propertyClass)) {
                   schema.addProperty(propertyName, updateTypeOnItemsSchema(primitiveType, property))
@@ -120,9 +120,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       None
     }
   }
-
-  private def updateTypeOnSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) =
-    correctSchema(propertySchema, primitiveType)
 
   private def updateTypeOnItemsSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) = {
     val updatedSchema = correctSchema(propertySchema.getItems, primitiveType)
