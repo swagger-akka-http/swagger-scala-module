@@ -15,6 +15,8 @@ import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
 import java.util
+import scala.collection.Seq
+import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -75,6 +77,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
                               chain: util.Iterator[ModelConverter]): Option[Schema[_]] = {
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
+        val schemaProperties = nullSafeMap(schema.getProperties)
         val introspector = BeanIntrospector(cls)
         val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
         introspector.properties.foreach { property =>
@@ -83,14 +86,18 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           val schemaOverrideClass = propertyAnnotations.collectFirst {
             case s: SchemaAnnotation if s.implementation() != VoidClass => s.implementation()
           }
-          if (schemaOverrideClass.isEmpty && schema.getProperties != null) {
-            erasedProperties.get(property.name).foreach { erasedType =>
-              val primitiveType = PrimitiveType.fromType(erasedType)
-              if (primitiveType != null && isOptional) {
-                updateTypeOnSchema(schema, primitiveType, property.name)
-              }
-              if (primitiveType != null && isIterable(propertyClass) && !isMap(propertyClass)) {
-                updateTypeOnItemsSchema(schema, primitiveType, property.name)
+          val propertyName = property.name
+          if (schemaProperties.nonEmpty && schemaOverrideClass.isEmpty) {
+            erasedProperties.get(propertyName).foreach { erasedType =>
+              schemaProperties.get(propertyName).foreach { property =>
+                Option(PrimitiveType.fromType(erasedType)).foreach { primitiveType =>
+                  if (isOptional) {
+                    schema.addProperty(propertyName, correctSchema(property, primitiveType))
+                  }
+                  if (isIterable(propertyClass) && !isMap(propertyClass)) {
+                    schema.addProperty(propertyName, updateTypeOnItemsSchema(primitiveType, property))
+                  }
+                }
               }
             }
           }
@@ -116,17 +123,10 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def updateTypeOnSchema(schema: Schema[_], primitiveType: PrimitiveType, propertyName: String) = {
-    val property = schema.getProperties.get(propertyName)
-    val updatedSchema = correctSchema(property, primitiveType)
-    schema.addProperty(propertyName, updatedSchema)
-  }
-
-  private def updateTypeOnItemsSchema(schema: Schema[_], primitiveType: PrimitiveType, propertyName: String) = {
-    val property = schema.getProperties.get(propertyName)
-    val updatedSchema = correctSchema(property.getItems, primitiveType)
-    property.setItems(updatedSchema)
-    schema.addProperty(propertyName, property)
+  private def updateTypeOnItemsSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) = {
+    val updatedSchema = correctSchema(propertySchema.getItems, primitiveType)
+    propertySchema.setItems(updatedSchema)
+    propertySchema
   }
 
   private def correctSchema(itemSchema: Schema[_], primitiveType: PrimitiveType) = {
@@ -142,7 +142,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
 
   private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
     case _: AnnotatedTypeForOption => Seq.empty
-    case _ => getRequiredSettings(nullSafeList(annotatedType.getCtxAnnotations))
+    case _ => getRequiredSettings(nullSafeSeq(annotatedType.getCtxAnnotations))
   }
 
   private def getRequiredSettings(annotations: Seq[Annotation]): Seq[Boolean] = {
@@ -295,8 +295,13 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def isMap(cls: Class[_]): Boolean = MapClass.isAssignableFrom(cls)
   private def isCaseClass(cls: Class[_]): Boolean = ProductClass.isAssignableFrom(cls)
 
-  private def nullSafeList[T](array: Array[T]): List[T] = Option(array) match {
+  private def nullSafeSeq[T](array: Array[T]): Seq[T] = Option(array) match {
     case None => List.empty[T]
     case Some(arr) => arr.toList
+  }
+
+  private def nullSafeMap[K, V](map: java.util.Map[K, V]): Map[K, V] = Option(map) match {
+    case None => Map.empty[K, V]
+    case Some(m) => m.asScala.toMap
   }
 }

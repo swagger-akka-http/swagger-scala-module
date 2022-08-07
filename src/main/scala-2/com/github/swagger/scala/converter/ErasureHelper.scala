@@ -3,7 +3,7 @@ package com.github.swagger.scala.converter
 import scala.reflect.runtime.universe
 import scala.util.Try
 
-object ErasureHelper {
+private[converter] object ErasureHelper {
 
   def erasedOptionalPrimitives(cls: Class[_]): Map[String, Class[_]] = {
     val mirror = universe.runtimeMirror(cls.getClassLoader)

@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
 
-object ErasureHelper {
+private[converter] object ErasureHelper {
   private val logger = LoggerFactory.getLogger(ErasureHelper.getClass)
 
   def erasedOptionalPrimitives(cls: Class[_]): Map[String, Class[_]] = {
