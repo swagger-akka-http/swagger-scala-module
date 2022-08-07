@@ -9,7 +9,7 @@ ThisBuild / scalaVersion := "2.13.6"
 
 ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.6", "3.0.2")
 
-ThisBuild / organizationHomepage := Some(url("http://swagger.io"))
+ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
 ThisBuild / scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked")
 
@@ -18,11 +18,11 @@ Test / publishArtifact := false
 pomIncludeRepository := { x => false }
 
 libraryDependencies ++= Seq(
-  "org.slf4j" % "slf4j-api" % "1.7.32",
+  "org.slf4j" % "slf4j-api" % "1.7.36",
   "io.swagger" % "swagger-core" % "1.6.3",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.0",
-  "org.scalatest" %% "scalatest" % "3.2.10" % Test,
-  "org.slf4j" % "slf4j-simple" % "1.7.32" % Test
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.3",
+  "org.scalatest" %% "scalatest" % "3.2.11" % Test,
+  "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
 
 homepage := Some(new URL("https://github.com/swagger-akka-http/swagger-scala-module"))
@@ -31,7 +31,7 @@ Test / parallelExecution := false
 
 startYear := Some(2014)
 
-licenses := Seq(("Apache License 2.0", new URL("http://www.apache.org/licenses/LICENSE-2.0.html")))
+licenses := Seq(("Apache License 2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.html")))
 
 pomExtra := {
   pomExtra.value ++ Group(
