@@ -7,7 +7,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 
 | Release | Supports |
 | ------- | -------- |
-| 2.7.x | *Experimental version, not recommended for swagger-akka-http users.* Scala 2 builds reintroduce scala-reflect dependency and can now introspect better on inner types. See section on `Treatment of Option` below.|
+| 2.7.x | Scala 2 builds reintroduce scala-reflect dependency and can now introspect better on inner types. See section on `Treatment of Option` below. |
 | 2.6.x/2.5.x | First releases to support Scala 3. Jackson 2.13, [jakarta](https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Getting-started) namespace jars. [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
 | 2.4.x | First releases to support [jakarta](https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Getting-started) namespace jars. Jackson 2.12, [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
 | 2.3.x | [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
@@ -17,7 +17,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 To enable the swagger-scala-module, include the appropriate version in your project:
 
 ```
-  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.6.0"
+  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.7.2"
 ```
 
 ## How does it work?
@@ -33,7 +33,7 @@ case class AddOptionRequest(number: Int, @Schema(required = false, implementatio
 
 Alternatively, you can non-primitive types like BigInt to avoid this requirement.
 
-Since v2.7.0 release, Scala 2 builds use scala-reflect jar to try to work out the class information for the inner types. Scala 3 builds cannot use this approach, and are therefore still affected by this issue. See https://github.com/swagger-akka-http/swagger-scala-module/issues/117.
+Since v2.7.2 release, Scala 2 builds use scala-reflect jar to try to work out the class information for the inner types. Scala 3 builds cannot use this approach, and are therefore still affected by this issue. See https://github.com/swagger-akka-http/swagger-scala-module/issues/117.
 
 License
 -------
