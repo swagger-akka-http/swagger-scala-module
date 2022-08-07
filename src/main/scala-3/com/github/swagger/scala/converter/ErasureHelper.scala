@@ -6,6 +6,7 @@ import co.blocke.scala_reflection.info.{ClassInfo, MapLikeInfo, ScalaOptionInfo}
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
+import scala.util.control.NonFatal
 
 private[converter] object ErasureHelper {
   private val logger = LoggerFactory.getLogger(ErasureHelper.getClass)
@@ -32,7 +33,7 @@ private[converter] object ErasureHelper {
         case _ => Map.empty[String, Class[_]]
       }
     } catch {
-      case t: Throwable => {
+      case NonFatal(t) => {
         if (logger.isDebugEnabled) {
           logger.debug("Unable to get type info {}", Option(cls.getName).getOrElse("null"), t)
         } else {
