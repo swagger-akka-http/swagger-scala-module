@@ -3,7 +3,7 @@ package com.github.swagger.scala.converter
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.oas.models.media._
-import models.NestingObject.NestedModelWOptionInt
+import models.NestingObject.{NestedModelWOptionInt, NoProperties}
 import models._
 import org.scalatest.OptionValues
 import org.scalatest.flatspec.AnyFlatSpec
@@ -140,6 +140,16 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
       optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     }
     nullSafeList(model.value.getRequired) shouldBe empty
+  }
+
+  it should "process Model without any properties" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[NoProperties]).asScala.toMap
+    val model = schemas.get("NoProperties")
+    model should be(defined)
+    model.value.getProperties should be (null)
+    model.get shouldBe a[Schema[_]]
+    model.get.getDescription shouldBe "An empty case class"
   }
 
   it should "process Model with nested Scala Option Int with Schema Override" in {

@@ -86,7 +86,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           val schemaOverrideClass = propertyAnnotations.collectFirst {
             case s: SchemaAnnotation if s.implementation() != VoidClass => s.implementation()
           }
-          if (schemaOverrideClass.isEmpty) {
+          if (schemaOverrideClass.isEmpty && schema.getProperties != null) {
             erasedProperties.get(property.name).foreach { erasedType =>
               val primitiveType = PrimitiveType.fromType(erasedType)
               if (primitiveType != null && isOptional) {

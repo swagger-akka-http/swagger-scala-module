@@ -7,6 +7,9 @@ case class ModelWOptionInt(optInt: Option[Int])
 object NestingObject {
   case class NestedModelWOptionInt(optInt: Option[Int])
 
+  @Schema(description = "An empty case class")
+  case class NoProperties()
+
   object NestedModelWOptionInt {
 
     def apply(nonOptional: Int): NestedModelWOptionInt = {
