@@ -2,6 +2,7 @@ package com.github.swagger.scala.converter
 
 import org.slf4j.LoggerFactory
 
+import scala.annotation.tailrec
 import scala.reflect.runtime.universe
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -27,7 +28,7 @@ private[converter] object ErasureHelper {
         val maybeClass: Option[Class[_]] = prop.typeSignature.typeArgs.headOption.flatMap { signature =>
           if (signature.typeSymbol.isClass) {
             signature.typeArgs.headOption match {
-              case Some(typeArg) => Option(mirror.runtimeClass(typeArg))
+              case Some(typeArg) => Option(mirror.runtimeClass(nestedTypeArg(typeArg)))
               case _ => Option(mirror.runtimeClass(signature))
             }
           } else {
@@ -46,6 +47,14 @@ private[converter] object ErasureHelper {
         }
         Map.empty[String, Class[_]]
       }
+    }
+  }
+
+  @tailrec
+  private def nestedTypeArg(typeArg: universe.Type): universe.Type = {
+    typeArg.typeArgs.headOption match {
+      case Some(innerArg) => nestedTypeArg(innerArg)
+      case _ => typeArg
     }
   }
 }
