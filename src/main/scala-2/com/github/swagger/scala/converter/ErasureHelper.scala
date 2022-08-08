@@ -26,8 +26,13 @@ private[converter] object ErasureHelper {
       properties.flatMap { prop: universe.Symbol =>
         val maybeClass: Option[Class[_]] = prop.typeSignature.typeArgs.headOption.flatMap { signature =>
           if (signature.typeSymbol.isClass) {
-            Option(mirror.runtimeClass(signature.typeSymbol.asClass))
-          } else None
+            signature.typeArgs.headOption match {
+              case Some(typeArg) => Option(mirror.runtimeClass(typeArg))
+              case _ => Option(mirror.runtimeClass(signature))
+            }
+          } else {
+            None
+          }
         }
         maybeClass.map(prop.name.toString.trim -> _)
       }.toMap

@@ -13,4 +13,10 @@ class ErasureHelperTest extends AnyFlatSpec with Matchers {
   "ErasureHelper" should "handle MyTrait" in {
     ErasureHelper.erasedOptionalPrimitives(classOf[ErasureHelperTest.SuperType]) shouldBe empty
   }
+  it should "handle OptionSeqLong" in {
+    ErasureHelper.erasedOptionalPrimitives(classOf[OptionSeqLong]) shouldBe Map("values" -> classOf[Long])
+  }
+  it should "handle SeqOptionLong" in {
+    ErasureHelper.erasedOptionalPrimitives(classOf[SeqOptionLong]) shouldBe Map("values" -> classOf[Long])
+  }
 }
