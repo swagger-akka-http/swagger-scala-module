@@ -17,6 +17,10 @@ class ErasureHelperTest extends AnyFlatSpec with Matchers {
     val expected = if (RuntimeUtil.isScala3()) Map.empty[String, Class[_]] else Map("values" -> classOf[Long])
     ErasureHelper.erasedOptionalPrimitives(classOf[OptionSeqLong]) shouldBe expected
   }
+  it should "handle Nested.OptionSeqLong" in {
+    val expected = if (RuntimeUtil.isScala3()) Map.empty[String, Class[_]] else Map("values" -> classOf[Long])
+    ErasureHelper.erasedOptionalPrimitives(classOf[Nested.OptionSeqLong]) shouldBe expected
+  }
   it should "handle SeqOptionLong" in {
     val expected = if (RuntimeUtil.isScala3()) Map.empty[String, Class[_]] else Map("values" -> classOf[Long])
     ErasureHelper.erasedOptionalPrimitives(classOf[SeqOptionLong]) shouldBe expected
