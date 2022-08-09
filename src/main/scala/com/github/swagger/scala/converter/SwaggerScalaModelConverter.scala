@@ -1,9 +1,7 @@
 package com.github.swagger.scala.converter
 
-import java.lang.annotation.Annotation
-import java.lang.reflect.ParameterizedType
-import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.databind.`type`.ReferenceType
+import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
@@ -14,15 +12,19 @@ import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotat
 import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
+import java.lang.annotation.Annotation
+import java.lang.reflect.ParameterizedType
 import java.util
-import scala.collection.Seq
 import scala.collection.JavaConverters._
+import scala.collection.Seq
 import scala.util.Try
 import scala.util.control.NonFatal
+
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
   val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
+  private var requiredBasedOnAnnotation = true
 
   /**
    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]] by default
@@ -36,7 +38,17 @@ object SwaggerScalaModelConverter {
   def setRequiredBasedOnAnnotation(value: Boolean = true): Unit = {
     requiredBasedOnAnnotation = value
   }
-  private[converter] var requiredBasedOnAnnotation = true
+
+  /**
+   * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]] by default
+   * This means that all fields that aren't [[Option]] will, counter to what you would expect based on the type,
+   * <b>not</b> be required by default.
+   * If this behavior is undesired, set [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]]
+   * and the required property on the annotation will be ignored, unless the field is an [[Option]].
+   *
+   * @return value: true by default
+   */
+  def isRequiredBasedOnAnnotation(): Boolean = requiredBasedOnAnnotation
 }
 
 class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverter.objectMapper) {
@@ -61,7 +73,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       // Unbox scala options
       val annotatedOverrides = getRequiredSettings(`type`)
       if (_isOptional(`type`, cls)) {
-        val baseType = if (SwaggerScalaModelConverter.requiredBasedOnAnnotation && annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType() else new AnnotatedTypeForOption()
+        val baseType = if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation()
+          && annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType() else new AnnotatedTypeForOption()
         resolve(nextType(baseType, `type`, javaType), context, chain)
       } else if (!annotatedOverrides.headOption.getOrElse(true)) {
         resolve(nextType(new AnnotatedTypeForOption(), `type`, javaType), context, chain)
