@@ -19,11 +19,24 @@ import scala.collection.Seq
 import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
-
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
   val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
+
+  /**
+   * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]] by default
+   * This means that all fields that aren't [[Option]] will, counter to what you would expect based on the type,
+   * <b>not</b> be required by default.
+   * If this behavior is undesired, set [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]]
+   * and the required property on the annotation will be ignored, unless the field is an [[Option]].
+   *
+   * @param value true by default
+   */
+  def setRequiredBasedOnAnnotation(value: Boolean = true): Unit = {
+    requiredBasedOnAnnotation = value
+  }
+  private[converter] var requiredBasedOnAnnotation = true
 }
 
 class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverter.objectMapper) {
@@ -48,7 +61,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       // Unbox scala options
       val annotatedOverrides = getRequiredSettings(`type`)
       if (_isOptional(`type`, cls)) {
-        val baseType = if (annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType() else new AnnotatedTypeForOption()
+        val baseType = if (SwaggerScalaModelConverter.requiredBasedOnAnnotation && annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType() else new AnnotatedTypeForOption()
         resolve(nextType(baseType, `type`, javaType), context, chain)
       } else if (!annotatedOverrides.headOption.getOrElse(true)) {
         resolve(nextType(new AnnotatedTypeForOption(), `type`, javaType), context, chain)
@@ -110,8 +123,11 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               }
             }
             case annotations => {
-              val required = getRequiredSettings(annotations).headOption
-                .getOrElse(!isOptional)
+              val annotationSetting = getRequiredSettings(annotations).headOption.getOrElse(false)
+              val required = if (isOptional || SwaggerScalaModelConverter.requiredBasedOnAnnotation) {
+                annotationSetting
+              } else { true }
+
               if (required) addRequiredItem(schema, property.name)
             }
           }
@@ -249,7 +265,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def setRequired(annotatedType: AnnotatedType): Unit = annotatedType match {
     case _: AnnotatedTypeForOption => // not required
     case _ => {
-      val required = getRequiredSettings(annotatedType).headOption.getOrElse(true)
+      val reqSettings = getRequiredSettings(annotatedType)
+      val required = reqSettings.headOption.getOrElse(true)
       if (required) {
         Option(annotatedType.getParent).foreach { parent =>
           Option(annotatedType.getPropertyName).foreach { n =>
