@@ -5,14 +5,22 @@ import io.swagger.v3.core.util.Json
 import io.swagger.v3.oas.models.media._
 import models.NestingObject.{NestedModelWOptionInt, NoProperties}
 import models._
-import org.scalatest.OptionValues
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 import java.util
 import scala.collection.JavaConverters._
 
-class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValues {
+class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with OptionValues {
+  override protected def beforeEach() = {
+    SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(true)
+  }
+
+  override protected def afterEach() = {
+    SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(true)
+  }
+
   it should "verify swagger-core bug 814" in {
     val converter = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[CoreBug814])
@@ -188,21 +196,20 @@ class ModelPropertyParserTest extends AnyFlatSpec with Matchers with OptionValue
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "allow annotation to override required with Scala Option Int" in {
-    val converter = ModelConverters.getInstance()
+  it should "prioritize required as specified in annotation by default" in {
+    val converter: ModelConverters = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverrideForRequired]).asScala.toMap
     val model = schemas.get("ModelWOptionIntSchemaOverrideForRequired")
-    model should be(defined)
-    model.value.getProperties should not be (null)
-    val optInt = model.value.getProperties().get("optInt")
-    optInt should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optInt shouldBe a[ObjectSchema]
-    } else {
-      optInt shouldBe a[IntegerSchema]
-      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
-    }
-    nullSafeSeq(model.value.getRequired) shouldEqual Seq("optInt")
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
+  }
+
+
+  it should "prioritize required based on (Option or not) type when `setRequiredBasedOnAnnotation` is set" in {
+    SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(false)
+    val converter: ModelConverters = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverrideForRequired]).asScala.toMap
+    val model = schemas.get("ModelWOptionIntSchemaOverrideForRequired")
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "annotatedRequiredInt", "requiredInt")
   }
 
   it should "process Model with Scala Option Long" in {

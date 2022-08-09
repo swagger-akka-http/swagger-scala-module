@@ -22,4 +22,9 @@ object NestingObject {
 
 case class ModelWOptionIntSchemaOverride(@Schema(description = "This is an optional int") optInt: Option[Int])
 
-case class ModelWOptionIntSchemaOverrideForRequired(@Schema(required = true) optInt: Option[Int])
+
+case class ModelWOptionIntSchemaOverrideForRequired(requiredInt: Int,
+                  optionalInt: Option[Int],
+                  @Schema(description = "should stay required") annotatedRequiredInt: Int,
+                  @Schema(description = "should become required", required = true) annotatedOptionalInt: Option[Int]
+                 )
