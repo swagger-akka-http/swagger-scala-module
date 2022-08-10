@@ -205,7 +205,11 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     requiredIntWithDefault shouldBe an[IntegerSchema]
     requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
 
-    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "requiredIntWithDefault")
+    val annotatedIntWithDefault = model.value.getProperties.get("annotatedIntWithDefault")
+    annotatedIntWithDefault shouldBe an[IntegerSchema]
+    annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
+
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
   }
 
 
@@ -219,7 +223,12 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     requiredIntWithDefault shouldBe an[IntegerSchema]
     requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
 
-    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
+    val annotatedIntWithDefault = model.value.getProperties.get("annotatedIntWithDefault")
+    annotatedIntWithDefault shouldBe an[IntegerSchema]
+    annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
+
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt",
+      "annotatedRequiredInt")
   }
 
   it should "process Model with Scala Option Long" in {
@@ -424,8 +433,31 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val schemas = converter.readAll(classOf[ModelWSeqInt]).asScala.toMap
     val model = findModel(schemas, "ModelWSeqInt")
     model should be(defined)
-    model.value.getProperties should not be (null)
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("ints")
 
+    model.value.getProperties should not be (null)
+    val stringsField = model.value.getProperties.get("ints")
+
+    stringsField shouldBe a[ArraySchema]
+    val arraySchema = stringsField.asInstanceOf[ArraySchema]
+    arraySchema.getUniqueItems() shouldBe (null)
+    if (RuntimeUtil.isScala3()) {
+      arraySchema.getItems shouldBe a[ObjectSchema]
+    } else {
+      arraySchema.getItems shouldBe a[IntegerSchema]
+    }
+    nullSafeMap(arraySchema.getProperties()) shouldBe empty
+    nullSafeSeq(arraySchema.getRequired()) shouldBe empty
+  }
+
+  it should "process Model with Scala Seq Int (default provided in constructor)" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWSeqIntDefaulted]).asScala.toMap
+    val model = findModel(schemas, "ModelWSeqIntDefaulted")
+    model should be(defined)
+    nullSafeSeq(model.value.getRequired) shouldBe empty
+
+    model.value.getProperties should not be (null)
     val stringsField = model.value.getProperties.get("ints")
 
     stringsField shouldBe a[ArraySchema]
