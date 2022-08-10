@@ -108,19 +108,29 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
         introspector.properties.foreach { property =>
           val propertyName = property.name
-
+          val (propertyClass, propertyAnnotations) = getPropertyClassAndAnnotations(property)
+          val isOptional = isOption(propertyClass)
+          val schemaOverride = propertyAnnotations.collectFirst {
+            case s: SchemaAnnotation => s
+          }
+          val schemaOverrideClass = schemaOverride.flatMap { s =>
+            if (s.implementation() == VoidClass) None else Option(s.implementation())
+          }
           val maybeDefault = property.param.flatMap(_.defaultValue)
-          maybeDefault.foreach { default =>
-            schemaProperties.get(propertyName).foreach { property =>
-              property.setDefault(default())
+          val schemaDefaultValue = schemaOverride.flatMap { s =>
+            Option(s.defaultValue()).flatMap(str => if (str.isEmpty) None else Some(str))
+          }
+          val hasDefaultValue = schemaDefaultValue.nonEmpty || maybeDefault.nonEmpty
+
+          if (schemaDefaultValue.isEmpty) {
+            // default values set in annotation leass to default values set in Scala constructor being ignored
+            maybeDefault.foreach { default =>
+              schemaProperties.get(propertyName).foreach { property =>
+                property.setDefault(default())
+              }
             }
           }
 
-          val (propertyClass, propertyAnnotations) = getPropertyClassAndAnnotations(property)
-          val isOptional = isOption(propertyClass)
-          val schemaOverrideClass = propertyAnnotations.collectFirst {
-            case s: SchemaAnnotation if s.implementation() != VoidClass => s.implementation()
-          }
           if (schemaProperties.nonEmpty && schemaOverrideClass.isEmpty) {
             erasedProperties.get(propertyName).foreach { erasedType =>
               schemaProperties.get(propertyName).foreach { property =>
@@ -139,7 +149,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             case Seq() => {
               if (isOptional && schema.getRequired != null && schema.getRequired.contains(propertyName)) {
                 schema.getRequired.remove(propertyName)
-              } else if (!isOptional && (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation || maybeDefault.isEmpty)) {
+              } else if (!isOptional && (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation || !hasDefaultValue)) {
                 addRequiredItem(schema, propertyName)
               }
             }
@@ -147,8 +157,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               val annotationSetting = getRequiredSettings(annotations).headOption.getOrElse(false)
               val required = if (isOptional || SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
                 annotationSetting
-              } else { maybeDefault.isEmpty }
-
+              } else {
+                !hasDefaultValue
+              }
               if (required) addRequiredItem(schema, propertyName)
             }
           }
