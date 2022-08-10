@@ -205,6 +205,10 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     requiredIntWithDefault shouldBe an[IntegerSchema]
     requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
 
+    val annotatedIntWithDefault = model.value.getProperties.get("annotatedIntWithDefault")
+    annotatedIntWithDefault shouldBe an[IntegerSchema]
+    annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
+
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "requiredIntWithDefault")
   }
 
@@ -219,7 +223,12 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     requiredIntWithDefault shouldBe an[IntegerSchema]
     requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
 
-    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
+    val annotatedIntWithDefault = model.value.getProperties.get("annotatedIntWithDefault")
+    annotatedIntWithDefault shouldBe an[IntegerSchema]
+    annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
+
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt",
+      "annotatedRequiredInt")
   }
 
   it should "process Model with Scala Option Long" in {
