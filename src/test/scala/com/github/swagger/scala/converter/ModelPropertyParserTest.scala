@@ -369,9 +369,25 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val model = findModel(schemas, "ModelWBigDecimalAnnotated")
     model should be (defined)
     model.value.getProperties should not be (null)
-    val field = model.value.getProperties.get("field")
-    field shouldBe a [StringSchema]
+    val fieldSchema = model.value.getProperties.get("field")
+    fieldSchema shouldBe a [StringSchema]
+    fieldSchema.asInstanceOf[StringSchema].getExample shouldEqual("42.0")
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
+  }
+
+  it should "process Model with Scala BigDecimal with default value annotation" in {
+    val converter = ModelConverters.getInstance()
+    val schemas = converter.readAll(classOf[ModelWBigDecimalAnnotatedDefault]).asScala.toMap
+    val model = findModel(schemas, "ModelWBigDecimalAnnotatedDefault")
+    model should be(defined)
+    model.value.getProperties should not be (null)
+    val fieldSchema = model.value.getProperties.get("field")
+    fieldSchema shouldBe a[StringSchema]
+    val stringSchema = fieldSchema.asInstanceOf[StringSchema]
+    stringSchema.getDefault shouldEqual("42.0")
+    stringSchema.getExample shouldEqual("42.0")
+
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala BigInt with annotation" in {
