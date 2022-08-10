@@ -114,7 +114,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             case s: SchemaAnnotation => s
           }
           val schemaOverrideClass = schemaOverride.flatMap { s =>
-            if (s.implementation() == VoidClass) None else Option(s.implementation())
+            // this form is needed by the Scala 2.11 compiler
+            val classOption: Option[Class[_]] = if (s.implementation() == VoidClass) None else Option(s.implementation())
+            classOption
           }
           val maybeDefault = property.param.flatMap(_.defaultValue)
           val schemaDefaultValue = schemaOverride.flatMap { s =>
@@ -123,7 +125,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           val hasDefaultValue = schemaDefaultValue.nonEmpty || maybeDefault.nonEmpty
 
           if (schemaDefaultValue.isEmpty) {
-            // default values set in annotation leass to default values set in Scala constructor being ignored
+            // default values set in annotation leads to default values set in Scala constructor being ignored
             maybeDefault.foreach { default =>
               schemaProperties.get(propertyName).foreach { property =>
                 property.setDefault(default())
