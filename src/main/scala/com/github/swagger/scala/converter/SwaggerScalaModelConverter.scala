@@ -127,19 +127,20 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               }
             }
           }
+          val noDefault = property.param.flatMap(_.defaultValue).isEmpty
           propertyAnnotations match {
             case Seq() => {
               if (isOptional && schema.getRequired != null && schema.getRequired.contains(property.name)) {
-                schema.getRequired.remove(property.name)
-              } else if (!isOptional) {
-                addRequiredItem(schema, property.name)
+                schema.getRequired.remove(propertyName)
+              } else if (!isOptional && (SwaggerScalaModelConverter.requiredBasedOnAnnotation || noDefault)) {
+                addRequiredItem(schema, propertyName)
               }
             }
             case annotations => {
               val annotationSetting = getRequiredSettings(annotations).headOption.getOrElse(false)
               val required = if (isOptional || SwaggerScalaModelConverter.requiredBasedOnAnnotation) {
                 annotationSetting
-              } else { true }
+              } else { noDefault }
 
               if (required) addRequiredItem(schema, property.name)
             }
