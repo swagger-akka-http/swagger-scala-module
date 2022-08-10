@@ -200,7 +200,12 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val converter: ModelConverters = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverrideForRequired]).asScala.toMap
     val model = schemas.get("ModelWOptionIntSchemaOverrideForRequired")
-    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
+
+    val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
+    requiredIntWithDefault shouldBe an[IntegerSchema]
+    requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
+
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "requiredIntWithDefault")
   }
 
 
@@ -209,7 +214,12 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val converter: ModelConverters = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverrideForRequired]).asScala.toMap
     val model = schemas.get("ModelWOptionIntSchemaOverrideForRequired")
-    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "annotatedRequiredInt", "requiredInt")
+
+    val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
+    requiredIntWithDefault shouldBe an[IntegerSchema]
+    requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
+
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
   }
 
   it should "process Model with Scala Option Long" in {
