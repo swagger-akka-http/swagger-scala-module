@@ -178,12 +178,20 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
 
+    val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+    annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+
+    val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+    annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
   }
 
   it should "prioritize required based on (Option or not) type when `setRequiredBasedOnAnnotation` is set" in new PropertiesScope[
     ModelWOptionIntSchemaOverrideForRequired
-  ](false) {
+  ](requiredBasedAnnotation = false) {
 
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
@@ -192,6 +200,14 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val annotatedIntWithDefault = model.value.getProperties.get("annotatedIntWithDefault")
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
+
+    val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+    annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+
+    val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+    annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
   }
