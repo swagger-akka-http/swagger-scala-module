@@ -26,12 +26,15 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val converter = ModelConverters.getInstance()
   }
 
-  class PropertiesScope[A](requiredBasedAnnotation: Boolean = true)(implicit tt: ClassTag[A]) extends TestScope {
+  class PropertiesScope[A](requiredBasedAnnotation: Boolean = true, debug: Boolean = false)(implicit tt: ClassTag[A]) extends TestScope {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(requiredBasedAnnotation)
     val schemas = converter.readAll(tt.runtimeClass).asScala.toMap
     val model = schemas.get(tt.runtimeClass.getSimpleName)
     model should be(defined)
     model.value.getProperties should not be (null)
+    if (debug) {
+      Json.prettyPrint(schemas)
+    }
   }
 
   it should "verify swagger-core bug 814" in new TestScope {
