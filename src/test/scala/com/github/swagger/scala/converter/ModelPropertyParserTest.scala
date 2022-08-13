@@ -11,6 +11,7 @@ import org.scalatest.matchers.should.Matchers
 
 import java.util
 import scala.collection.JavaConverters._
+import scala.collection.Seq
 import scala.reflect.ClassTag
 
 class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with OptionValues {
@@ -308,14 +309,15 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
-  it should "process Model with Scala BigDecimal with default value annotation" in new PropertiesScope[ModelWBigDecimalAnnotated](false) {
+  it should "process Model with Scala BigDecimal with default value annotation" in new PropertiesScope[ModelWBigDecimalAnnotatedDefault](false) {
     val fieldSchema = model.value.getProperties.get("field")
     fieldSchema shouldBe a[StringSchema]
     val stringSchema = fieldSchema.asInstanceOf[StringSchema]
     stringSchema.getDefault shouldEqual ("42.0")
     stringSchema.getExample shouldEqual ("42.0")
+    stringSchema.getDescription shouldBe "required of annotation should be honoured"
 
-    nullSafeSeq(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
   it should "process Model with Scala BigInt with annotation" in new PropertiesScope[ModelWBigIntAnnotated] {

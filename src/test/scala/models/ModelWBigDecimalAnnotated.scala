@@ -8,7 +8,7 @@ case class ModelWBigDecimalAnnotated(
 
 case class ModelWBigDecimalAnnotatedDefault(
     @Schema(
-      description = "bigdecimal value",
+      description = "required of annotation should be honoured",
       `type` = "string",
       example = "42.0",
       defaultValue = "42.0",
