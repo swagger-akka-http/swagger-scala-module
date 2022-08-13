@@ -18,3 +18,13 @@ case class ModelWBigDecimalAnnotatedDefault(
       required = true
     ) field: BigDecimal = BigDecimal.valueOf(0)
 )
+
+case class ModelWBigDecimalAnnotatedDefaultRequiredFalse(
+    @Schema(
+      description = "required of annotation should be honoured",
+      `type` = "string",
+      example = "42.0",
+      defaultValue = "42.0",
+      required = false
+    ) field: BigDecimal = BigDecimal.valueOf(0)
+)
