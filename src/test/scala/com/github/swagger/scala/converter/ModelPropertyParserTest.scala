@@ -309,7 +309,25 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
-  it should "process Model with Scala BigDecimal with default value annotation" in new PropertiesScope[ModelWBigDecimalAnnotatedDefault](false) {
+  it should "map BigDecimal to schema type 'number'" in new PropertiesScope[ModelWBigDecimalNoType]() {
+    val properties = model.value.getProperties
+    val fieldSchema = properties.get("field")
+    properties.size() shouldBe 1
+
+    fieldSchema shouldBe a[NumberSchema]
+  }
+
+  it should "map BigDecimal to schema type 'number' even when annotated" in new PropertiesScope[ModelWBigDecimalAnnotatedNoType]() {
+    val properties = model.value.getProperties
+    val fieldSchema = properties.get("field")
+    properties.size() shouldBe 1
+
+    fieldSchema shouldBe a[NumberSchema]
+  }
+
+  it should "process Model with Scala BigDecimal with default value annotation" in new PropertiesScope[ModelWBigDecimalAnnotatedDefault](
+    false
+  ) {
     val fieldSchema = model.value.getProperties.get("field")
     fieldSchema shouldBe a[StringSchema]
     val stringSchema = fieldSchema.asInstanceOf[StringSchema]
