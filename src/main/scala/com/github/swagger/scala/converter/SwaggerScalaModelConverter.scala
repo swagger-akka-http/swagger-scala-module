@@ -208,9 +208,13 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
+  private def hasTypeOverride(ann: SchemaAnnotation): Boolean = {
+    !(ann.implementation() == VoidClass && ann.`type`() == "")
+  }
+
   private def matchScalaPrimitives(`type`: AnnotatedType, nullableClass: Class[_]): Option[Schema[_]] = {
     val annotations = Option(`type`.getCtxAnnotations).map(_.toSeq).getOrElse(Seq.empty)
-    annotations.collectFirst { case ann: SchemaAnnotation => ann } match {
+    annotations.collectFirst { case ann: SchemaAnnotation if hasTypeOverride(ann) => ann } match {
       case Some(_) => None
       case _ => {
         annotations.collectFirst { case ann: JsonScalaEnumeration => ann } match {

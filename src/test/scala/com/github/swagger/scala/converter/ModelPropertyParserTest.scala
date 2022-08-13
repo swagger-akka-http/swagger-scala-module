@@ -11,6 +11,7 @@ import org.scalatest.matchers.should.Matchers
 
 import java.util
 import scala.collection.JavaConverters._
+import scala.collection.Seq
 import scala.reflect.ClassTag
 
 class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with OptionValues {
@@ -177,12 +178,22 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
 
+    if (!RuntimeUtil.isScala3()) {
+      val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+      annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+      annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+
+      val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+      annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+      annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+    }
+
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
   }
 
   it should "prioritize required based on (Option or not) type when `setRequiredBasedOnAnnotation` is set" in new PropertiesScope[
     ModelWOptionIntSchemaOverrideForRequired
-  ](false) {
+  ](requiredBasedAnnotation = false) {
 
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
@@ -191,6 +202,16 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val annotatedIntWithDefault = model.value.getProperties.get("annotatedIntWithDefault")
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
+
+    if (!RuntimeUtil.isScala3()) {
+      val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+      annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+      annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+
+      val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+      annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+      annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+    }
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
   }
@@ -308,14 +329,33 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
-  it should "process Model with Scala BigDecimal with default value annotation" in new PropertiesScope[ModelWBigDecimalAnnotated](false) {
+  it should "map BigDecimal to schema type 'number'" in new PropertiesScope[ModelWBigDecimalNoType]() {
+    val properties = model.value.getProperties
+    val fieldSchema = properties.get("field")
+    properties.size() shouldBe 1
+
+    fieldSchema shouldBe a[NumberSchema]
+  }
+
+  it should "map BigDecimal to schema type 'number' even when annotated" in new PropertiesScope[ModelWBigDecimalAnnotatedNoType]() {
+    val properties = model.value.getProperties
+    val fieldSchema = properties.get("field")
+    properties.size() shouldBe 1
+
+    fieldSchema shouldBe a[NumberSchema]
+  }
+
+  it should "process Model with Scala BigDecimal with default value annotation" in new PropertiesScope[ModelWBigDecimalAnnotatedDefault](
+    false
+  ) {
     val fieldSchema = model.value.getProperties.get("field")
     fieldSchema shouldBe a[StringSchema]
     val stringSchema = fieldSchema.asInstanceOf[StringSchema]
     stringSchema.getDefault shouldEqual ("42.0")
     stringSchema.getExample shouldEqual ("42.0")
+    stringSchema.getDescription shouldBe "required of annotation should be honoured"
 
-    nullSafeSeq(model.value.getRequired) shouldBe empty
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
   it should "process Model with Scala BigInt with annotation" in new PropertiesScope[ModelWBigIntAnnotated] {
