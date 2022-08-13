@@ -30,7 +30,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
 
     val orderSize = userSchema.getProperties().get("orderSize")
     orderSize should not be null
-    orderSize shouldBe a [StringSchema]
+    orderSize shouldBe a[StringSchema]
     val sp = orderSize.asInstanceOf[StringSchema]
     Option(sp.getEnum) shouldBe defined
     sp.getEnum().asScala.toSet shouldEqual Set("TALL", "GRANDE", "VENTI")
@@ -42,7 +42,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
 
     val enumModel = userSchema.getProperties().get("enumValue")
     enumModel should not be null
-    enumModel shouldBe a [StringSchema]
+    enumModel shouldBe a[StringSchema]
     val sp = enumModel.asInstanceOf[StringSchema]
     Option(sp.getEnum) shouldBe defined
     sp.getEnum().asScala.toSet shouldEqual Set("a", "b")
@@ -63,13 +63,13 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val schemas = ModelConverters.getInstance().readAll(classOf[SimpleUser]).asScala
     val userSchema = schemas("SimpleUser")
     val id = userSchema.getProperties().get("id")
-    id shouldBe a [IntegerSchema]
+    id shouldBe a[IntegerSchema]
 
     val name = userSchema.getProperties().get("name")
-    name shouldBe a [StringSchema]
+    name shouldBe a[StringSchema]
 
     val date = userSchema.getProperties().get("date")
-    date shouldBe a [DateTimeSchema]
+    date shouldBe a[DateTimeSchema]
 //    date.getDescription should be ("the birthdate")
   }
 
@@ -77,7 +77,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithVector]).asScala
     val model = schemas("ModelWithVector")
     val friends = model.getProperties().get("friends")
-    friends shouldBe a [ArraySchema]
+    friends shouldBe a[ArraySchema]
   }
 
   it should "read a model with vector of ints" in {
@@ -85,7 +85,8 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val model = schemas("ModelWithIntVector")
     val prop = model.getProperties().get("ints")
     prop shouldBe a [ArraySchema]
-    prop.asInstanceOf[ArraySchema].getItems.getType should be ("integer")
+    prop shouldBe a[ArraySchema]
+    prop.asInstanceOf[ArraySchema].getItems.getType should be("integer")
   }
 
   it should "read a model with vector of booleans" in {
@@ -93,13 +94,13 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val model = schemas("ModelWithBooleanVector")
     val prop = model.getProperties().get("bools")
     prop shouldBe a [ArraySchema]
-    prop.asInstanceOf[ArraySchema].getItems.getType should be ("boolean")
+    prop.asInstanceOf[ArraySchema].getItems.getType should be("boolean")
   }
 }
 
-case class ModelWithVector (name: String, friends: Vector[String])
+case class ModelWithVector(name: String, friends: Vector[String])
 
-case class ModelWithIntVector (ints: Vector[Int])
-case class ModelWithBooleanVector (bools: Vector[Boolean])
+case class ModelWithIntVector(ints: Vector[Int])
+case class ModelWithBooleanVector(bools: Vector[Boolean])
 
-case class SimpleUser (id: Long, name: String, @(Parameter @field)(description =  "the birthdate") date: java.util.Date)
+case class SimpleUser(id: Long, name: String, @(Parameter @field)(description = "the birthdate") date: java.util.Date)
