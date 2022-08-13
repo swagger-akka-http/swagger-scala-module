@@ -20,9 +20,12 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   override protected def afterEach() = {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(true)
   }
-
-  it should "verify swagger-core bug 814" in {
+  
+  trait TestScope {
     val converter = ModelConverters.getInstance()
+  }
+
+  it should "verify swagger-core bug 814" in new TestScope {
     val schemas = converter.readAll(classOf[CoreBug814])
     val model = schemas.get("CoreBug814")
     model should not be (null)
@@ -32,8 +35,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     isFoo shouldBe a[BooleanSchema]
   }
 
-  it should "process Option[String] as string" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Option[String] as string" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionString]).asScala.toMap
     val model = schemas.get("ModelWOptionString")
     model should be(defined)
@@ -55,8 +57,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(ipAddress.getRequired) shouldBe empty
   }
 
-  it should "process Option[Model] as Model" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Option[Model] as Model" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionModel]).asScala.toMap
     val model = schemas.get("ModelWOptionModel")
     model should be (defined)
@@ -66,10 +67,9 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     modelOpt.get$ref() shouldEqual "#/components/schemas/ModelWOptionString"
   }
 
-  it should "process Model with Scala BigDecimal as Number" in {
+  it should "process Model with Scala BigDecimal as Number" in new TestScope {
     case class TestModelWithBigDecimal(field: BigDecimal)
 
-    val converter = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[TestModelWithBigDecimal]).asScala.toMap
     val model = findModel(schemas, "TestModelWithBigDecimal")
     model should be (defined)
@@ -79,10 +79,9 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) should not be empty
   }
 
-  it should "process Model with Scala BigInt as Number" in {
+  it should "process Model with Scala BigInt as Number" in new TestScope {
     case class TestModelWithBigInt(field: BigInt)
 
-    val converter = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[TestModelWithBigInt]).asScala.toMap
     val model = findModel(schemas, "TestModelWithBigInt")
     model should be (defined)
@@ -92,8 +91,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) should not be empty
   }
 
-  it should "process Model with Scala Option BigDecimal" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Option BigDecimal" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionBigDecimal]).asScala.toMap
     val model = schemas.get("ModelWOptionBigDecimal")
     model should be (defined)
@@ -104,8 +102,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model with Scala Option BigInt" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Option BigInt" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionBigInt]).asScala.toMap
     val model = schemas.get("ModelWOptionBigInt")
     model should be (defined)
@@ -116,8 +113,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model with Scala Option Int" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Option Int" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionInt]).asScala.toMap
     val model = schemas.get("ModelWOptionInt")
     model should be (defined)
@@ -133,8 +129,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model with nested Scala Option Int" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with nested Scala Option Int" in new TestScope {
     val schemas = converter.readAll(classOf[NestedModelWOptionInt]).asScala.toMap
     val model = schemas.get("NestedModelWOptionInt")
     model should be(defined)
@@ -150,8 +145,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model without any properties" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model without any properties" in new TestScope {
     val schemas = converter.readAll(classOf[NoProperties]).asScala.toMap
     val model = schemas.get("NoProperties")
     model should be(defined)
@@ -160,8 +154,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     model.get.getDescription shouldBe "An empty case class"
   }
 
-  it should "process Model with nested Scala Option Int with Schema Override" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with nested Scala Option Int with Schema Override" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverride]).asScala.toMap
     val model = schemas.get("ModelWOptionIntSchemaOverride")
     model should be(defined)
@@ -178,8 +171,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model with Scala Option Int with Schema Override" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Option Int with Schema Override" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverride]).asScala.toMap
     val model = schemas.get("ModelWOptionIntSchemaOverride")
     model should be (defined)
@@ -196,8 +188,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "prioritize required as specified in annotation by default" in {
-    val converter: ModelConverters = ModelConverters.getInstance()
+  it should "prioritize required as specified in annotation by default" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverrideForRequired]).asScala.toMap
     val model = schemas.get("ModelWOptionIntSchemaOverrideForRequired")
 
@@ -213,9 +204,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   }
 
 
-  it should "prioritize required based on (Option or not) type when `setRequiredBasedOnAnnotation` is set" in {
+  it should "prioritize required based on (Option or not) type when `setRequiredBasedOnAnnotation` is set" in new TestScope {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(false)
-    val converter: ModelConverters = ModelConverters.getInstance()
     val schemas = converter.readAll(classOf[ModelWOptionIntSchemaOverrideForRequired]).asScala.toMap
     val model = schemas.get("ModelWOptionIntSchemaOverrideForRequired")
 
@@ -231,8 +221,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
       "annotatedRequiredInt")
   }
 
-  it should "process Model with Scala Option Long" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Option Long" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionLong]).asScala.toMap
     val model = schemas.get("ModelWOptionLong")
     model should be (defined)
@@ -248,8 +237,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model with Scala Option Long with Schema Override" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Option Long with Schema Override" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionLongSchemaOverride]).asScala.toMap
     val model = schemas.get("ModelWOptionLongSchemaOverride")
     model should be (defined)
@@ -261,8 +249,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model with Scala Option Long with Schema Int Override" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Option Long with Schema Int Override" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionLongSchemaIntOverride]).asScala.toMap
     val model = schemas.get("ModelWOptionLongSchemaIntOverride")
     model should be(defined)
@@ -274,8 +261,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model with Scala Option Boolean" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Option Boolean" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionBoolean]).asScala.toMap
     val model = schemas.get("ModelWOptionBoolean")
     model should be (defined)
@@ -286,8 +272,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model with Scala Option Boolean with Schema Override" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Option Boolean with Schema Override" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionBooleanSchemaOverride]).asScala.toMap
     val model = schemas.get("ModelWOptionBooleanSchemaOverride")
     model should be (defined)
@@ -298,7 +283,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process all properties as required barring Option[_] or if overridden in annotation" in {
+  it should "process all properties as required barring Option[_] or if overridden in annotation" in new TestScope {
     val schemas = ModelConverters
       .getInstance()
       .readAll(classOf[ModelWithOptionAndNonOption])
@@ -324,7 +309,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     requiredItems shouldBe List("forcedRequired", "required")
   }
 
-  it should "process all properties as required barring Option[_] or if overridden in annotation (Schema annotation)" in {
+  it should "process all properties as required barring Option[_] or if overridden in annotation (Schema annotation)" in new TestScope {
     val schemas = ModelConverters
       .getInstance()
       .readAll(classOf[ModelWithOptionAndNonOption2])
@@ -350,21 +335,19 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     requiredItems shouldBe List("forcedRequired", "required")
   }
 
-  it should "handle null properties from converters later in the chain" in {
+  it should "handle null properties from converters later in the chain" in new TestScope {
     object CustomConverter extends ModelConverter {
       override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: util.Iterator[ModelConverter]): Schema[_] = {
         if (chain.hasNext) chain.next().resolve(`type`, context, chain) else null
       }
     }
 
-    val converter = new ModelConverters()
     converter.addConverter(CustomConverter)
     converter.addConverter(new SwaggerScalaModelConverter)
     converter.readAll(classOf[Option[Int]])
   }
 
-  it should "process Model with Scala BigDecimal with annotation" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala BigDecimal with annotation" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWBigDecimalAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWBigDecimalAnnotated")
     model should be (defined)
@@ -375,8 +358,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
-  it should "process Model with Scala BigDecimal with default value annotation" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala BigDecimal with default value annotation" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWBigDecimalAnnotatedDefault]).asScala.toMap
     val model = findModel(schemas, "ModelWBigDecimalAnnotatedDefault")
     model should be(defined)
@@ -390,8 +372,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Model with Scala BigInt with annotation" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala BigInt with annotation" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWBigIntAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWBigIntAnnotated")
     model should be (defined)
@@ -401,8 +382,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
-  it should "process Model with Scala Enum with annotation" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Enum with annotation" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWEnumAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWEnumAnnotated")
     model should be(defined)
@@ -414,8 +394,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
-  it should "process ListReply Model" in {
-    val converter = ModelConverters.getInstance()
+  it should "process ListReply Model" in new TestScope {
     val schemas = converter.readAll(classOf[ListReply[String]]).asScala.toMap
     val model = findModel(schemas, "ListReply")
     model should be (defined)
@@ -429,8 +408,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     Json.mapper().writeValueAsString(model.value)
   }
 
-  it should "process Model with Scala Seq" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Seq" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWSeqString]).asScala.toMap
     val model = findModel(schemas, "ModelWSeqString")
     model should be (defined)
@@ -444,8 +422,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
-  it should "process Model with Scala Seq Int" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Seq Int" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWSeqInt]).asScala.toMap
     val model = findModel(schemas, "ModelWSeqInt")
     model should be(defined)
@@ -466,8 +443,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
-  it should "process Model with Scala Seq Int (default provided in constructor)" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Seq Int (default provided in constructor)" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWSeqIntDefaulted]).asScala.toMap
     val model = findModel(schemas, "ModelWSeqIntDefaulted")
     model should be(defined)
@@ -488,8 +464,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
-  it should "process Model with Scala Seq Int (annotated)" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Seq Int (annotated)" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWSeqIntAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWSeqIntAnnotated")
     model should be(defined)
@@ -511,8 +486,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
-  it should "process Model with Scala Set" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Set" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWSetString]).asScala.toMap
     val model = findModel(schemas, "ModelWSetString")
     model should be (defined)
@@ -526,8 +500,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
-  it should "process Model with Java List" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Java List" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWJavaListString]).asScala.toMap
     val model = findModel(schemas, "ModelWJavaListString")
     model should be (defined)
@@ -541,8 +514,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
 
-  it should "process Model with Scala Map" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Scala Map" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWMapString]).asScala.toMap
     val model = findModel(schemas, "ModelWMapString")
     model should be (defined)
@@ -555,8 +527,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(mapSchema.getRequired()) shouldBe empty
   }
 
-  it should "process Model with Java Map" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Model with Java Map" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWJavaMapString]).asScala.toMap
     val model = findModel(schemas, "ModelWJavaMapString")
     model should be (defined)
@@ -569,8 +540,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(mapSchema.getRequired()) shouldBe empty
   }
 
-  it should "process EchoList" in {
-    val converter = ModelConverters.getInstance()
+  it should "process EchoList" in new TestScope {
     val schemas = converter.readAll(classOf[EchoList]).asScala.toMap
     val model = findModel(schemas, "EchoList")
     model should be (defined)
@@ -582,24 +552,21 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     model.value.getRequired().asScala shouldEqual Seq("val1", "val2")
   }
 
-  it should "process Array-Model with Scala nonOption Seq (annotated)" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Array-Model with Scala nonOption Seq (annotated)" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWStringSeqAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWStringSeqAnnotated")
     model should be(defined)
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process Array-Model with forced required Scala Option Seq (annotated)" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Array-Model with forced required Scala Option Seq (annotated)" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionStringSeqAnnotated]).asScala.toMap
     val model = findModel(schemas, "ModelWOptionStringSeqAnnotated")
     model should be(defined)
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("listOfStrings")
   }
 
-  it should "process scala Iterable[T] classes" in {
-    val converter = ModelConverters.getInstance()
+  it should "process scala Iterable[T] classes" in new TestScope {
     val schemas = converter.readAll(classOf[Seq[String]]).asScala.toMap
     val model = findModel(schemas, "Seq")
     model should be(defined)
@@ -607,16 +574,14 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     model.value.getRequired should be(null)
   }
 
-  it should "process Array-Model with forced required Scala Option Seq" in {
-    val converter = ModelConverters.getInstance()
+  it should "process Array-Model with forced required Scala Option Seq" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWOptionStringSeq]).asScala.toMap
     val model = findModel(schemas, "ModelWOptionStringSeq")
     model should be(defined)
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "process case class with Duration field" in {
-    val converter = ModelConverters.getInstance()
+  it should "process case class with Duration field" in new TestScope {
     val schemas = converter.readAll(classOf[ModelWDuration]).asScala.toMap
     val model = findModel(schemas, "ModelWDuration")
     model should be(defined)
