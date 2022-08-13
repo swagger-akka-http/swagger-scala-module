@@ -84,7 +84,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithIntVector]).asScala
     val model = schemas("ModelWithIntVector")
     val prop = model.getProperties().get("ints")
-    prop shouldBe a [ArraySchema]
+    prop shouldBe a[ArraySchema]
     prop shouldBe a[ArraySchema]
     prop.asInstanceOf[ArraySchema].getItems.getType should be("integer")
   }
@@ -93,7 +93,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithBooleanVector]).asScala
     val model = schemas("ModelWithBooleanVector")
     val prop = model.getProperties().get("bools")
-    prop shouldBe a [ArraySchema]
+    prop shouldBe a[ArraySchema]
     prop.asInstanceOf[ArraySchema].getItems.getType should be("boolean")
   }
 }
