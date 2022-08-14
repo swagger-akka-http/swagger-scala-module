@@ -169,7 +169,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](true, true) {
+  it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](true) {
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
     requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5

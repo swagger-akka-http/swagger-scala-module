@@ -165,10 +165,11 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               }
             }
             case annotations => {
+              val annotationRequired = getRequiredSettings(annotations).headOption.getOrElse(false)
               if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
-                setRequiredBasedOnAnnotation(schema, propertyName, annotations)
+                setRequiredBasedOnAnnotation(schema, propertyName, annotationRequired)
               } else {
-                setRequiredBasedOnType(schema, propertyName, annotations, isOptional, hasDefaultValue)
+                setRequiredBasedOnType(schema, propertyName, isOptional, hasDefaultValue, annotationRequired)
               }
             }
           }
@@ -184,20 +185,18 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def setRequiredBasedOnAnnotation(
       schema: Schema[_],
       propertyName: String,
-      annotations: Seq[Annotation]
-  ) = {
-    val annotationSetting = getRequiredSettings(annotations).headOption.getOrElse(false)
+      annotationSetting: Boolean
+  ): Unit = {
     if (annotationSetting) addRequiredItem(schema, propertyName)
   }
 
   private def setRequiredBasedOnType(
       schema: Schema[_],
       propertyName: String,
-      annotations: Seq[Annotation],
       isOptional: Boolean,
-      hasDefaultValue: Boolean
-  ) = {
-    val annotationSetting = getRequiredSettings(annotations).headOption.getOrElse(false)
+      hasDefaultValue: Boolean,
+      annotationSetting: Boolean
+  ): Unit = {
     val required = if (isOptional) {
       annotationSetting
     } else {
