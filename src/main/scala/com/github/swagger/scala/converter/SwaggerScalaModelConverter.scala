@@ -156,26 +156,50 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               val requiredFlag = !isOptional && !hasDefaultValue
               if (!requiredFlag && schema.getRequired != null && schema.getRequired.contains(propertyName)) {
                 schema.getRequired.remove(propertyName)
-              } else if (requiredFlag && SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
+              } else if (requiredFlag) {
                 addRequiredItem(schema, propertyName)
               }
             }
             case annotations => {
-              val annotationSetting = getRequiredSettings(annotations).headOption.getOrElse(false)
-              val required = if (isOptional || SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
-                annotationSetting
+              if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
+                setRequiredBasedOnAnnotation(schema, propertyName, annotations)
               } else {
-                !hasDefaultValue
+                setRequiredBasedOnType(schema, propertyName, annotations, isOptional, hasDefaultValue)
               }
-              if (required) addRequiredItem(schema, propertyName)
             }
           }
+
         }
         schema
       }
     } else {
       None
     }
+  }
+
+  private def setRequiredBasedOnAnnotation(
+      schema: Schema[_],
+      propertyName: String,
+      annotations: Seq[Annotation]
+  ) = {
+    val annotationSetting = getRequiredSettings(annotations).headOption.getOrElse(false)
+    if (annotationSetting) addRequiredItem(schema, propertyName)
+  }
+
+  private def setRequiredBasedOnType(
+      schema: Schema[_],
+      propertyName: String,
+      annotations: Seq[Annotation],
+      isOptional: Boolean,
+      hasDefaultValue: Boolean
+  ) = {
+    val annotationSetting = getRequiredSettings(annotations).headOption.getOrElse(false)
+    val required = if (isOptional) {
+      annotationSetting
+    } else {
+      !hasDefaultValue
+    }
+    if (required) addRequiredItem(schema, propertyName)
   }
 
   private def updateTypeOnItemsSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) = {
