@@ -216,6 +216,18 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
   }
 
+  it should "consider fields that aren't optional required if `requiredBasedAnnotation == true`" in new PropertiesScope[
+    ModelWMultipleRequiredFields
+  ](
+    requiredBasedAnnotation = false
+  ) {
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("first", "second", "third")
+  }
+
+  it should "consider fields that aren't optional required" in new PropertiesScope[ModelWMultipleRequiredFields]() {
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("first", "second", "third")
+  }
+
   it should "process Model with Scala Option Long" in new PropertiesScope[ModelWOptionLong] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
