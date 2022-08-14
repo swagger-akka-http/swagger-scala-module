@@ -26,25 +26,29 @@ object SwaggerScalaModelConverter {
   val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
   private var requiredBasedOnAnnotation = true
 
-  /** [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]] by default
-    * This means that all fields that aren't [[Option]] will, counter to what you would expect based on the type,
-    * <b>not</b> be required by default.
-    * If this behavior is undesired, set [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]]
-    * and the required property on the annotation will be ignored, unless the field is an [[Option]].
+  /** If you use swagger annotations to override what is automatically derived, then be aware that
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]], by default. You are advised to set the required
+    * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
+    * the this module inferring the value (as ot would if you don't annotate the classes or fields), then set
+    * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]] and the required property on the annotation will be ignored,
+    * unless the field is an [[Option]].
     *
-    * @param value true by default
+    * @param value
+    *   true by default
     */
   def setRequiredBasedOnAnnotation(value: Boolean = true): Unit = {
     requiredBasedOnAnnotation = value
   }
 
-  /** [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]] by default
-    * This means that all fields that aren't [[Option]] will, counter to what you would expect based on the type,
-    * <b>not</b> be required by default.
-    * If this behavior is undesired, set [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]]
-    * and the required property on the annotation will be ignored, unless the field is an [[Option]].
+  /** If you use swagger annotations to override what is automatically derived, then be aware that
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]], by default. You are advised to set the required
+    * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
+    * the this module inferring the value (as ot would if you don't annotate the classes or fields), then set
+    * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]] and the required property on the annotation will be ignored,
+    * unless the field is an [[Option]].
     *
-    * @return value: true by default
+    * @return
+    *   value: true by default
     */
   def isRequiredBasedOnAnnotation: Boolean = requiredBasedOnAnnotation
 }

@@ -169,7 +169,9 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](true) {
+  it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](
+    true
+  ) {
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
     requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
@@ -416,8 +418,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    arraySchema.getItems shouldBe a[ObjectSchema] //probably type erasure - ideally this would eval as StringSchema
-    //next line used to fail (https://github.com/swagger-akka-http/swagger-akka-http/issues/171)
+    arraySchema.getItems shouldBe a[ObjectSchema] // probably type erasure - ideally this would eval as StringSchema
+    // next line used to fail (https://github.com/swagger-akka-http/swagger-akka-http/issues/171)
     Json.mapper().writeValueAsString(model.value)
   }
 
