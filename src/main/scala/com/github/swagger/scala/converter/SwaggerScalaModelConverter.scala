@@ -132,7 +132,11 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             // default values set in annotation leads to default values set in Scala constructor being ignored
             maybeDefault.foreach { default =>
               schemaProperties.get(propertyName).foreach { property =>
-                property.setDefault(default())
+                val defaultValue = default()
+                defaultValue match {
+                  case None =>
+                  case _ => property.setDefault(defaultValue)
+                }
               }
             }
           }

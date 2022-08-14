@@ -169,7 +169,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired] {
+  it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](true, true) {
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
     requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
@@ -186,6 +186,10 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
       val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
       annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
       annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+
+      val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+      annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+      annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
     }
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
@@ -211,6 +215,10 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
       val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
       annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
       annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+
+      val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+      annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+      annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
     }
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
