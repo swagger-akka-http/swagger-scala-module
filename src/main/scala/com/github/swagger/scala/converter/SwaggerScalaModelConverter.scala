@@ -132,7 +132,11 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             // default values set in annotation leads to default values set in Scala constructor being ignored
             maybeDefault.foreach { default =>
               schemaProperties.get(propertyName).foreach { property =>
-                property.setDefault(default())
+                val defaultValue = default()
+                defaultValue match {
+                  case None =>
+                  case _ => property.setDefault(defaultValue)
+                }
               }
             }
           }
@@ -156,26 +160,49 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               val requiredFlag = !isOptional && !hasDefaultValue
               if (!requiredFlag && schema.getRequired != null && schema.getRequired.contains(propertyName)) {
                 schema.getRequired.remove(propertyName)
-              } else if (requiredFlag && SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
+              } else if (requiredFlag) {
                 addRequiredItem(schema, propertyName)
               }
             }
             case annotations => {
-              val annotationSetting = getRequiredSettings(annotations).headOption.getOrElse(false)
-              val required = if (isOptional || SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
-                annotationSetting
+              val annotationRequired = getRequiredSettings(annotations).headOption.getOrElse(false)
+              if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
+                setRequiredBasedOnAnnotation(schema, propertyName, annotationRequired)
               } else {
-                !hasDefaultValue
+                setRequiredBasedOnType(schema, propertyName, isOptional, hasDefaultValue, annotationRequired)
               }
-              if (required) addRequiredItem(schema, propertyName)
             }
           }
+
         }
         schema
       }
     } else {
       None
     }
+  }
+
+  private def setRequiredBasedOnAnnotation(
+      schema: Schema[_],
+      propertyName: String,
+      annotationSetting: Boolean
+  ): Unit = {
+    if (annotationSetting) addRequiredItem(schema, propertyName)
+  }
+
+  private def setRequiredBasedOnType(
+      schema: Schema[_],
+      propertyName: String,
+      isOptional: Boolean,
+      hasDefaultValue: Boolean,
+      annotationSetting: Boolean
+  ): Unit = {
+    val required = if (isOptional) {
+      annotationSetting
+    } else {
+      !hasDefaultValue
+    }
+    if (required) addRequiredItem(schema, propertyName)
   }
 
   private def updateTypeOnItemsSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) = {
