@@ -511,6 +511,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     mapSchema.getUniqueItems() shouldBe (null)
     nullSafeMap(mapSchema.getProperties()) shouldBe empty
     nullSafeSeq(mapSchema.getRequired()) shouldBe empty
+    nullSafeSet(mapSchema.getTypes) shouldEqual Set("object")
   }
 
   it should "process Model with Java Map" in new PropertiesScope[ModelWJavaMapString] {
@@ -520,6 +521,17 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     mapSchema.getUniqueItems() shouldBe (null)
     nullSafeMap(mapSchema.getProperties()) shouldBe empty
     nullSafeSeq(mapSchema.getRequired()) shouldBe empty
+    nullSafeSet(mapSchema.getTypes) shouldEqual Set("object")
+  }
+
+  it should "process Model with Scala Map[Int, Long]" in new PropertiesScope[ModelWMapIntLong] {
+    val mapField = model.value.getProperties.get("map")
+    mapField shouldBe a[MapSchema]
+    val mapSchema = mapField.asInstanceOf[MapSchema]
+    mapSchema.getUniqueItems() shouldBe (null)
+    nullSafeMap(mapSchema.getProperties()) shouldBe empty
+    nullSafeSeq(mapSchema.getRequired()) shouldBe empty
+    nullSafeSet(mapSchema.getTypes) shouldEqual Set("object")
   }
 
   it should "process EchoList" in new PropertiesScope[EchoList] {
@@ -571,6 +583,11 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   private def nullSafeSeq[T](list: java.util.List[T]): Seq[T] = Option(list) match {
     case None => List.empty[T]
     case Some(l) => l.asScala.toSeq
+  }
+
+  private def nullSafeSet[T](list: java.util.Set[T]): Set[T] = Option(list) match {
+    case None => Set.empty[T]
+    case Some(l) => l.asScala.toSet
   }
 
   private def nullSafeMap[K, V](map: java.util.Map[K, V]): Map[K, V] = Option(map) match {
