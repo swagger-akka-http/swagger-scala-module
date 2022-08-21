@@ -534,6 +534,16 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSet(mapSchema.getTypes) shouldEqual Set("object")
   }
 
+  it should "process Model with Scala IntMap[Long]" in new PropertiesScope[ModelWIntMapLong] {
+    val mapField = model.value.getProperties.get("map")
+    mapField shouldBe a[MapSchema]
+    val mapSchema = mapField.asInstanceOf[MapSchema]
+    mapSchema.getUniqueItems() shouldBe (null)
+    nullSafeMap(mapSchema.getProperties()) shouldBe empty
+    nullSafeSeq(mapSchema.getRequired()) shouldBe empty
+    nullSafeSet(mapSchema.getTypes) shouldEqual Set("object")
+  }
+
   it should "process EchoList" in new PropertiesScope[EchoList] {
     val val1Field = model.value.getProperties.get("val1")
     val1Field shouldBe a[IntegerSchema]
