@@ -1,10 +1,7 @@
 package com.github.swagger.scala.converter
 
-import java.lang.annotation.Annotation
-import java.lang.reflect.ParameterizedType
-import java.util.Iterator
-import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.`type`.ReferenceType
+import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
@@ -15,29 +12,62 @@ import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotat
 import io.swagger.v3.oas.models.media.Schema
 import org.slf4j.LoggerFactory
 
+import java.lang.annotation.Annotation
+import java.lang.reflect.ParameterizedType
+import java.util
+import scala.collection.JavaConverters._
+import scala.collection.Seq
 import scala.util.Try
 import scala.util.control.NonFatal
 
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  val objectMapper = Json.mapper().registerModule(DefaultScalaModule)
+  val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
+  private var requiredBasedOnAnnotation = true
+
+  /** If you use swagger annotations to override what is automatically derived, then be aware that
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]], by default. You are advised to set the required
+    * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
+    * the this module inferring the value (as ot would if you don't annotate the classes or fields), then set
+    * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]] and the required property on the annotation will be ignored,
+    * unless the field is an [[Option]].
+    *
+    * @param value
+    *   true by default
+    */
+  def setRequiredBasedOnAnnotation(value: Boolean = true): Unit = {
+    requiredBasedOnAnnotation = value
+  }
+
+  /** If you use swagger annotations to override what is automatically derived, then be aware that
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]], by default. You are advised to set the required
+    * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
+    * the this module inferring the value (as ot would if you don't annotate the classes or fields), then set
+    * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]] and the required property on the annotation will be ignored,
+    * unless the field is an [[Option]].
+    *
+    * @return
+    *   value: true by default
+    */
+  def isRequiredBasedOnAnnotation: Boolean = requiredBasedOnAnnotation
 }
 
 class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverter.objectMapper) {
-  SwaggerScalaModelConverter
 
   private val logger = LoggerFactory.getLogger(classOf[SwaggerScalaModelConverter])
+  private val VoidClass = classOf[Void]
   private val EnumClass = classOf[scala.Enumeration]
   private val OptionClass = classOf[scala.Option[_]]
   private val IterableClass = classOf[scala.collection.Iterable[_]]
+  private val MapClass = classOf[Map[_, _]]
   private val SetClass = classOf[scala.collection.Set[_]]
   private val BigDecimalClass = classOf[BigDecimal]
   private val BigIntClass = classOf[BigInt]
   private val ProductClass = classOf[Product]
   private val AnyClass = classOf[Any]
 
-  override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: Iterator[ModelConverter]): Schema[_] = {
+  override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: util.Iterator[ModelConverter]): Schema[_] = {
     val javaType = _mapper.constructType(`type`.getType)
     val cls = javaType.getRawClass
 
@@ -45,7 +75,12 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       // Unbox scala options
       val annotatedOverrides = getRequiredSettings(`type`)
       if (_isOptional(`type`, cls)) {
-        val baseType = if (annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType() else new AnnotatedTypeForOption()
+        val baseType =
+          if (
+            SwaggerScalaModelConverter.isRequiredBasedOnAnnotation
+            && annotatedOverrides.headOption.getOrElse(false)
+          ) new AnnotatedType()
+          else new AnnotatedTypeForOption()
         resolve(nextType(baseType, `type`, javaType), context, chain)
       } else if (!annotatedOverrides.headOption.getOrElse(true)) {
         resolve(nextType(new AnnotatedTypeForOption(), `type`, javaType), context, chain)
@@ -70,28 +105,79 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def caseClassSchema(cls: Class[_], `type`: AnnotatedType, context: ModelConverterContext,
-                              chain: Iterator[ModelConverter]): Option[Schema[_]] = {
+  private def caseClassSchema(
+      cls: Class[_],
+      `type`: AnnotatedType,
+      context: ModelConverterContext,
+      chain: util.Iterator[ModelConverter]
+  ): Option[Schema[_]] = {
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
+        val schemaProperties = nullSafeMap(schema.getProperties)
         val introspector = BeanIntrospector(cls)
+        val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
         introspector.properties.foreach { property =>
-          getPropertyAnnotations(property) match {
+          val propertyName = property.name
+          val (propertyClass, propertyAnnotations) = getPropertyClassAndAnnotations(property)
+          val isOptional = isOption(propertyClass)
+          val schemaOverride = propertyAnnotations.collectFirst { case s: SchemaAnnotation => s }
+          val schemaOverrideClass = schemaOverride.flatMap { s =>
+            // this form is needed by the Scala 2.11 compiler
+            val classOption: Option[Class[_]] = if (s.implementation() == VoidClass) None else Option(s.implementation())
+            classOption
+          }
+          val maybeDefault = property.param.flatMap(_.defaultValue)
+          val schemaDefaultValue = schemaOverride.flatMap { s =>
+            Option(s.defaultValue()).flatMap(str => if (str.isEmpty) None else Some(str))
+          }
+          val hasDefaultValue = schemaDefaultValue.nonEmpty || maybeDefault.nonEmpty
+
+          if (schemaDefaultValue.isEmpty) {
+            // default values set in annotation leads to default values set in Scala constructor being ignored
+            maybeDefault.foreach { default =>
+              schemaProperties.get(propertyName).foreach { property =>
+                val defaultValue = default()
+                defaultValue match {
+                  case None =>
+                  case _ => property.setDefault(defaultValue)
+                }
+              }
+            }
+          }
+
+          if (schemaProperties.nonEmpty && schemaOverrideClass.isEmpty) {
+            erasedProperties.get(propertyName).foreach { erasedType =>
+              schemaProperties.get(propertyName).foreach { property =>
+                Option(PrimitiveType.fromType(erasedType)).foreach { primitiveType =>
+                  if (isOptional) {
+                    schema.addProperty(propertyName, correctSchema(property, primitiveType))
+                  }
+                  if (isIterable(propertyClass) && !isMap(propertyClass)) {
+                    schema.addProperty(propertyName, updateTypeOnItemsSchema(primitiveType, property))
+                  }
+                }
+              }
+            }
+          }
+          propertyAnnotations match {
             case Seq() => {
-              val propertyClass = getPropertyClass(property)
-              val optionalFlag = isOption(propertyClass)
-              if (optionalFlag && schema.getRequired != null && schema.getRequired.contains(property.name)) {
-                schema.getRequired.remove(property.name)
-              } else if (!optionalFlag) {
-                addRequiredItem(schema, property.name)
+              val requiredFlag = !isOptional && !hasDefaultValue
+              if (!requiredFlag && schema.getRequired != null && schema.getRequired.contains(propertyName)) {
+                schema.getRequired.remove(propertyName)
+              } else if (requiredFlag) {
+                addRequiredItem(schema, propertyName)
               }
             }
             case annotations => {
-              val required = getRequiredSettings(annotations).headOption
-                .getOrElse(!isOption(getPropertyClass(property)))
-              if (required) addRequiredItem(schema, property.name)
+              val annotationRequired = getRequiredSettings(annotations).headOption.getOrElse(false)
+              if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
+                setRequiredBasedOnAnnotation(schema, propertyName, annotationRequired)
+              } else {
+                setRequiredBasedOnType(schema, propertyName, isOptional, hasDefaultValue, annotationRequired)
+              }
             }
           }
+
         }
         schema
       }
@@ -100,9 +186,49 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
+  private def setRequiredBasedOnAnnotation(
+      schema: Schema[_],
+      propertyName: String,
+      annotationSetting: Boolean
+  ): Unit = {
+    if (annotationSetting) addRequiredItem(schema, propertyName)
+  }
+
+  private def setRequiredBasedOnType(
+      schema: Schema[_],
+      propertyName: String,
+      isOptional: Boolean,
+      hasDefaultValue: Boolean,
+      annotationSetting: Boolean
+  ): Unit = {
+    val required = if (isOptional) {
+      annotationSetting
+    } else {
+      !hasDefaultValue
+    }
+    if (required) addRequiredItem(schema, propertyName)
+  }
+
+  private def updateTypeOnItemsSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) = {
+    val updatedSchema = correctSchema(propertySchema.getItems, primitiveType)
+    propertySchema.setItems(updatedSchema)
+    propertySchema
+  }
+
+  private def correctSchema(itemSchema: Schema[_], primitiveType: PrimitiveType) = {
+    val primitiveProperty = primitiveType.createProperty()
+    val propAsString = objectMapper.writeValueAsString(itemSchema)
+    val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
+    correctedSchema.setType(primitiveProperty.getType)
+    if (itemSchema.getFormat == null) {
+      correctedSchema.setFormat(primitiveProperty.getFormat)
+    }
+    correctedSchema
+  }
+
   private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
     case _: AnnotatedTypeForOption => Seq.empty
-    case _ => getRequiredSettings(nullSafeList(annotatedType.getCtxAnnotations))
+    case _ => getRequiredSettings(nullSafeSeq(annotatedType.getCtxAnnotations))
   }
 
   private def getRequiredSettings(annotations: Seq[Annotation]): Seq[Boolean] = {
@@ -113,9 +239,13 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
+  private def hasTypeOverride(ann: SchemaAnnotation): Boolean = {
+    !(ann.implementation() == VoidClass && ann.`type`() == "")
+  }
+
   private def matchScalaPrimitives(`type`: AnnotatedType, nullableClass: Class[_]): Option[Schema[_]] = {
     val annotations = Option(`type`.getCtxAnnotations).map(_.toSeq).getOrElse(Seq.empty)
-    annotations.collectFirst { case ann: SchemaAnnotation => ann } match {
+    annotations.collectFirst { case ann: SchemaAnnotation if hasTypeOverride(ann) => ann } match {
       case Some(_) => None
       case _ => {
         annotations.collectFirst { case ann: JsonScalaEnumeration => ann } match {
@@ -129,7 +259,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               val mainClass = getMainClass(cls)
               val valueMethods = mainClass.getMethods.toSeq.filter { m =>
                 m.getDeclaringClass != EnumClass &&
-                  m.getReturnType.getName == "scala.Enumeration$Value" && m.getParameterCount == 0
+                m.getReturnType.getName == "scala.Enumeration$Value" && m.getParameterCount == 0
               }
               val enumValues = valueMethods.map(_.invoke(None.orNull))
               enumValues.foreach { v =>
@@ -184,7 +314,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def nextType(baseType: AnnotatedType, `type`: AnnotatedType, javaType: JavaType): AnnotatedType = {
-    baseType.`type`(underlyingJavaType(`type`, javaType))
+    baseType
+      .`type`(underlyingJavaType(`type`, javaType))
       .ctxAnnotations(`type`.getCtxAnnotations)
       .parent(`type`.getParent)
       .schemaProperty(`type`.isSchemaProperty)
@@ -209,7 +340,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def setRequired(annotatedType: AnnotatedType): Unit = annotatedType match {
     case _: AnnotatedTypeForOption => // not required
     case _ => {
-      val required = getRequiredSettings(annotatedType).headOption.getOrElse(true)
+      val reqSettings = getRequiredSettings(annotatedType)
+      val required = reqSettings.headOption.getOrElse(true)
       if (required) {
         Option(annotatedType.getParent).foreach { parent =>
           Option(annotatedType.getPropertyName).foreach { n =>
@@ -220,66 +352,52 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def getPropertyClass(property: PropertyDescriptor): Class[_] = {
+  private def getPropertyClassAndAnnotations(property: PropertyDescriptor): (Class[_], Seq[Annotation]) = {
     property.param match {
-      case Some(constructorParameter) => {
+      case Some(constructorParameter) =>
         val types = constructorParameter.constructor.getParameterTypes
-        if (constructorParameter.index > types.size) {
-          AnyClass
+        val annotations = constructorParameter.constructor.getParameterAnnotations
+        val index = constructorParameter.index
+        if (index > types.size) {
+          (AnyClass, Seq.empty)
         } else {
-          types(constructorParameter.index)
+          val onlyType = types(index)
+          val onlyAnnotations = if (index > annotations.size) { Seq.empty[Annotation] }
+          else { annotations(index).toIndexedSeq }
+          (onlyType, onlyAnnotations)
         }
-      }
-      case _ => property.field match {
-        case Some(field) => field.getType
-        case _ => property.setter match {
-          case Some(setter) if setter.getParameterCount == 1 => {
-            setter.getParameterTypes()(0)
-          }
-          case _ => property.beanSetter match {
-            case Some(setter) if setter.getParameterCount == 1 => {
-              setter.getParameterTypes()(0)
+      case _ =>
+        property.field match {
+          case Some(field) => (field.getType, field.getAnnotations.toSeq)
+          case _ =>
+            property.setter match {
+              case Some(setter) if setter.getParameterCount == 1 => {
+                (setter.getParameterTypes()(0), setter.getAnnotations.toSeq)
+              }
+              case _ =>
+                property.beanSetter match {
+                  case Some(setter) if setter.getParameterCount == 1 => {
+                    (setter.getParameterTypes()(0), setter.getAnnotations.toSeq)
+                  }
+                  case _ => (AnyClass, Seq.empty)
+                }
             }
-            case _ => AnyClass
-          }
         }
-      }
-    }
-  }
-
-  private def getPropertyAnnotations(property: PropertyDescriptor): Seq[Annotation] = {
-    property.param match {
-      case Some(constructorParameter) => {
-        val types = constructorParameter.constructor.getParameterAnnotations
-        if (constructorParameter.index > types.size) {
-          Seq.empty
-        } else {
-          types(constructorParameter.index).toSeq
-        }
-      }
-      case _ => property.field match {
-        case Some(field) => field.getAnnotations.toSeq
-        case _ => property.setter match {
-          case Some(setter) if setter.getParameterCount == 1 => {
-            setter.getAnnotations().toSeq
-          }
-          case _ => property.beanSetter match {
-            case Some(setter) if setter.getParameterCount == 1 => {
-              setter.getAnnotations().toSeq
-            }
-            case _ => Seq.empty
-          }
-        }
-      }
     }
   }
 
   private def isOption(cls: Class[_]): Boolean = cls == OptionClass
   private def isIterable(cls: Class[_]): Boolean = IterableClass.isAssignableFrom(cls)
+  private def isMap(cls: Class[_]): Boolean = MapClass.isAssignableFrom(cls)
   private def isCaseClass(cls: Class[_]): Boolean = ProductClass.isAssignableFrom(cls)
 
-  private def nullSafeList[T](array: Array[T]): List[T] = Option(array) match {
+  private def nullSafeSeq[T](array: Array[T]): Seq[T] = Option(array) match {
     case None => List.empty[T]
     case Some(arr) => arr.toList
+  }
+
+  private def nullSafeMap[K, V](map: java.util.Map[K, V]): Map[K, V] = Option(map) match {
+    case None => Map.empty[K, V]
+    case Some(m) => m.asScala.toMap
   }
 }

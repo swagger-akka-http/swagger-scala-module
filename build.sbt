@@ -9,9 +9,29 @@ organization := "com.github.swagger-akka-http"
 
 ThisBuild / scalaVersion := "2.13.8"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.8", "3.0.2")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.8", "3.1.3")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
+
+autoAPIMappings := true
+
+apiMappings ++= {
+  def mappingsFor(organization: String, names: List[String], location: String, revision: (String) => String = identity): Seq[(File, URL)] =
+    for {
+      entry: Attributed[File] <- (Compile / fullClasspath).value
+      module: ModuleID <- entry.get(moduleID.key)
+      if module.organization == organization
+      if names.exists(module.name.startsWith)
+    } yield entry.data -> url(location.format(revision(module.revision)))
+
+  val mappings: Seq[(File, URL)] =
+    mappingsFor("org.scala-lang", List("scala-library"), "https://scala-lang.org/api/%s/") ++
+      mappingsFor("io.swagger.core.v3", List("swagger-core-jakarta"), "https://javadoc.io/doc/io.swagger.core.v3/swagger-core/%s/") ++
+      mappingsFor("com.fasterxml.jackson.core", List("jackson-core"), "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-core/%s/") ++
+      mappingsFor("com.fasterxml.jackson.core", List("jackson-databind"), "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-databind/%s/")
+
+  mappings.toMap
+}
 
 val scalaReleaseVersion = SettingKey[Int]("scalaReleaseVersion")
 scalaReleaseVersion := {
@@ -47,11 +67,18 @@ pomIncludeRepository := { x => false }
 
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
-  "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.0",
+  "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.2",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.3",
-  "org.scalatest" %% "scalatest" % "3.2.11" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.13" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
+libraryDependencies ++= {
+  if (scalaReleaseVersion.value == 2) {
+    Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+  } else {
+    Seq()
+  }
+}
 
 homepage := Some(new URL("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -59,7 +86,7 @@ Test / parallelExecution := false
 
 startYear := Some(2014)
 
-licenses := Seq(("Apache License 2.0", new URL("http://www.apache.org/licenses/LICENSE-2.0.html")))
+licenses := Seq(("Apache License 2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.html")))
 
 pomExtra := {
   pomExtra.value ++ Group(
@@ -84,7 +111,7 @@ pomExtra := {
 
 ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep.Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2.13 build"), cond = Some("startsWith(matrix.scala, '2.13')")),
-  WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13')")),
+  WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13')"))
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec(Zulu, "8"))
