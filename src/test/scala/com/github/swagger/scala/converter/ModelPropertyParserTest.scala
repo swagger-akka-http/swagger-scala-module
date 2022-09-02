@@ -238,6 +238,19 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("first", "second", "third")
   }
 
+  it should "process Model with Scala Option Long (Some Default)" in new PropertiesScope[ModelWOptionLongWithSomeDefault] {
+    val optLong = model.value.getProperties().get("optLong")
+    optLong should not be (null)
+    if (RuntimeUtil.isScala3()) {
+      optLong shouldBe a[ObjectSchema]
+    } else {
+      optLong shouldBe a[IntegerSchema]
+      optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
+    }
+    optLong.getDefault shouldEqual Long.MaxValue
+    nullSafeSeq(model.value.getRequired) shouldBe empty
+  }
+
   it should "process Model with Scala Option Long" in new PropertiesScope[ModelWOptionLong] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
