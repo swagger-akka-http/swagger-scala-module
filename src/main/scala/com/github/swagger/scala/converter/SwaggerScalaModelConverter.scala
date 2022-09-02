@@ -139,7 +139,15 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
                 val defaultValue = default()
                 defaultValue match {
                   case None =>
-                  case _ => property.setDefault(defaultValue)
+                  case _ => {
+                    defaultValue match {
+                      case Some(wrappedValue) => property.setDefault(wrappedValue)
+                      case None => //no default
+                      case seq: Seq[_] => property.setDefault(seq.asJava)
+                      case set: Set[_] => property.setDefault(set.asJava)
+                      case dv => property.setDefault(dv)
+                    }
+                  }
                 }
               }
             }
