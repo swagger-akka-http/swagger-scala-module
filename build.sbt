@@ -7,9 +7,11 @@ import org.typelevel.sbt.gha.UseRef.Public
 
 organization := "com.github.swagger-akka-http"
 
+ThisBuild / version := "2.8.0-SNAPSHOT"
+
 ThisBuild / scalaVersion := "2.13.8"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.8", "3.1.3")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.8", "3.2.0")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -59,7 +61,7 @@ ThisBuild / scalacOptions ++= {
   Seq("-encoding", "UTF-8", "-deprecation", "-unchecked", "-feature") ++ additionalSettings
 }
 
-//ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
 Test / publishArtifact := false
 
@@ -68,7 +70,7 @@ pomIncludeRepository := { x => false }
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.2",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.3",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.14.0-SNAPSHOT" changing(),
   "org.scalatest" %% "scalatest" % "3.2.13" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
