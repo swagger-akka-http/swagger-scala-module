@@ -74,10 +74,7 @@ libraryDependencies ++= Seq(
 )
 libraryDependencies ++= {
   if (scalaReleaseVersion.value == 2) {
-    Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "com.github.pjfanning" %% "jackson-scala-reflect-extensions" % "2.13.4+14-94714f36-SNAPSHOT"
-    )
+    Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   } else {
     Seq()
   }

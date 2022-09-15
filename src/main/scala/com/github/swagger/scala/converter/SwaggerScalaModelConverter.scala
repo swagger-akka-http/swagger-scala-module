@@ -3,13 +3,13 @@ package com.github.swagger.scala.converter
 import com.fasterxml.jackson.databind.`type`.ReferenceType
 import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
-import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
+import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
-import io.swagger.v3.core.util.PrimitiveType
+import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
-import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.{ObjectSchema, Schema}
 import org.slf4j.LoggerFactory
 
 import java.lang.annotation.Annotation
@@ -23,7 +23,8 @@ import scala.util.control.NonFatal
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  val objectMapper: ObjectMapper = JacksonUtil.objectMapper
+  val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
+
   private var requiredBasedOnAnnotation = true
 
   /** If you use swagger annotations to override what is automatically derived, then be aware that
@@ -69,8 +70,23 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
 
   override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: util.Iterator[ModelConverter]): Schema[_] = {
     val javaType = _mapper.constructType(`type`.getType)
-    val cls = javaType.getRawClass
+    val subtypes = SubtypeHelper.findSubtypes(javaType.getRawClass)
+    if (subtypes.isEmpty) {
+      resolveWithoutSubtypes(javaType, `type`, context, chain)
+    } else {
+      val converters = chain.asScala.toSeq
+      val schema = new ObjectSchema
+      val subSchemas = subtypes.map { subtype =>
+        val javaSubType = _mapper.constructType(subtype)
+        resolveWithoutSubtypes(javaSubType, new AnnotatedType(subtype), context, converters.iterator.asJava)
+      }
+      schema.anyOf(subSchemas.asJava)
+    }
+  }
 
+  private def resolveWithoutSubtypes(javaType: JavaType, `type`: AnnotatedType, context: ModelConverterContext,
+                                     chain: util.Iterator[ModelConverter]): Schema[_] = {
+    val cls = javaType.getRawClass
     matchScalaPrimitives(`type`, cls).getOrElse {
       // Unbox scala options
       val annotatedOverrides = getRequiredSettings(`type`)
@@ -78,7 +94,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         val baseType =
           if (
             SwaggerScalaModelConverter.isRequiredBasedOnAnnotation
-            && annotatedOverrides.headOption.getOrElse(false)
+              && annotatedOverrides.headOption.getOrElse(false)
           ) new AnnotatedType()
           else new AnnotatedTypeForOption()
         resolve(nextType(baseType, `type`, javaType), context, chain)
