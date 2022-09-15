@@ -59,7 +59,7 @@ ThisBuild / scalacOptions ++= {
   Seq("-encoding", "UTF-8", "-deprecation", "-unchecked", "-feature") ++ additionalSettings
 }
 
-//ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
 Test / publishArtifact := false
 
@@ -74,7 +74,10 @@ libraryDependencies ++= Seq(
 )
 libraryDependencies ++= {
   if (scalaReleaseVersion.value == 2) {
-    Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+    Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "com.github.pjfanning" %% "jackson-scala-reflect-extensions" % "2.13.4+14-94714f36-SNAPSHOT"
+    )
   } else {
     Seq()
   }

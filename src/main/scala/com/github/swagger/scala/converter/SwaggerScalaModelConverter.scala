@@ -3,10 +3,10 @@ package com.github.swagger.scala.converter
 import com.fasterxml.jackson.databind.`type`.ReferenceType
 import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
-import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
+import com.fasterxml.jackson.module.scala.JsonScalaEnumeration
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
-import io.swagger.v3.core.util.{Json, PrimitiveType}
+import io.swagger.v3.core.util.PrimitiveType
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
 import io.swagger.v3.oas.models.media.Schema
@@ -23,7 +23,7 @@ import scala.util.control.NonFatal
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
+  val objectMapper: ObjectMapper = JacksonUtil.objectMapper
   private var requiredBasedOnAnnotation = true
 
   /** If you use swagger annotations to override what is automatically derived, then be aware that
