@@ -207,7 +207,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def getAnnotatedPropertyName(property: PropertyDescriptor): String = {
-    val (_, propertyAnnotations) = getPropertyClassAndAnnotations(property)
+    val propertyAnnotations = getPropertyAnnotations(property)
     propertyAnnotations.collectFirst { case s: SchemaAnnotation => s } match {
       case Some(ann) if ann.name().nonEmpty => ann.name()
       case _ => property.name
@@ -390,8 +390,12 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           (AnyClass, Seq.empty)
         } else {
           val onlyType = types(index)
-          val onlyAnnotations = if (index > annotations.size) { Seq.empty[Annotation] }
-          else { annotations(index).toIndexedSeq }
+          val onlyAnnotations = if (index > annotations.size) {
+            Seq.empty[Annotation]
+          }
+          else {
+            annotations(index).toIndexedSeq
+          }
           (onlyType, onlyAnnotations)
         }
       case _ =>
@@ -411,6 +415,35 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
                 }
             }
         }
+    }
+  }
+
+  private def getPropertyAnnotations(property: PropertyDescriptor): Seq[Annotation] = {
+    property.field match {
+      case Some(field) => field.getAnnotations.toSeq
+      case _ => property.setter match {
+        case Some(setter) if setter.getParameterCount == 1 => setter.getAnnotations.toSeq
+        case _ => property.beanSetter match {
+          case Some(setter) if setter.getParameterCount == 1 => setter.getAnnotations.toSeq
+          case _ => property.param match {
+            case Some(constructorParameter) if 1 == 2 => {
+              val types = constructorParameter.constructor.getParameterTypes
+              val annotations = constructorParameter.constructor.getParameterAnnotations
+              val index = constructorParameter.index
+              if (index > types.size) {
+                Seq.empty
+              } else {
+                if (index > annotations.size) {
+                  Seq.empty[Annotation]
+                }
+                else {
+                  annotations(index).toIndexedSeq
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
