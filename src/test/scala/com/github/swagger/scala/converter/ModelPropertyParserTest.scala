@@ -612,6 +612,10 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     props("duration") shouldBe a[Schema[_]]
   }
 
+  it should "process sealed abstract class" in new PropertiesScope[Animal] {
+    nullSafeSeq(model.value.getAnyOf) should have size 2
+  }
+
   private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
     schemas.get(name) match {
       case Some(m) => Some(m)
