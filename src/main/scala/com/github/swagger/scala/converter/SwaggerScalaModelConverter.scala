@@ -119,7 +119,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         val schemaProperties = nullSafeMap(schema.getProperties)
         introspector.properties.foreach { property =>
           val propertyName = property.name
-          val (propertyClass, propertyAnnotations) = getPropertyClassAndAnnotations(property)
+          val propertyClass = getPropertyClass(property)
+          val propertyAnnotations = getPropertyAnnotations(property)
           val isOptional = isOption(propertyClass)
           val schemaOverride = propertyAnnotations.collectFirst { case s: SchemaAnnotation => s }
           val schemaOverrideClass = schemaOverride.flatMap { s =>
@@ -380,38 +381,31 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def getPropertyClassAndAnnotations(property: PropertyDescriptor): (Class[_], Seq[Annotation]) = {
+  private def getPropertyClass(property: PropertyDescriptor): Class[_] = {
     property.param match {
       case Some(constructorParameter) =>
         val types = constructorParameter.constructor.getParameterTypes
         val annotations = constructorParameter.constructor.getParameterAnnotations
         val index = constructorParameter.index
         if (index > types.size) {
-          (AnyClass, Seq.empty)
+          AnyClass
         } else {
-          val onlyType = types(index)
-          val onlyAnnotations = if (index > annotations.size) {
-            Seq.empty[Annotation]
-          }
-          else {
-            annotations(index).toIndexedSeq
-          }
-          (onlyType, onlyAnnotations)
+          types(index)
         }
       case _ =>
         property.field match {
-          case Some(field) => (field.getType, field.getAnnotations.toSeq)
+          case Some(field) => field.getType
           case _ =>
             property.setter match {
               case Some(setter) if setter.getParameterCount == 1 => {
-                (setter.getParameterTypes()(0), setter.getAnnotations.toSeq)
+                setter.getParameterTypes()(0)
               }
               case _ =>
                 property.beanSetter match {
                   case Some(setter) if setter.getParameterCount == 1 => {
-                    (setter.getParameterTypes()(0), setter.getAnnotations.toSeq)
+                    setter.getParameterTypes()(0)
                   }
-                  case _ => (AnyClass, Seq.empty)
+                  case _ => AnyClass
                 }
             }
         }
@@ -419,32 +413,32 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def getPropertyAnnotations(property: PropertyDescriptor): Seq[Annotation] = {
-    property.field match {
+    val fieldAnnotations = property.field match {
       case Some(field) => field.getAnnotations.toSeq
-      case _ => property.setter match {
-        case Some(setter) if setter.getParameterCount == 1 => setter.getAnnotations.toSeq
-        case _ => property.beanSetter match {
-          case Some(setter) if setter.getParameterCount == 1 => setter.getAnnotations.toSeq
-          case _ => property.param match {
-            case Some(constructorParameter) if 1 == 2 => {
-              val types = constructorParameter.constructor.getParameterTypes
-              val annotations = constructorParameter.constructor.getParameterAnnotations
-              val index = constructorParameter.index
-              if (index > types.size) {
-                Seq.empty
-              } else {
-                if (index > annotations.size) {
-                  Seq.empty[Annotation]
-                }
-                else {
-                  annotations(index).toIndexedSeq
-                }
-              }
-            }
-          }
+      case _ => Seq.empty
+    }
+    val setterAnnotations = property.setter match {
+      case Some(setter) => setter.getAnnotations.toSeq
+      case _ => Seq.empty
+    }
+    val beanSetterAnnotations = property.beanSetter match {
+      case Some(beanSetter) => beanSetter.getAnnotations.toSeq
+      case _ => Seq.empty
+    }
+    val paramAnnotations = property.param match {
+      case Some(constructorParameter) => {
+        val types = constructorParameter.constructor.getParameterTypes
+        val annotations = constructorParameter.constructor.getParameterAnnotations
+        val index = constructorParameter.index
+        if (index > types.size || index > annotations.size) {
+          Seq.empty
+        } else {
+          annotations(index).toIndexedSeq
         }
       }
+      case _ => Seq.empty
     }
+    (paramAnnotations ++ fieldAnnotations ++ setterAnnotations ++ beanSetterAnnotations).distinct
   }
 
   private def isOption(cls: Class[_]): Boolean = cls == OptionClass

@@ -15,15 +15,13 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val schemas = ModelConverters.getInstance().readAll(classOf[SModelWithEnum]).asScala
     val userSchema = schemas("SModelWithEnum")
 
-    if (!RuntimeUtil.isScala3()) {
-      val orderSize = userSchema.getProperties().get("Order Size")
-      orderSize should not be null
-      // TODO fix tests
-      //    orderSize shouldBe a [StringSchema]
-      //
-      //    val sp = orderSize.asInstanceOf[StringSchema]
-      //    (sp.getEnum().asScala.toSet & Set("TALL", "GRANDE", "VENTI")) should have size 3
-    }
+    val orderSize = userSchema.getProperties().get("Order Size")
+    orderSize should not be null
+    // TODO fix tests
+    //    orderSize shouldBe a [StringSchema]
+    //
+    //    val sp = orderSize.asInstanceOf[StringSchema]
+    //    (sp.getEnum().asScala.toSet & Set("TALL", "GRANDE", "VENTI")) should have size 3
   }
 
   it should "extract a scala enum (jackson annotated)" in {
