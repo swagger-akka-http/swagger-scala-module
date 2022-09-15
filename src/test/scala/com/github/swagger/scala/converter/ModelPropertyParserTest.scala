@@ -567,13 +567,10 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
 
   it should "process ModelWGetFunction" in new PropertiesScope[ModelWGetFunction] {
     val props = nullSafeMap(model.value.getProperties)
-    props should have size 2 //ideally this should 1 (https://github.com/swagger-akka-http/swagger-scala-module/issues/189)
+    props should have size 1
     val amountField = props.get("amount").value
     amountField shouldBe a[IntegerSchema]
     amountField.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
-    val optionalField = props.get("optionalAmount").value
-    //even this schema type is wrong, this should be IntegerSchema too
-    optionalField shouldBe an[ObjectSchema]
 
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("amount")
   }

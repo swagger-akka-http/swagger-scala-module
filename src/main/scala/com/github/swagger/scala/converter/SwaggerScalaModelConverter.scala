@@ -113,9 +113,10 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   ): Option[Schema[_]] = {
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
-        val schemaProperties = nullSafeMap(schema.getProperties)
         val introspector = BeanIntrospector(cls)
+        filterUnwantedProperties(schema, introspector.properties)
         val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
+        val schemaProperties = nullSafeMap(schema.getProperties)
         introspector.properties.foreach { property =>
           val propertyName = property.name
           val (propertyClass, propertyAnnotations) = getPropertyClassAndAnnotations(property)
@@ -191,6 +192,25 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       }
     } else {
       None
+    }
+  }
+
+  private def filterUnwantedProperties(schema: Schema[_], propertiesToKeep: Seq[PropertyDescriptor]): Unit = {
+    val propNamesSet = propertiesToKeep.map(getAnnotatedPropertyName).toSet
+    val originalProps = nullSafeMap(schema.getProperties)
+    val newProps = originalProps.filter { case (key, value) =>
+      propNamesSet.contains(key)
+    }
+    if (originalProps.size > newProps.size) {
+      schema.setProperties(newProps.asJava)
+    }
+  }
+
+  private def getAnnotatedPropertyName(property: PropertyDescriptor): String = {
+    val propertyAnnotations = getPropertyAnnotations(property)
+    propertyAnnotations.collectFirst { case s: SchemaAnnotation => s } match {
+      case Some(ann) if ann.name().nonEmpty => ann.name()
+      case _ => property.name
     }
   }
 
@@ -370,8 +390,12 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           (AnyClass, Seq.empty)
         } else {
           val onlyType = types(index)
-          val onlyAnnotations = if (index > annotations.size) { Seq.empty[Annotation] }
-          else { annotations(index).toIndexedSeq }
+          val onlyAnnotations = if (index > annotations.size) {
+            Seq.empty[Annotation]
+          }
+          else {
+            annotations(index).toIndexedSeq
+          }
           (onlyType, onlyAnnotations)
         }
       case _ =>
@@ -391,6 +415,35 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
                 }
             }
         }
+    }
+  }
+
+  private def getPropertyAnnotations(property: PropertyDescriptor): Seq[Annotation] = {
+    property.field match {
+      case Some(field) => field.getAnnotations.toSeq
+      case _ => property.setter match {
+        case Some(setter) if setter.getParameterCount == 1 => setter.getAnnotations.toSeq
+        case _ => property.beanSetter match {
+          case Some(setter) if setter.getParameterCount == 1 => setter.getAnnotations.toSeq
+          case _ => property.param match {
+            case Some(constructorParameter) if 1 == 2 => {
+              val types = constructorParameter.constructor.getParameterTypes
+              val annotations = constructorParameter.constructor.getParameterAnnotations
+              val index = constructorParameter.index
+              if (index > types.size) {
+                Seq.empty
+              } else {
+                if (index > annotations.size) {
+                  Seq.empty[Annotation]
+                }
+                else {
+                  annotations(index).toIndexedSeq
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
