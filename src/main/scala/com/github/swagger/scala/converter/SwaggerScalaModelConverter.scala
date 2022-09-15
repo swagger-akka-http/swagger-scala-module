@@ -196,13 +196,21 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def filterUnwantedProperties(schema: Schema[_], propertiesToKeep: Seq[PropertyDescriptor]): Unit = {
-    val propNamesSet = propertiesToKeep.map(_.name).toSet
+    val propNamesSet = propertiesToKeep.map(getAnnotatedPropertyName).toSet
     val originalProps = nullSafeMap(schema.getProperties)
     val newProps = originalProps.filter { case (key, value) =>
       propNamesSet.contains(key)
     }
     if (originalProps.size > newProps.size) {
       schema.setProperties(newProps.asJava)
+    }
+  }
+
+  private def getAnnotatedPropertyName(property: PropertyDescriptor): String = {
+    val (_, propertyAnnotations) = getPropertyClassAndAnnotations(property)
+    propertyAnnotations.collectFirst { case s: SchemaAnnotation => s } match {
+      case Some(ann) if ann.name().nonEmpty => ann.name()
+      case _ => property.name
     }
   }
 
