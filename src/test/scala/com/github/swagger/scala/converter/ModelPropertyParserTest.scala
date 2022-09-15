@@ -612,8 +612,24 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     props("duration") shouldBe a[Schema[_]]
   }
 
-  it should "process sealed abstract class" in new PropertiesScope[Animal] {
-    nullSafeSeq(model.value.getAnyOf) should have size 2
+  it should "process sealed abstract class" in new TestScope {
+    val schemas = converter.readAll(classOf[Animal]).asScala.toMap
+    if (!RuntimeUtil.isScala3()) {
+      val catModel = findModel(schemas, "Cat")
+      catModel should be(defined)
+      val catProps = nullSafeMap(catModel.value.getProperties)
+      catProps should have size 2
+      catProps.get("name").value shouldBe a[StringSchema]
+      catProps.get("animalType").value shouldBe a[StringSchema]
+      nullSafeSeq(catModel.value.getRequired) shouldEqual Seq("name")
+      val dogModel = findModel(schemas, "Dog")
+      dogModel should be(defined)
+      val dogProps = nullSafeMap(dogModel.value.getProperties)
+      dogProps should have size 2
+      dogProps.get("name").value shouldBe a[StringSchema]
+      dogProps.get("animalType").value shouldBe a[StringSchema]
+      nullSafeSeq(dogModel.value.getRequired) shouldBe empty //seems wrong
+    }
   }
 
   private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
