@@ -113,9 +113,10 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   ): Option[Schema[_]] = {
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
-        val schemaProperties = nullSafeMap(schema.getProperties)
         val introspector = BeanIntrospector(cls)
+        filterUnwantedProperties(schema, introspector.properties)
         val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
+        val schemaProperties = nullSafeMap(schema.getProperties)
         introspector.properties.foreach { property =>
           val propertyName = property.name
           val (propertyClass, propertyAnnotations) = getPropertyClassAndAnnotations(property)
@@ -191,6 +192,17 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       }
     } else {
       None
+    }
+  }
+
+  private def filterUnwantedProperties(schema: Schema[_], propertiesToKeep: Seq[PropertyDescriptor]): Unit = {
+    val propNamesSet = propertiesToKeep.map(_.name).toSet
+    val originalProps = nullSafeMap(schema.getProperties)
+    val newProps = originalProps.filter { case (key, value) =>
+      propNamesSet.contains(key)
+    }
+    if (originalProps.size > newProps.size) {
+      schema.setProperties(newProps.asJava)
     }
   }
 
