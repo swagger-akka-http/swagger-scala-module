@@ -11,7 +11,7 @@ ThisBuild / version := "2.8.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "2.13.8"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.8", "3.2.0")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.8", "3.2.0")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
