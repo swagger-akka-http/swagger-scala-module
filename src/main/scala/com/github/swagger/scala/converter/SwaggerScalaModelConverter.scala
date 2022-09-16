@@ -66,7 +66,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private val SetClass = classOf[scala.collection.Set[_]]
   private val BigDecimalClass = classOf[BigDecimal]
   private val BigIntClass = classOf[BigInt]
-  private val ProductClass = classOf[Product]
   private val AnyClass = classOf[Any]
 
   override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: util.Iterator[ModelConverter]): Schema[_] = {
