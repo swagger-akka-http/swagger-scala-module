@@ -3,6 +3,7 @@ package com.github.swagger.scala.converter
 import com.fasterxml.jackson.databind.`type`.ReferenceType
 import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
+import com.fasterxml.jackson.module.scala.util.ClassW
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
@@ -84,8 +85,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         resolve(nextType(baseType, `type`, javaType), context, chain)
       } else if (!annotatedOverrides.headOption.getOrElse(true)) {
         resolve(nextType(new AnnotatedTypeForOption(), `type`, javaType), context, chain)
-      } else if (isCaseClass(cls)) {
-        caseClassSchema(cls, `type`, context, chain).getOrElse(None.orNull)
+      } else if (isScalaClass(cls)) {
+        scalaClassSchema(cls, `type`, context, chain).getOrElse(None.orNull)
       } else if (chain.hasNext) {
         val nextResolved = Option(chain.next().resolve(`type`, context, chain))
         nextResolved match {
@@ -105,7 +106,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def caseClassSchema(
+  private def scalaClassSchema(
       cls: Class[_],
       `type`: AnnotatedType,
       context: ModelConverterContext,
@@ -444,7 +445,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def isOption(cls: Class[_]): Boolean = cls == OptionClass
   private def isIterable(cls: Class[_]): Boolean = IterableClass.isAssignableFrom(cls)
   private def isMap(cls: Class[_]): Boolean = MapClass.isAssignableFrom(cls)
-  private def isCaseClass(cls: Class[_]): Boolean = ProductClass.isAssignableFrom(cls)
+  private def isScalaClass(cls: Class[_]): Boolean = ClassW(cls).extendsScalaClass
 
   private def nullSafeSeq[T](array: Array[T]): Seq[T] = Option(array) match {
     case None => List.empty[T]
