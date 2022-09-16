@@ -622,14 +622,14 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
       catProps.get("name").value shouldBe a[StringSchema]
       catProps.get("age").value shouldBe a[IntegerSchema]
       catProps.get("animalType").value shouldBe a[StringSchema]
-      nullSafeSeq(catModel.value.getRequired) shouldEqual Seq("age") //should be Seq("name", "age")
+      nullSafeSeq(catModel.value.getRequired) shouldEqual Seq("age", "animalType", "name")
       val dogModel = findModel(schemas, "Dog")
       dogModel should be(defined)
       val dogProps = nullSafeMap(dogModel.value.getProperties)
       dogProps should have size 2
       dogProps.get("name").value shouldBe a[StringSchema]
       dogProps.get("animalType").value shouldBe a[StringSchema]
-      nullSafeSeq(dogModel.value.getRequired) shouldEqual Seq("name")
+      nullSafeSeq(dogModel.value.getRequired) shouldEqual Seq("animalType", "name")
     }
   }
 
