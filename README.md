@@ -17,14 +17,14 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 To enable the swagger-scala-module, include the appropriate version in your project:
 
 ```
-  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.7.2"
+  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.7.4"
 ```
 
 ## How does it work?
 Including the library in your project allows the swagger extension module to discover this module, bringing in the appropriate jackson library in the process.  You can then use scala classes and objects in your swagger project.
 
 ## Treatment of `Option` and `required`
-All properties, besides those wrapped in `Option` or explicitly set via annotations `@Schema(required = false, implementation = classOf[Int])`, default to `required = true`  in the generated swagger model. See [#7](https://github.com/swagger-api/swagger-scala-module/issues/7)
+Prior to v2.7 releases, all properties, besides those wrapped in `Option` or explicitly set via annotations `@Schema(required = false, implementation = classOf[Int])`, default to `required = true`  in the generated swagger model. See [#7](https://github.com/swagger-api/swagger-scala-module/issues/7)
 
 With Collections (and Options), scala primitives are affected by type erasure. You may need to declare the type using a Schema annotation.
 ```
@@ -33,7 +33,15 @@ case class AddOptionRequest(number: Int, @Schema(required = false, implementatio
 
 Alternatively, you can non-primitive types like BigInt to avoid this requirement.
 
-Since v2.7.2 release, Scala 2 builds use scala-reflect jar to try to work out the class information for the inner types. Scala 3 builds cannot use this approach, and are therefore still affected by this issue. See https://github.com/swagger-akka-http/swagger-scala-module/issues/117.
+Since the v2.7 releases, Scala 2 builds use scala-reflect jar to try to work out the class information for the inner types. Scala 3 builds cannot use this approach, and are therefore still affected by this issue. See https://github.com/swagger-akka-http/swagger-scala-module/issues/117.
+
+v2.7 takes default values into account - either those specified in Scala contructors or via swagger annotations. A field might be marked as not required if a default value is specified.
+
+If you use swagger annotations and don't want to explicity set the `required` value and allow this lib to infer the value, then you can set [SwaggerScalaModelConverter.setRequiredBasedOnAnnotation](https://github.com/swagger-akka-http/swagger-scala-module/blob/564c7c7fb879c1b93b7c913af2219dc4b550ad95/src/main/scala/com/github/swagger/scala/converter/SwaggerScalaModelConverter.scala#L39).
+
+v2.7 is still a little bit unstable and it recommended that the latest v2.7 release is used.
+
+
 
 License
 -------

@@ -11,6 +11,7 @@ import org.scalatest.matchers.should.Matchers
 
 import java.util
 import scala.collection.JavaConverters._
+import scala.collection.Seq
 import scala.reflect.ClassTag
 
 class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with OptionValues {
@@ -160,7 +161,9 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
-  it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired] {
+  it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](
+    true
+  ) {
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
     requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
@@ -168,13 +171,27 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val annotatedIntWithDefault = model.value.getProperties.get("annotatedIntWithDefault")
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
+
+    if (!RuntimeUtil.isScala3()) {
+      val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+      annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+      annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+
+      val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+      annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+      annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+
+      val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+      annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+      annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
+    }
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
   }
 
   it should "prioritize required based on (Option or not) type when `setRequiredBasedOnAnnotation` is set" in new PropertiesScope[
     ModelWOptionIntSchemaOverrideForRequired
-  ](false) {
+  ](requiredBasedAnnotation = false) {
 
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
@@ -184,7 +201,46 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
 
+    if (!RuntimeUtil.isScala3()) {
+      val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+      annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+      annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+
+      val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+      annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+      annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+
+      val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+      annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+      annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
+    }
+
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
+  }
+
+  it should "consider fields that aren't optional required if `requiredBasedAnnotation == true`" in new PropertiesScope[
+    ModelWMultipleRequiredFields
+  ](
+    requiredBasedAnnotation = false
+  ) {
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("first", "second", "third")
+  }
+
+  it should "consider fields that aren't optional required" in new PropertiesScope[ModelWMultipleRequiredFields]() {
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("first", "second", "third")
+  }
+
+  it should "process Model with Scala Option Long (Some Default)" in new PropertiesScope[ModelWOptionLongWithSomeDefault] {
+    val optLong = model.value.getProperties().get("optLong")
+    optLong should not be (null)
+    if (RuntimeUtil.isScala3()) {
+      optLong shouldBe a[ObjectSchema]
+    } else {
+      optLong shouldBe a[IntegerSchema]
+      optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
+    }
+    optLong.getDefault shouldEqual Long.MaxValue
+    nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
   it should "process Model with Scala Option Long" in new PropertiesScope[ModelWOptionLong] {
@@ -300,12 +356,46 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
   }
 
-  it should "process Model with Scala BigDecimal with default value annotation" in new PropertiesScope[ModelWBigDecimalAnnotated](false) {
+  it should "map BigDecimal to schema type 'number'" in new PropertiesScope[ModelWBigDecimalNoType]() {
+    val properties = model.value.getProperties
+    val fieldSchema = properties.get("field")
+    properties.size() shouldBe 1
+
+    fieldSchema shouldBe a[NumberSchema]
+  }
+
+  it should "map BigDecimal to schema type 'number' even when annotated" in new PropertiesScope[ModelWBigDecimalAnnotatedNoType]() {
+    val properties = model.value.getProperties
+    val fieldSchema = properties.get("field")
+    properties.size() shouldBe 1
+
+    fieldSchema shouldBe a[NumberSchema]
+  }
+
+  it should "process Model with Scala BigDecimal with default value annotation" in new PropertiesScope[ModelWBigDecimalAnnotatedDefault](
+    false
+  ) {
     val fieldSchema = model.value.getProperties.get("field")
     fieldSchema shouldBe a[StringSchema]
     val stringSchema = fieldSchema.asInstanceOf[StringSchema]
     stringSchema.getDefault shouldEqual ("42.0")
     stringSchema.getExample shouldEqual ("42.0")
+    stringSchema.getDescription shouldBe "required of annotation should be honoured"
+
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
+  }
+
+  it should "process Model with Scala BigDecimal with default value annotation (required=false)" in new PropertiesScope[
+    ModelWBigDecimalAnnotatedDefaultRequiredFalse
+  ](
+    false
+  ) {
+    val fieldSchema = model.value.getProperties.get("field")
+    fieldSchema shouldBe a[StringSchema]
+    val stringSchema = fieldSchema.asInstanceOf[StringSchema]
+    stringSchema.getDefault shouldEqual ("42.0")
+    stringSchema.getExample shouldEqual ("42.0")
+    stringSchema.getDescription shouldBe "required of annotation should be honoured"
 
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
@@ -333,8 +423,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    arraySchema.getItems shouldBe a[ObjectSchema] //probably type erasure - ideally this would eval as StringSchema
-    //next line used to fail (https://github.com/swagger-akka-http/swagger-akka-http/issues/171)
+    arraySchema.getItems shouldBe a[ObjectSchema] // probably type erasure - ideally this would eval as StringSchema
+    // next line used to fail (https://github.com/swagger-akka-http/swagger-akka-http/issues/171)
     Json.mapper().writeValueAsString(model.value)
   }
 
@@ -418,6 +508,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     mapSchema.getUniqueItems() shouldBe (null)
     nullSafeMap(mapSchema.getProperties()) shouldBe empty
     nullSafeSeq(mapSchema.getRequired()) shouldBe empty
+    nullSafeSet(mapSchema.getTypes) shouldEqual Set("object")
   }
 
   it should "process Model with Java Map" in new PropertiesScope[ModelWJavaMapString] {
@@ -427,6 +518,27 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     mapSchema.getUniqueItems() shouldBe (null)
     nullSafeMap(mapSchema.getProperties()) shouldBe empty
     nullSafeSeq(mapSchema.getRequired()) shouldBe empty
+    nullSafeSet(mapSchema.getTypes) shouldEqual Set("object")
+  }
+
+  it should "process Model with Scala Map[Int, Long]" in new PropertiesScope[ModelWMapIntLong] {
+    val mapField = model.value.getProperties.get("map")
+    mapField shouldBe a[MapSchema]
+    val mapSchema = mapField.asInstanceOf[MapSchema]
+    mapSchema.getUniqueItems() shouldBe (null)
+    nullSafeMap(mapSchema.getProperties()) shouldBe empty
+    nullSafeSeq(mapSchema.getRequired()) shouldBe empty
+    nullSafeSet(mapSchema.getTypes) shouldEqual Set("object")
+  }
+
+  it should "process Model with Scala IntMap[Long]" in new PropertiesScope[ModelWIntMapLong] {
+    val mapField = model.value.getProperties.get("map")
+    mapField shouldBe a[MapSchema]
+    val mapSchema = mapField.asInstanceOf[MapSchema]
+    mapSchema.getUniqueItems() shouldBe (null)
+    nullSafeMap(mapSchema.getProperties()) shouldBe empty
+    nullSafeSeq(mapSchema.getRequired()) shouldBe empty
+    nullSafeSet(mapSchema.getTypes) shouldEqual Set("object")
   }
 
   it should "process EchoList" in new PropertiesScope[EchoList] {
@@ -435,6 +547,26 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val val2Field = model.value.getProperties.get("val2")
     val2Field shouldBe a[IntegerSchema]
     model.value.getRequired().asScala shouldEqual Seq("val1", "val2")
+  }
+
+  it should "process ModelWGetFunction" in new PropertiesScope[ModelWGetFunction] {
+    val props = nullSafeMap(model.value.getProperties)
+    props should have size 1
+    val amountField = props.get("amount").value
+    amountField shouldBe a[IntegerSchema]
+    amountField.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
+
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("amount")
+  }
+
+  it should "process ModelWJacksonAnnotatedGetFunction" in new PropertiesScope[ModelWJacksonAnnotatedGetFunction] {
+    val props = nullSafeMap(model.value.getProperties)
+    props should have size 1
+    val amountField = props.get("amount").value
+    amountField shouldBe a[IntegerSchema]
+    amountField.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
+
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("amount")
   }
 
   it should "process Array-Model with Scala nonOption Seq (annotated)" in new PropertiesScope[ModelWStringSeqAnnotated] {
@@ -459,7 +591,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
 
   it should "process case class with Duration field" in new PropertiesScope[ModelWDuration] {
     model.value.getRequired.asScala shouldEqual Seq("duration")
-    val props = model.value.getProperties.asScala.toMap
+    val props = nullSafeMap(model.value.getProperties)
     props should have size 1
     props("duration") shouldBe a[Schema[_]]
   }
@@ -478,6 +610,11 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   private def nullSafeSeq[T](list: java.util.List[T]): Seq[T] = Option(list) match {
     case None => List.empty[T]
     case Some(l) => l.asScala.toSeq
+  }
+
+  private def nullSafeSet[T](list: java.util.Set[T]): Set[T] = Option(list) match {
+    case None => Set.empty[T]
+    case Some(l) => l.asScala.toSet
   }
 
   private def nullSafeMap[K, V](map: java.util.Map[K, V]): Map[K, V] = Option(map) match {

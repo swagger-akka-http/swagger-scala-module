@@ -13,7 +13,7 @@ private[converter] object ErasureHelper {
   def erasedOptionalPrimitives(cls: Class[_]): Map[String, Class[_]] = {
     try {
       val mirror = universe.runtimeMirror(cls.getClassLoader)
-      val moduleSymbol = mirror.moduleSymbol(Class.forName(cls.getName))
+      val moduleSymbol = mirror.moduleSymbol(cls)
       val ConstructorName = "apply"
       val companion: universe.Symbol = moduleSymbol.typeSignature.member(universe.TermName(ConstructorName))
       val properties =
@@ -40,7 +40,7 @@ private[converter] object ErasureHelper {
     } catch {
       case NonFatal(t) => {
         if (logger.isDebugEnabled) {
-          //use this form because of Scala 2.11 & 2.12 compile issue
+          // use this form because of Scala 2.11 & 2.12 compile issue
           logger.debug(s"Unable to get type info ${Option(cls.getName).getOrElse("null")}", t)
         } else {
           logger.info("Unable to get type info {}", Option(cls.getName).getOrElse("null"))

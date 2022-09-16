@@ -29,5 +29,8 @@ case class ModelWOptionIntSchemaOverrideForRequired(
     @Schema(description = "should stay required") annotatedRequiredInt: Int,
     @Schema(description = "should become optional") annotatedRequiredIntWithDefault: Int = 5,
     @Schema(description = "annotated default", defaultValue = "10") annotatedIntWithDefault: Int,
-    @Schema(description = "should become required", required = true) annotatedOptionalInt: Option[Int]
+    @Schema(description = "should become required", required = true) annotatedOptionalInt: Option[Int],
+    @Schema(description = "should not have default") annotatedOptionalIntWithNoneDefault: Option[Int] = None,
+    @Schema(description = "should have default") annotatedOptionalIntWithSomeDefault: Option[Int] = Some(5),
+    @Schema(description = "should not have a default") annotatedOptionalStringWithNoneDefault: Option[String] = None
 )
