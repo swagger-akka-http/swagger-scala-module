@@ -6,6 +6,6 @@ sealed abstract class Animal(val animalType: String) {
 
 class Dog(val name: String) extends Animal("Dog")
 
-class Cat(val name: String) extends Animal("Cat")
+class Cat(val name: String, val age: Int) extends Animal("Cat")
 
 case class PetOwner(owner: String, pet: Animal)
