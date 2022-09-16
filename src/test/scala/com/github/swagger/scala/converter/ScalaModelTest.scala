@@ -85,8 +85,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val model = schemas("ModelWithIntVector")
     val prop = model.getProperties().get("ints")
     prop shouldBe a[ArraySchema]
-    val expectedType = if (RuntimeUtil.isScala3()) "object" else "integer"
-    prop.asInstanceOf[ArraySchema].getItems.getType should be(expectedType)
+    prop.asInstanceOf[ArraySchema].getItems.getType should be("integer")
   }
 
   it should "read a model with vector of booleans" in {
@@ -94,8 +93,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val model = schemas("ModelWithBooleanVector")
     val prop = model.getProperties().get("bools")
     prop shouldBe a[ArraySchema]
-    val expectedType = if (RuntimeUtil.isScala3()) "object" else "boolean"
-    prop.asInstanceOf[ArraySchema].getItems.getType should be(expectedType)
+    prop.asInstanceOf[ArraySchema].getItems.getType should be("boolean")
   }
 }
 

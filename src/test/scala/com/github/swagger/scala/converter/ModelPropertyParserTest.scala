@@ -113,12 +113,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Int" in new PropertiesScope[ModelWOptionInt] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optInt shouldBe a[ObjectSchema]
-    } else {
-      optInt shouldBe a[IntegerSchema]
-      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
-    }
+    optInt shouldBe a[IntegerSchema]
+    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
@@ -146,12 +142,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with nested Scala Option Int with Schema Override" in new PropertiesScope[ModelWOptionIntSchemaOverride] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optInt shouldBe a[ObjectSchema]
-    } else {
-      optInt shouldBe a[IntegerSchema]
-      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
-    }
+    optInt shouldBe a[IntegerSchema]
+    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     optInt.getDescription shouldBe "This is an optional int"
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
@@ -159,12 +151,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Int with Schema Override" in new PropertiesScope[ModelWOptionIntSchemaOverride] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optInt shouldBe a[ObjectSchema]
-    } else {
-      optInt shouldBe a[IntegerSchema]
-      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
-    }
+    optInt shouldBe a[IntegerSchema]
+    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     optInt.getDescription shouldBe "This is an optional int"
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
@@ -241,12 +229,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Long (Some Default)" in new PropertiesScope[ModelWOptionLongWithSomeDefault] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optLong shouldBe a[ObjectSchema]
-    } else {
-      optLong shouldBe a[IntegerSchema]
-      optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
-    }
+    optLong shouldBe a[IntegerSchema]
+    optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
     optLong.getDefault shouldEqual Long.MaxValue
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
@@ -254,12 +238,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Long" in new PropertiesScope[ModelWOptionLong] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optLong shouldBe a[ObjectSchema]
-    } else {
-      optLong shouldBe a[IntegerSchema]
-      optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
-    }
+    optLong shouldBe a[IntegerSchema]
+    optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
@@ -454,11 +434,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    if (RuntimeUtil.isScala3()) {
-      arraySchema.getItems shouldBe a[ObjectSchema]
-    } else {
-      arraySchema.getItems shouldBe a[IntegerSchema]
-    }
+    arraySchema.getItems shouldBe a[IntegerSchema]
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
@@ -471,11 +447,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    if (RuntimeUtil.isScala3()) {
-      arraySchema.getItems shouldBe a[ObjectSchema]
-    } else {
-      arraySchema.getItems shouldBe a[IntegerSchema]
-    }
+    arraySchema.getItems shouldBe a[IntegerSchema]
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
@@ -487,11 +459,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
 
-    if (RuntimeUtil.isScala3()) {
-      arraySchema.getItems shouldBe a[ObjectSchema]
-    } else {
-      arraySchema.getItems shouldBe a[IntegerSchema]
-    }
+    arraySchema.getItems shouldBe a[IntegerSchema]
     arraySchema.getItems.getDescription shouldBe "These are ints"
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
