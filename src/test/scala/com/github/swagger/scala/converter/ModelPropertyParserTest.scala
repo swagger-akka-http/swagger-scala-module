@@ -168,19 +168,17 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
 
-    if (!RuntimeUtil.isScala3()) {
-      val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
-      annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
-      annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+    val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+    annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
 
-      val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
-      annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
-      annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+    val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+    annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
 
-      val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
-      annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
-      annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
-    }
+    val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+    annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+    annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
   }
@@ -197,19 +195,17 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
 
-    if (!RuntimeUtil.isScala3()) {
-      val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
-      annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
-      annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+    val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+    annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
 
-      val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
-      annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
-      annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+    val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+    annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
 
-      val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
-      annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
-      annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
-    }
+    val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+    annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+    annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
   }
