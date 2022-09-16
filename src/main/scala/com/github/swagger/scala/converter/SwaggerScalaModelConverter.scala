@@ -3,6 +3,7 @@ package com.github.swagger.scala.converter
 import com.fasterxml.jackson.databind.`type`.ReferenceType
 import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
+import com.fasterxml.jackson.module.scala.util.ClassW
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
@@ -84,8 +85,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         resolve(nextType(baseType, `type`, javaType), context, chain)
       } else if (!annotatedOverrides.headOption.getOrElse(true)) {
         resolve(nextType(new AnnotatedTypeForOption(), `type`, javaType), context, chain)
-      } else if (isCaseClass(cls)) {
-        caseClassSchema(cls, `type`, context, chain).getOrElse(None.orNull)
+      } else if (isScalaClass(cls)) {
+        scalaClassSchema(cls, `type`, context, chain).getOrElse(None.orNull)
       } else if (chain.hasNext) {
         val nextResolved = Option(chain.next().resolve(`type`, context, chain))
         nextResolved match {
@@ -105,7 +106,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def caseClassSchema(
+  private def scalaClassSchema(
       cls: Class[_],
       `type`: AnnotatedType,
       context: ModelConverterContext,
@@ -113,12 +114,14 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   ): Option[Schema[_]] = {
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
-        val schemaProperties = nullSafeMap(schema.getProperties)
         val introspector = BeanIntrospector(cls)
+        filterUnwantedProperties(schema, introspector.properties)
         val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
+        val schemaProperties = nullSafeMap(schema.getProperties)
         introspector.properties.foreach { property =>
           val propertyName = property.name
-          val (propertyClass, propertyAnnotations) = getPropertyClassAndAnnotations(property)
+          val propertyClass = getPropertyClass(property)
+          val propertyAnnotations = getPropertyAnnotations(property)
           val isOptional = isOption(propertyClass)
           val schemaOverride = propertyAnnotations.collectFirst { case s: SchemaAnnotation => s }
           val schemaOverrideClass = schemaOverride.flatMap { s =>
@@ -191,6 +194,25 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       }
     } else {
       None
+    }
+  }
+
+  private def filterUnwantedProperties(schema: Schema[_], propertiesToKeep: Seq[PropertyDescriptor]): Unit = {
+    val propNamesSet = propertiesToKeep.map(getAnnotatedPropertyName).toSet
+    val originalProps = nullSafeMap(schema.getProperties)
+    val newProps = originalProps.filter { case (key, value) =>
+      propNamesSet.contains(key)
+    }
+    if (originalProps.size > newProps.size) {
+      schema.setProperties(newProps.asJava)
+    }
+  }
+
+  private def getAnnotatedPropertyName(property: PropertyDescriptor): String = {
+    val propertyAnnotations = getPropertyAnnotations(property)
+    propertyAnnotations.collectFirst { case s: SchemaAnnotation => s } match {
+      case Some(ann) if ann.name().nonEmpty => ann.name()
+      case _ => property.name
     }
   }
 
@@ -360,44 +382,70 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def getPropertyClassAndAnnotations(property: PropertyDescriptor): (Class[_], Seq[Annotation]) = {
+  private def getPropertyClass(property: PropertyDescriptor): Class[_] = {
     property.param match {
       case Some(constructorParameter) =>
         val types = constructorParameter.constructor.getParameterTypes
         val annotations = constructorParameter.constructor.getParameterAnnotations
         val index = constructorParameter.index
         if (index > types.size) {
-          (AnyClass, Seq.empty)
+          AnyClass
         } else {
-          val onlyType = types(index)
-          val onlyAnnotations = if (index > annotations.size) { Seq.empty[Annotation] }
-          else { annotations(index).toIndexedSeq }
-          (onlyType, onlyAnnotations)
+          types(index)
         }
       case _ =>
         property.field match {
-          case Some(field) => (field.getType, field.getAnnotations.toSeq)
+          case Some(field) => field.getType
           case _ =>
             property.setter match {
               case Some(setter) if setter.getParameterCount == 1 => {
-                (setter.getParameterTypes()(0), setter.getAnnotations.toSeq)
+                setter.getParameterTypes()(0)
               }
               case _ =>
                 property.beanSetter match {
                   case Some(setter) if setter.getParameterCount == 1 => {
-                    (setter.getParameterTypes()(0), setter.getAnnotations.toSeq)
+                    setter.getParameterTypes()(0)
                   }
-                  case _ => (AnyClass, Seq.empty)
+                  case _ => AnyClass
                 }
             }
         }
     }
   }
 
+  private def getPropertyAnnotations(property: PropertyDescriptor): Seq[Annotation] = {
+    val fieldAnnotations = property.field match {
+      case Some(field) => field.getAnnotations.toSeq
+      case _ => Seq.empty
+    }
+    val setterAnnotations = property.setter match {
+      case Some(setter) => setter.getAnnotations.toSeq
+      case _ => Seq.empty
+    }
+    val beanSetterAnnotations = property.beanSetter match {
+      case Some(beanSetter) => beanSetter.getAnnotations.toSeq
+      case _ => Seq.empty
+    }
+    val paramAnnotations = property.param match {
+      case Some(constructorParameter) => {
+        val types = constructorParameter.constructor.getParameterTypes
+        val annotations = constructorParameter.constructor.getParameterAnnotations
+        val index = constructorParameter.index
+        if (index > types.size || index > annotations.size) {
+          Seq.empty
+        } else {
+          annotations(index).toIndexedSeq
+        }
+      }
+      case _ => Seq.empty
+    }
+    (paramAnnotations ++ fieldAnnotations ++ setterAnnotations ++ beanSetterAnnotations).distinct
+  }
+
   private def isOption(cls: Class[_]): Boolean = cls == OptionClass
   private def isIterable(cls: Class[_]): Boolean = IterableClass.isAssignableFrom(cls)
   private def isMap(cls: Class[_]): Boolean = MapClass.isAssignableFrom(cls)
-  private def isCaseClass(cls: Class[_]): Boolean = ProductClass.isAssignableFrom(cls)
+  private def isScalaClass(cls: Class[_]): Boolean = ClassW(cls).extendsScalaClass
 
   private def nullSafeSeq[T](array: Array[T]): Seq[T] = Option(array) match {
     case None => List.empty[T]

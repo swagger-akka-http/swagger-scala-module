@@ -565,6 +565,26 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     model.value.getRequired().asScala shouldEqual Seq("val1", "val2")
   }
 
+  it should "process ModelWGetFunction" in new PropertiesScope[ModelWGetFunction] {
+    val props = nullSafeMap(model.value.getProperties)
+    props should have size 1
+    val amountField = props.get("amount").value
+    amountField shouldBe a[IntegerSchema]
+    amountField.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
+
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("amount")
+  }
+
+  it should "process ModelWJacksonAnnotatedGetFunction" in new PropertiesScope[ModelWJacksonAnnotatedGetFunction] {
+    val props = nullSafeMap(model.value.getProperties)
+    props should have size 1
+    val amountField = props.get("amount").value
+    amountField shouldBe a[IntegerSchema]
+    amountField.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
+
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("amount")
+  }
+
   it should "process Array-Model with Scala nonOption Seq (annotated)" in new PropertiesScope[ModelWStringSeqAnnotated] {
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
@@ -587,7 +607,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
 
   it should "process case class with Duration field" in new PropertiesScope[ModelWDuration] {
     model.value.getRequired.asScala shouldEqual Seq("duration")
-    val props = model.value.getProperties.asScala.toMap
+    val props = nullSafeMap(model.value.getProperties)
     props should have size 1
     props("duration") shouldBe a[Schema[_]]
   }
