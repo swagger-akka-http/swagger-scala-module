@@ -12,14 +12,13 @@ private[converter] object ErasureHelper {
 
   def erasedOptionalPrimitives(cls: Class[_]): Map[String, Class[_]] = {
     try {
-      val mirror = universe.runtimeMirror(cls.getClassLoader)
-      val moduleSymbol = mirror.moduleSymbol(cls)
+      val mirror = universe.runtimeMirror(Thread.currentThread().getContextClassLoader)
+      val classSymbol = mirror.classSymbol(cls)
       val ConstructorName = "apply"
-      val companion: universe.Symbol = moduleSymbol.typeSignature.member(universe.TermName(ConstructorName))
+      val companion: universe.Symbol = classSymbol.typeSignature.member(universe.TermName(ConstructorName))
       val properties =
         Try(companion.asTerm.alternatives.head.asMethod.paramLists.flatten).getOrElse {
-          val sym = mirror.classSymbol(cls)
-          sym.selfType.members
+          classSymbol.selfType.members
             .filterNot(_.isMethod)
             .filterNot(_.isClass)
         }
