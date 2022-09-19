@@ -13,7 +13,7 @@ private[converter] object ErasureHelper {
 
   def erasedOptionalPrimitives(cls: Class[_]): Map[String, Class[_]] = {
     try {
-      val rType = RType.of(cls)
+      val rType = RTypeCache.getRType(cls)
       rType match {
         case classInfo: ClassInfo => {
           val results = classInfo.fields.flatMap { fieldInfo =>

@@ -29,10 +29,10 @@ object SwaggerScalaModelConverter {
   private var requiredBasedOnAnnotation = true
 
   /** If you use swagger annotations to override what is automatically derived, then be aware that
-    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]], by default. You are advised to set the required
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required
     * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
     * the this module inferring the value (as ot would if you don't annotate the classes or fields), then set
-    * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]] and the required property on the annotation will be ignored,
+    * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to true and the required property on the annotation will be ignored,
     * unless the field is an [[Option]].
     *
     * @param value
@@ -43,10 +43,10 @@ object SwaggerScalaModelConverter {
   }
 
   /** If you use swagger annotations to override what is automatically derived, then be aware that
-    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = [[false]], by default. You are advised to set the required
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required
     * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
     * the this module inferring the value (as ot would if you don't annotate the classes or fields), then set
-    * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to [[true]] and the required property on the annotation will be ignored,
+    * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to true and the required property on the annotation will be ignored,
     * unless the field is an [[Option]].
     *
     * @return
@@ -215,7 +215,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def filterUnwantedProperties(schema: Schema[_], propertiesToKeep: Seq[PropertyDescriptor]): Unit = {
     val propNamesSet = propertiesToKeep.map(getAnnotatedPropertyName).toSet
     val originalProps = nullSafeMap(schema.getProperties)
-    val newProps = originalProps.filter { case (key, value) =>
+    val newProps = originalProps.filter { case (key, _) =>
       propNamesSet.contains(key)
     }
     if (originalProps.size > newProps.size) {
@@ -401,7 +401,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     property.param match {
       case Some(constructorParameter) =>
         val types = constructorParameter.constructor.getParameterTypes
-        val annotations = constructorParameter.constructor.getParameterAnnotations
         val index = constructorParameter.index
         if (index > types.size) {
           AnyClass
