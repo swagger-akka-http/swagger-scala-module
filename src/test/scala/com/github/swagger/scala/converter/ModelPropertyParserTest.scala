@@ -570,10 +570,17 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   }
 
   it should "process case class with Duration field" in new PropertiesScope[ModelWDuration] {
-    model.value.getRequired.asScala shouldEqual Seq("duration")
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("duration")
     val props = nullSafeMap(model.value.getProperties)
     props should have size 1
     props("duration") shouldBe a[Schema[_]]
+  }
+
+  it should "process DataExampleClass" in new PropertiesScope[DataExampleClass] {
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("data")
+    val props = nullSafeMap(model.value.getProperties)
+    props should have size 1
+    props("data") shouldBe a[Schema[_]]
   }
 
   it should "process sealed abstract class" in new TestScope {
