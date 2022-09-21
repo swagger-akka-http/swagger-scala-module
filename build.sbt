@@ -67,6 +67,18 @@ Test / publishArtifact := false
 
 pomIncludeRepository := { x => false }
 
+Compile / unmanagedSourceDirectories ++= {
+  if (scalaReleaseVersion.value > 2) {
+    Seq(
+      (LocalRootProject / baseDirectory).value / "src" / "main" / "scala-3"
+    )
+  } else {
+    Seq(
+      (LocalRootProject / baseDirectory).value / "src" / "main" / "scala-2"
+    )
+  }
+}
+
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.2",
