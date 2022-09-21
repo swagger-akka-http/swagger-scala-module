@@ -42,7 +42,16 @@ private[converter] object ErasureHelper {
           // use this form because of Scala 2.11 & 2.12 compile issue
           logger.debug(s"Unable to get type info ${Option(cls.getName).getOrElse("null")}", t)
         } else {
-          logger.info("Unable to get type info {}", Option(cls.getName).getOrElse("null"))
+          logger.info(s"Unable to get type info ${Option(cls.getName).getOrElse("null")}: $t")
+        }
+        Map.empty[String, Class[_]]
+      }
+      case err: NoClassDefFoundError => {
+        if (logger.isDebugEnabled) {
+          // use this form because of Scala 2.11 & 2.12 compile issue
+          logger.debug(s"Unable to get type info ${Option(cls.getName).getOrElse("null")}", err)
+        } else {
+          logger.info(s"Unable to get type info ${Option(cls.getName).getOrElse("null")}: $err")
         }
         Map.empty[String, Class[_]]
       }
