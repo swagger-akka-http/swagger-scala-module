@@ -16,12 +16,11 @@ object SubtypeHelper {
       if (classSymbol.isJava) {
         Seq.empty
       } else if (symbol.isClass) {
-        val clazzes = symbol.asClass.knownDirectSubclasses
+        symbol.asClass.knownDirectSubclasses
           .toSeq
           .sortBy(_.info.toString)
           .flatMap(s => if (s.isClass) Some(s.asClass) else None)
-          .map(c => mirror.runtimeClass(c).getName)
-        clazzes.map(cn => Class.forName(cn, true, Thread.currentThread().getContextClassLoader))
+          .map(c => mirror.runtimeClass(c))
       } else {
         Seq.empty
       }

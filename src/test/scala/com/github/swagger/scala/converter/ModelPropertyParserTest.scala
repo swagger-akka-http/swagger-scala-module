@@ -113,12 +113,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Int" in new PropertiesScope[ModelWOptionInt] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optInt shouldBe a[ObjectSchema]
-    } else {
-      optInt shouldBe a[IntegerSchema]
-      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
-    }
+    optInt shouldBe a[IntegerSchema]
+    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
@@ -146,12 +142,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with nested Scala Option Int with Schema Override" in new PropertiesScope[ModelWOptionIntSchemaOverride] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optInt shouldBe a[ObjectSchema]
-    } else {
-      optInt shouldBe a[IntegerSchema]
-      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
-    }
+    optInt shouldBe a[IntegerSchema]
+    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     optInt.getDescription shouldBe "This is an optional int"
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
@@ -159,12 +151,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Int with Schema Override" in new PropertiesScope[ModelWOptionIntSchemaOverride] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optInt shouldBe a[ObjectSchema]
-    } else {
-      optInt shouldBe a[IntegerSchema]
-      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
-    }
+    optInt shouldBe a[IntegerSchema]
+    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     optInt.getDescription shouldBe "This is an optional int"
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
@@ -180,19 +168,17 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
 
-    if (!RuntimeUtil.isScala3()) {
-      val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
-      annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
-      annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+    val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+    annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
 
-      val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
-      annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
-      annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+    val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+    annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
 
-      val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
-      annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
-      annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
-    }
+    val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+    annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+    annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
   }
@@ -209,19 +195,17 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     annotatedIntWithDefault shouldBe an[IntegerSchema]
     annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
 
-    if (!RuntimeUtil.isScala3()) {
-      val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
-      annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
-      annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+    val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+    annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
 
-      val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
-      annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
-      annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+    val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+    annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
 
-      val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
-      annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
-      annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
-    }
+    val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+    annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+    annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
   }
@@ -241,12 +225,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Long (Some Default)" in new PropertiesScope[ModelWOptionLongWithSomeDefault] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optLong shouldBe a[ObjectSchema]
-    } else {
-      optLong shouldBe a[IntegerSchema]
-      optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
-    }
+    optLong shouldBe a[IntegerSchema]
+    optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
     optLong.getDefault shouldEqual Long.MaxValue
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
@@ -254,12 +234,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Long" in new PropertiesScope[ModelWOptionLong] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optLong shouldBe a[ObjectSchema]
-    } else {
-      optLong shouldBe a[IntegerSchema]
-      optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
-    }
+    optLong shouldBe a[IntegerSchema]
+    optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
     nullSafeSeq(model.value.getRequired) shouldBe empty
   }
 
@@ -454,11 +430,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    if (RuntimeUtil.isScala3()) {
-      arraySchema.getItems shouldBe a[ObjectSchema]
-    } else {
-      arraySchema.getItems shouldBe a[IntegerSchema]
-    }
+    arraySchema.getItems shouldBe a[IntegerSchema]
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
@@ -471,11 +443,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    if (RuntimeUtil.isScala3()) {
-      arraySchema.getItems shouldBe a[ObjectSchema]
-    } else {
-      arraySchema.getItems shouldBe a[IntegerSchema]
-    }
+    arraySchema.getItems shouldBe a[IntegerSchema]
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
@@ -487,11 +455,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
 
-    if (RuntimeUtil.isScala3()) {
-      arraySchema.getItems shouldBe a[ObjectSchema]
-    } else {
-      arraySchema.getItems shouldBe a[IntegerSchema]
-    }
+    arraySchema.getItems shouldBe a[IntegerSchema]
     arraySchema.getItems.getDescription shouldBe "These are ints"
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
@@ -606,31 +570,36 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   }
 
   it should "process case class with Duration field" in new PropertiesScope[ModelWDuration] {
-    model.value.getRequired.asScala shouldEqual Seq("duration")
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("duration")
     val props = nullSafeMap(model.value.getProperties)
     props should have size 1
     props("duration") shouldBe a[Schema[_]]
   }
 
+  it should "process DataExampleClass" in new PropertiesScope[DataExampleClass] {
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("data")
+    val props = nullSafeMap(model.value.getProperties)
+    props should have size 1
+    props("data") shouldBe a[Schema[_]]
+  }
+
   it should "process sealed abstract class" in new TestScope {
     val schemas = converter.readAll(classOf[Animal]).asScala.toMap
-    if (!RuntimeUtil.isScala3()) {
-      val catModel = findModel(schemas, "Cat")
-      catModel should be(defined)
-      val catProps = nullSafeMap(catModel.value.getProperties)
-      catProps should have size 3
-      catProps.get("name").value shouldBe a[StringSchema]
-      catProps.get("age").value shouldBe a[IntegerSchema]
-      catProps.get("animalType").value shouldBe a[StringSchema]
-      nullSafeSeq(catModel.value.getRequired) shouldEqual Seq("age", "animalType", "name")
-      val dogModel = findModel(schemas, "Dog")
-      dogModel should be(defined)
-      val dogProps = nullSafeMap(dogModel.value.getProperties)
-      dogProps should have size 2
-      dogProps.get("name").value shouldBe a[StringSchema]
-      dogProps.get("animalType").value shouldBe a[StringSchema]
-      nullSafeSeq(dogModel.value.getRequired) shouldEqual Seq("animalType", "name")
-    }
+    val catModel = findModel(schemas, "Cat")
+    catModel should be(defined)
+    val catProps = nullSafeMap(catModel.value.getProperties)
+    catProps should have size 3
+    catProps.get("name").value shouldBe a[StringSchema]
+    catProps.get("age").value shouldBe a[IntegerSchema]
+    catProps.get("animalType").value shouldBe a[StringSchema]
+    nullSafeSeq(catModel.value.getRequired) shouldEqual Seq("age", "animalType", "name")
+    val dogModel = findModel(schemas, "Dog")
+    dogModel should be(defined)
+    val dogProps = nullSafeMap(dogModel.value.getProperties)
+    dogProps should have size 2
+    dogProps.get("name").value shouldBe a[StringSchema]
+    dogProps.get("animalType").value shouldBe a[StringSchema]
+    nullSafeSeq(dogModel.value.getRequired) shouldEqual Seq("animalType", "name")
   }
 
   private def findModel(schemas: Map[String, Schema[_]], name: String): Option[Schema[_]] = {
