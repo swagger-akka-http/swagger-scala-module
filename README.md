@@ -33,18 +33,19 @@ case class AddOptionRequest(number: Int, @Schema(required = false, implementatio
 
 Alternatively, you can non-primitive types like BigInt to avoid this requirement.
 
-Since the v2.7 releases, Scala 2 builds use scala-reflect jar to try to work out the class information for the inner types. Scala 3 builds cannot use this approach, and are therefore still affected by this issue. See https://github.com/swagger-akka-http/swagger-scala-module/issues/117.
+Since the v2.7 releases, Scala 2 builds use scala-reflect jar to try to work out the class information for the inner types. Since v2.7.5, Scala 3 builds use a lib that supports runtime reflection. See https://github.com/swagger-akka-http/swagger-scala-module/issues/117. One issue affacting Scala 3 users is https://github.com/gzoller/scala-reflection/issues/40.
 
 v2.7 takes default values into account - either those specified in Scala contructors or via swagger annotations. A field might be marked as not required if a default value is specified.
 
 If you use swagger annotations and don't want to explicity set the `required` value and allow this lib to infer the value, then you can set [SwaggerScalaModelConverter.setRequiredBasedOnAnnotation](https://github.com/swagger-akka-http/swagger-scala-module/blob/564c7c7fb879c1b93b7c913af2219dc4b550ad95/src/main/scala/com/github/swagger/scala/converter/SwaggerScalaModelConverter.scala#L39).
 
-v2.7 is still a little bit unstable and it recommended that the latest v2.7 release is used.
+v2.7 is still a little bit unstable and it recommended that the users who are happy with the latest v2.6 release should stick with that.
 
+## Sealed Traits
 
+Since v2.7.5, swagger-scala-module tries to handle sealed traits and classes. If an API method uses a sealed trait/class as a parameter or return type, the OpenAPI model for that type should be a schema with an `anyOf` construct that contains the schemas for all the classes that extend the selaed trait/class. 
 
-License
--------
+## License
 
 Copyright 2016 SmartBear Software, Inc.
 
