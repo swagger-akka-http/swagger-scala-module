@@ -466,7 +466,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def nullSafeSeq[T](array: Array[T]): Seq[T] = Option(array) match {
-    case None => List.empty[T]
+    case None => Seq.empty[T]
     case Some(arr) => arr.toList
   }
 
