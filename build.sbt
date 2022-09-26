@@ -7,9 +7,11 @@ import org.typelevel.sbt.gha.UseRef.Public
 
 organization := "com.github.swagger-akka-http"
 
-ThisBuild / scalaVersion := "2.13.8"
+ThisBuild / version := "2.8.0-SNAPSHOT"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.8", "3.2.0")
+ThisBuild / scalaVersion := "2.13.9"
+
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.9", "3.2.0")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -80,7 +82,7 @@ Compile / unmanagedSourceDirectories ++= {
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.2",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.14.0-rc1",
   "org.scalatest" %% "scalatest" % "3.2.13" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )

@@ -459,14 +459,14 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def isOption(cls: Class[_]): Boolean = cls == OptionClass
   private def isIterable(cls: Class[_]): Boolean = IterableClass.isAssignableFrom(cls)
   private def isMap(cls: Class[_]): Boolean = MapClass.isAssignableFrom(cls)
+
   private def isScalaClass(cls: Class[_]): Boolean = {
     val classW = ClassW(cls)
-    classW.extendsScalaClass || (!cls.getName.startsWith("scala.") && classW.hasSignature)
+    classW.extendsScalaClass(true) || (!cls.getName.startsWith("scala.") && classW.hasSignature)
   }
 
-
   private def nullSafeSeq[T](array: Array[T]): Seq[T] = Option(array) match {
-    case None => List.empty[T]
+    case None => Seq.empty[T]
     case Some(arr) => arr.toList
   }
 
