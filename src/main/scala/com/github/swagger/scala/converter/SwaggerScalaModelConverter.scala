@@ -109,7 +109,10 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             if (isIterable(cls)) {
               property.setRequired(null)
               property.setProperties(null)
-              if (`type`.getParent != null) property.setName(null)
+              Option(`type`.getParent) match {
+                case Some(_) => property.setName(null)
+                case _ =>
+              }
             }
             setRequired(`type`)
             property
@@ -189,7 +192,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           propertyAnnotations match {
             case Seq() => {
               val requiredFlag = !isOptional && !hasDefaultValue
-              if (!requiredFlag && schema.getRequired != null && schema.getRequired.contains(propertyName)) {
+              if (!requiredFlag && Option(schema.getRequired).isDefined && schema.getRequired.contains(propertyName)) {
                 schema.getRequired.remove(propertyName)
               } else if (requiredFlag) {
                 addRequiredItem(schema, propertyName)
@@ -266,8 +269,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     val propAsString = objectMapper.writeValueAsString(itemSchema)
     val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
     correctedSchema.setType(primitiveProperty.getType)
-    if (itemSchema.getFormat == null) {
-      correctedSchema.setFormat(primitiveProperty.getFormat)
+    Option(itemSchema.getFormat) match {
+      case Some(_) =>
+      case _ => correctedSchema.setFormat(primitiveProperty.getFormat)
     }
     correctedSchema
   }

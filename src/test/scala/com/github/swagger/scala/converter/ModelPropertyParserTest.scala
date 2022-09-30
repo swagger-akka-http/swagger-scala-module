@@ -343,7 +343,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "map BigDecimal to schema type 'number'" in new PropertiesScope[ModelWBigDecimalNoType]() {
     val properties = model.value.getProperties
     val fieldSchema = properties.get("field")
-    properties.size() shouldBe 1
+    properties should have size 1
 
     fieldSchema shouldBe a[NumberSchema]
   }
@@ -351,7 +351,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "map BigDecimal to schema type 'number' even when annotated" in new PropertiesScope[ModelWBigDecimalAnnotatedNoType]() {
     val properties = model.value.getProperties
     val fieldSchema = properties.get("field")
-    properties.size() shouldBe 1
+    properties should have size 1
 
     fieldSchema shouldBe a[NumberSchema]
   }
@@ -413,6 +413,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   }
 
   it should "process Model with Scala Seq" in new PropertiesScope[ModelWSeqString] {
+    schemas should have size 1
     val stringsField = model.value.getProperties.get("strings")
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]

@@ -75,7 +75,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
 
   it should "read a model with vector property" in {
     val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithVector]).asScala
-    schemas.size shouldBe 1
+    schemas should have size 1
 
     val model = schemas("ModelWithVector")
     val friends = model.getProperties().get("friends")
@@ -84,7 +84,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
 
   it should "read a model with vector of ints" in {
     val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithIntVector]).asScala
-    schemas.size shouldBe 1
+    schemas should have size 1
 
     val model = schemas("ModelWithIntVector")
     val prop = model.getProperties().get("ints")
@@ -94,7 +94,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
 
   it should "read a model with vector of booleans" in {
     val schemas = ModelConverters.getInstance().readAll(classOf[ModelWithBooleanVector]).asScala
-    schemas.size shouldBe 1
+    schemas should have size 1
 
     val model = schemas("ModelWithBooleanVector")
     val prop = model.getProperties().get("bools")
