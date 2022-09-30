@@ -109,6 +109,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             if (isIterable(cls)) {
               property.setRequired(null)
               property.setProperties(null)
+              if (`type`.getParent != null) property.setName(null)
             }
             setRequired(`type`)
             property
