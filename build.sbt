@@ -81,8 +81,8 @@ Compile / unmanagedSourceDirectories ++= {
 
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
-  "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.2",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.14.0-rc1",
+  "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.3",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.14.0-rc2",
   "org.scalatest" %% "scalatest" % "3.2.13" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
