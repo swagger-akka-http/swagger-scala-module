@@ -29,8 +29,16 @@ apiMappings ++= {
   val mappings: Seq[(File, URL)] =
     mappingsFor("org.scala-lang", List("scala-library"), "https://scala-lang.org/api/%s/") ++
       mappingsFor("io.swagger.core.v3", List("swagger-core-jakarta"), "https://javadoc.io/doc/io.swagger.core.v3/swagger-core/%s/") ++
-      mappingsFor("com.fasterxml.jackson.core", List("jackson-core"), "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-core/%s/") ++
-      mappingsFor("com.fasterxml.jackson.core", List("jackson-databind"), "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-databind/%s/")
+      mappingsFor(
+        "com.fasterxml.jackson.core",
+        List("jackson-core"),
+        "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-core/%s/"
+      ) ++
+      mappingsFor(
+        "com.fasterxml.jackson.core",
+        List("jackson-databind"),
+        "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-databind/%s/"
+      )
 
   mappings.toMap
 }
@@ -83,7 +91,7 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.3",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.14.0-rc2",
-  "org.scalatest" %% "scalatest" % "3.2.13" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.14" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
 libraryDependencies ++= {
@@ -107,7 +115,7 @@ licenses := Seq(("Apache License 2.0", new URL("https://www.apache.org/licenses/
 
 pomExtra := {
   pomExtra.value ++ Group(
-      <issueManagement>
+    <issueManagement>
         <system>github</system>
         <url>https://github.com/swagger-api/swagger-scala-module/issues</url>
       </issueManagement>
@@ -127,7 +135,8 @@ pomExtra := {
 }
 
 ThisBuild / githubWorkflowBuild := Seq(
-  WorkflowStep.Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2.13 build"), cond = Some("startsWith(matrix.scala, '2.13')")),
+  WorkflowStep
+    .Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2.13 build"), cond = Some("startsWith(matrix.scala, '2.13')")),
   WorkflowStep.Sbt(List("test"), name = Some("Scala build"), cond = Some("!startsWith(matrix.scala, '2.13')"))
 )
 
@@ -139,7 +148,8 @@ ThisBuild / githubWorkflowPublishTargetBranches := Seq(
 )
 
 ThisBuild / githubWorkflowBuildPostamble := Seq(
-  WorkflowStep.Use(Public("codecov", "codecov-action", "v2"),
+  WorkflowStep.Use(
+    Public("codecov", "codecov-action", "v2"),
     name = Some("Publish to Codecov.io"),
     params = Map("fail_ci_if_error" -> "true"),
     cond = Some("startsWith(matrix.scala, '2.13')")
