@@ -29,9 +29,9 @@ object SwaggerScalaModelConverter {
   private var requiredBasedOnAnnotation = true
 
   /** If you use swagger annotations to override what is automatically derived, then be aware that
-    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required
-    * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
-    * the this module inferring the value (as ot would if you don't annotate the classes or fields), then set
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required flag
+    * on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on the
+    * this module inferring the value (as ot would if you don't annotate the classes or fields), then set
     * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to true and the required property on the annotation will be ignored,
     * unless the field is an [[Option]].
     *
@@ -43,9 +43,9 @@ object SwaggerScalaModelConverter {
   }
 
   /** If you use swagger annotations to override what is automatically derived, then be aware that
-    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required
-    * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
-    * the this module inferring the value (as ot would if you don't annotate the classes or fields), then set
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required flag
+    * on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on the
+    * this module inferring the value (as ot would if you don't annotate the classes or fields), then set
     * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to true and the required property on the annotation will be ignored,
     * unless the field is an [[Option]].
     *
@@ -84,8 +84,12 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def resolveWithoutSubtypes(javaType: JavaType, `type`: AnnotatedType, context: ModelConverterContext,
-                                     chain: util.Iterator[ModelConverter]): Schema[_] = {
+  private def resolveWithoutSubtypes(
+      javaType: JavaType,
+      `type`: AnnotatedType,
+      context: ModelConverterContext,
+      chain: util.Iterator[ModelConverter]
+  ): Schema[_] = {
     val cls = javaType.getRawClass
     matchScalaPrimitives(`type`, cls).getOrElse {
       // Unbox scala options
@@ -94,7 +98,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         val baseType =
           if (
             SwaggerScalaModelConverter.isRequiredBasedOnAnnotation
-              && annotatedOverrides.headOption.getOrElse(false)
+            && annotatedOverrides.headOption.getOrElse(false)
           ) new AnnotatedType()
           else new AnnotatedTypeForOption()
         resolve(nextType(baseType, `type`, javaType), context, chain)
@@ -164,7 +168,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
                   case _ => {
                     defaultValue match {
                       case Some(wrappedValue) => property.setDefault(wrappedValue)
-                      case None => //no default
+                      case None => // no default
                       case seq: Seq[_] => property.setDefault(seq.asJava)
                       case set: Set[_] => property.setDefault(set.asJava)
                       case dv => property.setDefault(dv)
