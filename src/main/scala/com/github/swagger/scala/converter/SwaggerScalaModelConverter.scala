@@ -496,7 +496,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
 
   private def isScalaClass(cls: Class[_]): Boolean = {
     val classW = ClassW(cls)
-    classW.extendsScalaClass(true) || (!cls.getName.startsWith("scala.") && classW.hasSignature)
+    classW.extendsScalaClass || (!cls.getName.startsWith("scala.") && classW.hasSignature)
   }
 
   private def nullSafeSeq[T](array: Array[T]): Seq[T] = Option(array) match {
