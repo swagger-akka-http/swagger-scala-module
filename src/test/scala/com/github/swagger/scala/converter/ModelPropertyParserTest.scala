@@ -27,8 +27,9 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val converter = ModelConverters.getInstance()
   }
 
-  class PropertiesScope[A](requiredBasedAnnotation: Boolean = true, debug: Boolean = false)(implicit tt: ClassTag[A]) extends TestScope {
+  class PropertiesScope[A](requiredBasedAnnotation: Boolean = true, requiredBasedDefaultValue: Boolean = true, debug: Boolean = false)(implicit tt: ClassTag[A]) extends TestScope {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(requiredBasedAnnotation)
+    SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue(requiredBasedDefaultValue)
     val schemas = converter.readAll(tt.runtimeClass).asScala.toMap
     val model = schemas.get(tt.runtimeClass.getSimpleName)
     model should be(defined)
@@ -158,7 +159,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   }
 
   it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](
-    true
+    true, true
   ) {
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
@@ -183,9 +184,35 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
   }
 
+  it should "prioritize required as specified in annotation and not based on default value" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](
+    true, false
+  ) {
+    val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
+    requiredIntWithDefault shouldBe an[IntegerSchema]
+    requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
+
+    val annotatedIntWithDefault = model.value.getProperties.get("annotatedIntWithDefault")
+    annotatedIntWithDefault shouldBe an[IntegerSchema]
+    annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
+
+    val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+    annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+
+    val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+    annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+
+    val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+    annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+    annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
+
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "requiredIntWithDefault")
+  }
+
   it should "prioritize required based on (Option or not) type when `setRequiredBasedOnAnnotation` is set" in new PropertiesScope[
     ModelWOptionIntSchemaOverrideForRequired
-  ](requiredBasedAnnotation = false) {
+  ](requiredBasedAnnotation = false, requiredBasedDefaultValue = true) {
 
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
@@ -208,6 +235,33 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
 
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt", "annotatedRequiredInt")
+  }
+
+  it should "prioritize required based on (Option or not) type when `setRequiredBasedOnAnnotation` and `requiredBasedDefaultValue` is set" in new PropertiesScope[
+    ModelWOptionIntSchemaOverrideForRequired
+  ](requiredBasedAnnotation = false, requiredBasedDefaultValue = false) {
+
+    val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
+    requiredIntWithDefault shouldBe an[IntegerSchema]
+    requiredIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 5
+
+    val annotatedIntWithDefault = model.value.getProperties.get("annotatedIntWithDefault")
+    annotatedIntWithDefault shouldBe an[IntegerSchema]
+    annotatedIntWithDefault.asInstanceOf[IntegerSchema].getDefault shouldEqual 10
+
+    val annotatedOptionalIntWithNoneDefault = model.value.getProperties.get("annotatedOptionalIntWithNoneDefault")
+    annotatedOptionalIntWithNoneDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithNoneDefault.asInstanceOf[IntegerSchema].getDefault should be(null)
+
+    val annotatedOptionalIntWithSomeDefault = model.value.getProperties.get("annotatedOptionalIntWithSomeDefault")
+    annotatedOptionalIntWithSomeDefault shouldBe an[IntegerSchema]
+    annotatedOptionalIntWithSomeDefault.asInstanceOf[IntegerSchema].getDefault should be(5)
+
+    val annotatedOptionalStringWithNoneDefault = model.value.getProperties.get("annotatedOptionalStringWithNoneDefault")
+    annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
+    annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
+
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("requiredInt", "requiredIntWithDefault", "annotatedRequiredInt", "annotatedRequiredIntWithDefault", "annotatedIntWithDefault", "annotatedOptionalInt")
   }
 
   it should "consider fields that aren't optional required if `requiredBasedAnnotation == true`" in new PropertiesScope[
