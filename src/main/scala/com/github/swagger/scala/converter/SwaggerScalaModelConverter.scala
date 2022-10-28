@@ -223,7 +223,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       propNamesSet.contains(key)
     }
     if (originalProps.size > newProps.size) {
-      schema.setProperties(newProps.asJava)
+      schema.setProperties(new util.LinkedHashMap(newProps.asJava))
     }
   }
 
