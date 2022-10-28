@@ -7,6 +7,8 @@ import org.typelevel.sbt.gha.UseRef.Public
 
 organization := "com.github.swagger-akka-http"
 
+ThisBuild / version := "2.7.6"
+
 ThisBuild / scalaVersion := "2.13.10"
 
 ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.10", "3.2.0")
