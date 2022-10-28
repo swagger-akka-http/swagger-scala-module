@@ -7,8 +7,6 @@ import org.typelevel.sbt.gha.UseRef.Public
 
 organization := "com.github.swagger-akka-http"
 
-ThisBuild / version := "2.8.0-SNAPSHOT"
-
 ThisBuild / scalaVersion := "2.13.10"
 
 ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.10", "3.2.0")
@@ -88,11 +86,11 @@ Compile / unmanagedSourceDirectories ++= {
 }
 
 libraryDependencies ++= Seq(
-  "org.slf4j" % "slf4j-api" % "2.0.3",
+  "org.slf4j" % "slf4j-api" % "1.7.36",
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.4",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.14.0-rc2",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4",
   "org.scalatest" %% "scalatest" % "3.2.14" % Test,
-  "org.slf4j" % "slf4j-simple" % "2.0.3" % Test
+  "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
 libraryDependencies ++= {
   if (scalaReleaseVersion.value == 2) {
