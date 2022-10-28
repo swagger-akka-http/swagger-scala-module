@@ -38,6 +38,7 @@ object SwaggerScalaModelConverter {
     *
     * @param value
     *   true by default
+    * @since v2.7.4
     */
   def setRequiredBasedOnAnnotation(value: Boolean = true): Unit = {
     requiredBasedOnAnnotation = value
@@ -51,6 +52,7 @@ object SwaggerScalaModelConverter {
     *
     * @param value
     *   true by default
+    * @since v2.7.6
     */
   def setRequiredBasedOnDefaultValue(value: Boolean = true): Unit = {
     requiredBasedOnDefaultValue = value
@@ -63,8 +65,9 @@ object SwaggerScalaModelConverter {
     * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to true and the required property on the annotation will be ignored,
     * unless the field is an [[Option]].
     *
-    * @return
+    * @return value
     *   value: true by default
+    * @since v2.7.4
     */
   def isRequiredBasedOnAnnotation: Boolean = requiredBasedOnAnnotation
 
@@ -75,8 +78,9 @@ object SwaggerScalaModelConverter {
     * However, if this flag is false, then a property will be required only if it's not an [[Option]].
     *
     * @return
-    * value: true by default
-    */
+    *   value: true by default
+    * @since v2.7.6
+   */
   def isRequiredBasedOnDefaultValue: Boolean = requiredBasedOnDefaultValue
 }
 
