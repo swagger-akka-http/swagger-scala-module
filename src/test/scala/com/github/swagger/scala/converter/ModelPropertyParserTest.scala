@@ -540,6 +540,16 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("amount")
   }
 
+  it should "process ModelWGetFunction with optional field" in new PropertiesScope[ModelWGetFunctionWithOptionalField] {
+    val props = nullSafeMap(model.value.getProperties)
+    props should have size 1
+    val amountField = props.get("amount").value
+    amountField shouldBe a[IntegerSchema]
+    amountField.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
+
+    nullSafeSeq(model.value.getRequired) shouldBe empty
+  }
+
   it should "process ModelWJacksonAnnotatedGetFunction" in new PropertiesScope[ModelWJacksonAnnotatedGetFunction] {
     val props = nullSafeMap(model.value.getProperties)
     props should have size 1
