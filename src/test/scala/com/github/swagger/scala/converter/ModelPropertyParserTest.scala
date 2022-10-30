@@ -458,9 +458,10 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     model should be(defined)
     model.value.getProperties should not be (null)
     val stringsField = model.value.getProperties.get("items")
-    stringsField shouldBe a[ArraySchema]
+    stringsField shouldBe an[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
-    arraySchema.getUniqueItems() shouldBe (null)
+    arraySchema.getUniqueItems shouldBe null
+    arraySchema.getRequired shouldBe null
     arraySchema.getItems shouldBe a[ObjectSchema] // probably type erasure - ideally this would eval as StringSchema
     // next line used to fail (https://github.com/swagger-akka-http/swagger-akka-http/issues/171)
     Json.mapper().writeValueAsString(model.value)

@@ -129,7 +129,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         resolve(nextType(baseType, `type`, javaType), context, chain)
       } else if (!annotatedOverrides.headOption.getOrElse(true)) {
         resolve(nextType(new AnnotatedTypeForOption(), `type`, javaType), context, chain)
-      } else if (isScalaClass(cls)) {
+      } else if (isScalaClass(cls) && !isIterable(cls)) {
         scalaClassSchema(cls, `type`, context, chain).getOrElse(None.orNull)
       } else if (chain.hasNext) {
         val nextResolved = Option(chain.next().resolve(`type`, context, chain))
