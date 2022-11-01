@@ -1,7 +1,7 @@
 package com.github.swagger.scala.converter
 
 import io.swagger.v3.core.converter._
-import io.swagger.v3.core.util.Json
+import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.models.media._
 import models.NestingObject.{NestedModelWOptionInt, NoProperties}
 import models._
@@ -465,6 +465,20 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     arraySchema.getItems shouldBe a[ObjectSchema] // probably type erasure - ideally this would eval as StringSchema
     // next line used to fail (https://github.com/swagger-akka-http/swagger-akka-http/issues/171)
     Json.mapper().writeValueAsString(model.value)
+  }
+
+  it should "default to supplied schema if it can't be corrected" in new PropertiesScope[ModelWMapStringCaseClass] {
+    schemas should have size 2
+
+    val mapField = model.value.getProperties.get("maybeMapStringCaseClass")
+    mapField shouldBe a[MapSchema]
+    mapField.getAdditionalProperties shouldBe a[Schema[_]]
+    mapField.getAdditionalProperties.asInstanceOf[Schema[_]].get$ref() shouldBe "#/components/schemas/SomeCaseClass"
+
+
+    val caseClassField = schemas("SomeCaseClass")
+    caseClassField shouldBe a[Schema[_]]
+    caseClassField.getProperties.get("field") shouldBe an[IntegerSchema]
   }
 
   it should "process Model with Scala Seq" in new PropertiesScope[ModelWSeqString] {

@@ -8,4 +8,8 @@ case class ModelWJavaListString(strings: java.util.List[String])
 
 case class ModelWMapString(strings: Map[String, String])
 
+case class SomeCaseClass(field: Int)
+
+case class ModelWMapStringCaseClass(maybeMapStringCaseClass: Option[Map[String, SomeCaseClass]])
+
 case class ModelWJavaMapString(strings: java.util.Map[String, String])

@@ -209,7 +209,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               schemaProperties.get(propertyName).foreach { property =>
                 Option(PrimitiveType.fromType(erasedType)).foreach { primitiveType =>
                   if (isOptional) {
-                    schema.addProperty(propertyName, correctSchema(property, primitiveType))
+                    schema.addProperty(propertyName, tryCorrectSchema(property, primitiveType))
                   }
                   if (isIterable(propertyClass) && !isMap(propertyClass)) {
                     schema.addProperty(propertyName, updateTypeOnItemsSchema(primitiveType, property))
@@ -288,22 +288,25 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def updateTypeOnItemsSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) = {
-    val updatedSchema = correctSchema(propertySchema.getItems, primitiveType)
+    val updatedSchema = tryCorrectSchema(propertySchema.getItems, primitiveType)
     propertySchema.setItems(updatedSchema)
     propertySchema
   }
 
-  private def correctSchema(itemSchema: Schema[_], primitiveType: PrimitiveType) = {
-    val primitiveProperty = primitiveType.createProperty()
-    val propAsString = objectMapper.writeValueAsString(itemSchema)
-    val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
-    correctedSchema.setType(primitiveProperty.getType)
-    Option(itemSchema.getFormat) match {
-      case Some(_) =>
-      case _ => correctedSchema.setFormat(primitiveProperty.getFormat)
-    }
-    correctedSchema
+  private[converter] def tryCorrectSchema(itemSchema: Schema[_], primitiveType: PrimitiveType): Schema[_] = {
+    Try {
+      val primitiveProperty = primitiveType.createProperty()
+      val propAsString = objectMapper.writeValueAsString(itemSchema)
+      val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
+      correctedSchema.setType(primitiveProperty.getType)
+      Option(itemSchema.getFormat) match {
+        case Some(_) =>
+        case _ => correctedSchema.setFormat(primitiveProperty.getFormat)
+      }
+      correctedSchema
+    }.toOption.getOrElse(itemSchema)
   }
+
 
   private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
     case _: AnnotatedTypeForOption => Seq.empty
