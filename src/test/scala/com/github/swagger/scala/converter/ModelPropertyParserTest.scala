@@ -389,6 +389,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
 
   it should "process Model with Scala BigDecimal with annotation" in new PropertiesScope[ModelWBigDecimalAnnotated]() {
     val fieldSchema = model.value.getProperties.get("field")
+    fieldSchema.getDeprecated shouldBe java.lang.Boolean.TRUE
     fieldSchema shouldBe a[StringSchema]
     fieldSchema.asInstanceOf[StringSchema].getExample shouldEqual ("42.0")
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
@@ -397,6 +398,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "map BigDecimal to schema type 'number'" in new PropertiesScope[ModelWBigDecimalNoType]() {
     val properties = model.value.getProperties
     val fieldSchema = properties.get("field")
+    fieldSchema.getDeprecated shouldBe null
     properties should have size 1
 
     fieldSchema shouldBe a[NumberSchema]
