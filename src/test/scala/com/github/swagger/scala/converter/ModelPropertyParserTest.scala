@@ -472,15 +472,25 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "default to supplied schema if it can't be corrected" in new PropertiesScope[ModelWMapStringCaseClass] {
     schemas should have size 2
 
+    nullSafeSeq(model.value.getRequired) shouldBe empty
     val mapField = model.value.getProperties.get("maybeMapStringCaseClass")
     mapField shouldBe a[MapSchema]
     mapField.getAdditionalProperties shouldBe a[Schema[_]]
     mapField.getAdditionalProperties.asInstanceOf[Schema[_]].get$ref() shouldBe "#/components/schemas/SomeCaseClass"
 
-
     val caseClassField = schemas("SomeCaseClass")
     caseClassField shouldBe a[Schema[_]]
     caseClassField.getProperties.get("field") shouldBe an[IntegerSchema]
+  }
+
+  it should "handle Option[Map[String, Long]]" in new PropertiesScope[ModelWMapStringLong] {
+    schemas should have size 1
+
+    nullSafeSeq(model.value.getRequired) shouldBe empty
+    val mapField = model.value.getProperties.get("maybeMapStringLong")
+    mapField shouldBe a[MapSchema]
+    nullSafeMap(mapField.getProperties) shouldBe empty
+    mapField.getAdditionalProperties shouldBe a[Schema[_]]
   }
 
   it should "process Model with Scala Seq" in new PropertiesScope[ModelWSeqString] {

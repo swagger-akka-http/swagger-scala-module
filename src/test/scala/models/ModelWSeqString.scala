@@ -12,4 +12,6 @@ case class SomeCaseClass(field: Int)
 
 case class ModelWMapStringCaseClass(maybeMapStringCaseClass: Option[Map[String, SomeCaseClass]])
 
+case class ModelWMapStringLong(maybeMapStringLong: Option[Map[String, Long]])
+
 case class ModelWJavaMapString(strings: java.util.Map[String, String])
