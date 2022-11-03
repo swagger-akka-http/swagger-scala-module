@@ -17,10 +17,12 @@ import scala.reflect.ClassTag
 class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with OptionValues {
   override protected def beforeEach() = {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(true)
+    SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue(true)
   }
 
   override protected def afterEach() = {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(true)
+    SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue(true)
   }
 
   trait TestScope {
