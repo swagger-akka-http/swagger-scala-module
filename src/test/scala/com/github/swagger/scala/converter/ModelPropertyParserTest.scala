@@ -17,10 +17,12 @@ import scala.reflect.ClassTag
 class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with OptionValues {
   override protected def beforeEach() = {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(true)
+    SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue(true)
   }
 
   override protected def afterEach() = {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(true)
+    SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue(true)
   }
 
   trait TestScope {
@@ -389,6 +391,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
 
   it should "process Model with Scala BigDecimal with annotation" in new PropertiesScope[ModelWBigDecimalAnnotated]() {
     val fieldSchema = model.value.getProperties.get("field")
+    fieldSchema.getDeprecated shouldBe java.lang.Boolean.TRUE
     fieldSchema shouldBe a[StringSchema]
     fieldSchema.asInstanceOf[StringSchema].getExample shouldEqual ("42.0")
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("field")
@@ -397,6 +400,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "map BigDecimal to schema type 'number'" in new PropertiesScope[ModelWBigDecimalNoType]() {
     val properties = model.value.getProperties
     val fieldSchema = properties.get("field")
+    fieldSchema.getDeprecated shouldBe null
     properties should have size 1
 
     fieldSchema shouldBe a[NumberSchema]
@@ -470,15 +474,25 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "default to supplied schema if it can't be corrected" in new PropertiesScope[ModelWMapStringCaseClass] {
     schemas should have size 2
 
+    nullSafeSeq(model.value.getRequired) shouldBe empty
     val mapField = model.value.getProperties.get("maybeMapStringCaseClass")
     mapField shouldBe a[MapSchema]
     mapField.getAdditionalProperties shouldBe a[Schema[_]]
     mapField.getAdditionalProperties.asInstanceOf[Schema[_]].get$ref() shouldBe "#/components/schemas/SomeCaseClass"
 
-
     val caseClassField = schemas("SomeCaseClass")
     caseClassField shouldBe a[Schema[_]]
     caseClassField.getProperties.get("field") shouldBe an[IntegerSchema]
+  }
+
+  it should "handle Option[Map[String, Long]]" in new PropertiesScope[ModelWMapStringLong] {
+    schemas should have size 1
+
+    nullSafeSeq(model.value.getRequired) shouldBe empty
+    val mapField = model.value.getProperties.get("maybeMapStringLong")
+    mapField shouldBe a[MapSchema]
+    nullSafeMap(mapField.getProperties) shouldBe empty
+    mapField.getAdditionalProperties shouldBe a[Schema[_]]
   }
 
   it should "process Model with Scala Seq" in new PropertiesScope[ModelWSeqString] {

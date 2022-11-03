@@ -10,7 +10,7 @@ import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
-import io.swagger.v3.oas.models.media.{ObjectSchema, Schema}
+import io.swagger.v3.oas.models.media.{MapSchema, ObjectSchema, Schema}
 import org.slf4j.LoggerFactory
 
 import java.lang.annotation.Annotation
@@ -294,17 +294,22 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private[converter] def tryCorrectSchema(itemSchema: Schema[_], primitiveType: PrimitiveType): Schema[_] = {
-    Try {
-      val primitiveProperty = primitiveType.createProperty()
-      val propAsString = objectMapper.writeValueAsString(itemSchema)
-      val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
-      correctedSchema.setType(primitiveProperty.getType)
-      Option(itemSchema.getFormat) match {
-        case Some(_) =>
-        case _ => correctedSchema.setFormat(primitiveProperty.getFormat)
+    itemSchema match {
+      case ms: MapSchema => ms
+      case _ => {
+        Try {
+          val primitiveProperty = primitiveType.createProperty()
+          val propAsString = objectMapper.writeValueAsString(itemSchema)
+          val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
+          correctedSchema.setType(primitiveProperty.getType)
+          Option(itemSchema.getFormat) match {
+            case Some(_) =>
+            case _ => correctedSchema.setFormat(primitiveProperty.getFormat)
+          }
+          correctedSchema
+        }.toOption.getOrElse(itemSchema)
       }
-      correctedSchema
-    }.toOption.getOrElse(itemSchema)
+    }
   }
 
 
