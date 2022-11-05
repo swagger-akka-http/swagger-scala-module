@@ -223,7 +223,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               val requiredFlag = !isOptional && (!SwaggerScalaModelConverter.isRequiredBasedOnDefaultValue || !hasDefaultValue)
               if (!requiredFlag && Option(schema.getRequired).isDefined && schema.getRequired.contains(propertyName)) {
                 schema.getRequired.remove(propertyName)
-              } else if (requiredFlag) {
+              } else if (requiredFlag && schema.getEnum == null) {
                 addRequiredItem(schema, propertyName)
               }
             }
