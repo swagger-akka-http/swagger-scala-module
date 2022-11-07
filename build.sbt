@@ -148,6 +148,7 @@ ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.StartsWith(Ref.Tag("v"))
 )
 
+/*
 ThisBuild / githubWorkflowBuildPostamble := Seq(
   WorkflowStep.Use(
     Public("codecov", "codecov-action", "v2"),
@@ -156,6 +157,7 @@ ThisBuild / githubWorkflowBuildPostamble := Seq(
     cond = Some("startsWith(matrix.scala, '2.13')")
   )
 )
+*/
 
 ThisBuild / githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(
