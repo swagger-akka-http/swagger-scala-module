@@ -98,18 +98,29 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private val AnyClass = classOf[Any]
 
   override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: util.Iterator[ModelConverter]): Schema[_] = {
-    val javaType = _mapper.constructType(`type`.getType)
-    val subtypes = SubtypeHelper.findSubtypes(javaType.getRawClass)
-    if (subtypes.isEmpty) {
-      resolveWithoutSubtypes(javaType, `type`, context, chain)
-    } else {
-      val converters = chain.asScala.toSeq
-      val schema = new ObjectSchema
-      val subSchemas = subtypes.map { subtype =>
-        val javaSubType = _mapper.constructType(subtype)
-        resolveWithoutSubtypes(javaSubType, new AnnotatedType(subtype), context, converters.iterator.asJava)
+    Option(`type`.getType) match {
+      case Some(typeType) => {
+        val javaType = _mapper.constructType(typeType)
+        val subtypes = SubtypeHelper.findSubtypes(javaType.getRawClass)
+        if (subtypes.isEmpty) {
+          resolveWithoutSubtypes(javaType, `type`, context, chain)
+        } else {
+          val converters = chain.asScala.toSeq
+          val schema = new ObjectSchema
+          val subSchemas = subtypes.map { subtype =>
+            val javaSubType = _mapper.constructType(subtype)
+            resolveWithoutSubtypes(javaSubType, new AnnotatedType(subtype), context, converters.iterator.asJava)
+          }
+          schema.anyOf(subSchemas.asJava)
+        }
       }
-      schema.anyOf(subSchemas.asJava)
+      case _ => {
+        if (chain.hasNext) {
+          chain.next().resolve(`type`, context, chain)
+        } else {
+          None.orNull
+        }
+      }
     }
   }
 
