@@ -114,13 +114,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           schema.anyOf(subSchemas.asJava)
         }
       }
-      case _ => {
-        if (chain.hasNext) {
-          chain.next().resolve(`type`, context, chain)
-        } else {
-          None.orNull
-        }
-      }
+      case _ => None.orNull
     }
   }
 
