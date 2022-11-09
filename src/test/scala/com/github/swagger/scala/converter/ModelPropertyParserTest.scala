@@ -29,7 +29,9 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val converter = ModelConverters.getInstance()
   }
 
-  class PropertiesScope[A](requiredBasedAnnotation: Boolean = true, requiredBasedDefaultValue: Boolean = true, debug: Boolean = false)(implicit tt: ClassTag[A]) extends TestScope {
+  class PropertiesScope[A](requiredBasedAnnotation: Boolean = true, requiredBasedDefaultValue: Boolean = true, debug: Boolean = false)(
+      implicit tt: ClassTag[A]
+  ) extends TestScope {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(requiredBasedAnnotation)
     SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue(requiredBasedDefaultValue)
     val schemas = converter.readAll(tt.runtimeClass).asScala.toMap
@@ -161,7 +163,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   }
 
   it should "prioritize required as specified in annotation by default" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](
-    true, true
+    true,
+    true
   ) {
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
@@ -186,8 +189,11 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("annotatedOptionalInt", "requiredInt")
   }
 
-  it should "prioritize required as specified in annotation and not based on default value" in new PropertiesScope[ModelWOptionIntSchemaOverrideForRequired](
-    true, false
+  it should "prioritize required as specified in annotation and not based on default value" in new PropertiesScope[
+    ModelWOptionIntSchemaOverrideForRequired
+  ](
+    true,
+    false
   ) {
     val requiredIntWithDefault = model.value.getProperties.get("requiredIntWithDefault")
     requiredIntWithDefault shouldBe an[IntegerSchema]
@@ -263,7 +269,14 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     annotatedOptionalStringWithNoneDefault shouldBe an[StringSchema]
     annotatedOptionalStringWithNoneDefault.asInstanceOf[StringSchema].getDefault should be(null)
 
-    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set("requiredInt", "requiredIntWithDefault", "annotatedRequiredInt", "annotatedRequiredIntWithDefault", "annotatedIntWithDefault", "annotatedOptionalInt")
+    nullSafeSeq(model.value.getRequired).toSet shouldEqual Set(
+      "requiredInt",
+      "requiredIntWithDefault",
+      "annotatedRequiredInt",
+      "annotatedRequiredIntWithDefault",
+      "annotatedIntWithDefault",
+      "annotatedOptionalInt"
+    )
   }
 
   it should "consider fields that aren't optional required if `requiredBasedAnnotation == true`" in new PropertiesScope[
