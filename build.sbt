@@ -9,7 +9,7 @@ organization := "com.github.swagger-akka-http"
 
 ThisBuild / scalaVersion := "2.13.10"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.10", "3.2.0")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.10", "3.2.1")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -152,7 +152,7 @@ ThisBuild / githubWorkflowBuildPostamble := Seq(
     cond = Some("startsWith(matrix.scala, '2.13')")
   )
 )
-*/
+ */
 
 ThisBuild / githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(
