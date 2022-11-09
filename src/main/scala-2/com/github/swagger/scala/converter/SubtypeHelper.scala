@@ -16,8 +16,7 @@ object SubtypeHelper {
       if (classSymbol.isJava) {
         Seq.empty
       } else if (symbol.isClass) {
-        symbol.asClass.knownDirectSubclasses
-          .toSeq
+        symbol.asClass.knownDirectSubclasses.toSeq
           .sortBy(_.info.toString)
           .flatMap(s => if (s.isClass) Some(s.asClass) else None)
           .map(c => mirror.runtimeClass(c))

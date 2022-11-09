@@ -152,7 +152,7 @@ ThisBuild / githubWorkflowBuildPostamble := Seq(
     cond = Some("startsWith(matrix.scala, '2.13')")
   )
 )
-*/
+ */
 
 ThisBuild / githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(

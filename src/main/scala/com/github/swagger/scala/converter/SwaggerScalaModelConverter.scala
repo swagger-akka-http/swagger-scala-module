@@ -30,9 +30,9 @@ object SwaggerScalaModelConverter {
   private var requiredBasedOnDefaultValue = true
 
   /** If you use swagger annotations to override what is automatically derived, then be aware that
-    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required
-    * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
-    * the this module inferring the value (as it would if you don't annotate the classes or fields), then set
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required flag
+    * on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on the
+    * this module inferring the value (as it would if you don't annotate the classes or fields), then set
     * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to true and the required property on the annotation will be ignored,
     * unless the field is an [[Option]].
     *
@@ -44,11 +44,11 @@ object SwaggerScalaModelConverter {
     requiredBasedOnAnnotation = value
   }
 
-  /** If you use swagger annotations to override what is automatically derived, then this flag will not be used.
-    * If you rely on this module inferring the required flag (as it would if you don't annotate the classes or fields),
-    * then this flag will control how the required flag is derived when a default value exists.
-    * If [[SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue]] is true and a property has a default value, then it will not be required.
-    * However, if this flag is false, then a property will be required only if it's not an [[Option]].
+  /** If you use swagger annotations to override what is automatically derived, then this flag will not be used. If you rely on this module
+    * inferring the required flag (as it would if you don't annotate the classes or fields), then this flag will control how the required
+    * flag is derived when a default value exists. If [[SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue]] is true and a property
+    * has a default value, then it will not be required. However, if this flag is false, then a property will be required only if it's not
+    * an [[Option]].
     *
     * @param value
     *   true by default
@@ -59,28 +59,28 @@ object SwaggerScalaModelConverter {
   }
 
   /** If you use swagger annotations to override what is automatically derived, then be aware that
-    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required
-    * flag on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on
-    * the this module inferring the value (as it would if you don't annotate the classes or fields), then set
+    * [[io.swagger.v3.oas.annotations.media.Schema]] annotation has required = false, by default. You are advised to set the required flag
+    * on this annotation to the correct value. If you would prefer to have the Schema annotation required flag ignored and to rely on the
+    * this module inferring the value (as it would if you don't annotate the classes or fields), then set
     * [[SwaggerScalaModelConverter.setRequiredBasedOnAnnotation]] to true and the required property on the annotation will be ignored,
     * unless the field is an [[Option]].
     *
-    * @return value
-    *   value: true by default
+    * @return
+    *   value value: true by default
     * @since v2.7.4
     */
   def isRequiredBasedOnAnnotation: Boolean = requiredBasedOnAnnotation
 
-  /** If you use swagger annotations to override what is automatically derived, then this flag will not be used.
-    * If you rely on this module inferring the required flag (as it would if you don't annotate the classes or fields),
-    * then this flag will control how the required flag is derived when a default value exists.
-    * If [[SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue]] is true and a property has a default value, then it will not be required.
-    * However, if this flag is false, then a property will be required only if it's not an [[Option]].
+  /** If you use swagger annotations to override what is automatically derived, then this flag will not be used. If you rely on this module
+    * inferring the required flag (as it would if you don't annotate the classes or fields), then this flag will control how the required
+    * flag is derived when a default value exists. If [[SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue]] is true and a property
+    * has a default value, then it will not be required. However, if this flag is false, then a property will be required only if it's not
+    * an [[Option]].
     *
     * @return
     *   value: true by default
     * @since v2.7.6
-   */
+    */
   def isRequiredBasedOnDefaultValue: Boolean = requiredBasedOnDefaultValue
 }
 
@@ -118,8 +118,12 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def resolveWithoutSubtypes(javaType: JavaType, `type`: AnnotatedType, context: ModelConverterContext,
-                                     chain: util.Iterator[ModelConverter]): Schema[_] = {
+  private def resolveWithoutSubtypes(
+      javaType: JavaType,
+      `type`: AnnotatedType,
+      context: ModelConverterContext,
+      chain: util.Iterator[ModelConverter]
+  ): Schema[_] = {
     val cls = javaType.getRawClass
     matchScalaPrimitives(`type`, cls).getOrElse {
       // Unbox scala options
@@ -128,7 +132,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         val baseType =
           if (
             SwaggerScalaModelConverter.isRequiredBasedOnAnnotation
-              && annotatedOverrides.headOption.getOrElse(false)
+            && annotatedOverrides.headOption.getOrElse(false)
           ) new AnnotatedType()
           else new AnnotatedTypeForOption()
         resolve(nextType(baseType, `type`, javaType), context, chain)
@@ -198,7 +202,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
                   case _ => {
                     defaultValue match {
                       case Some(wrappedValue) => property.setDefault(wrappedValue)
-                      case None => //no default
+                      case None => // no default
                       case seq: Seq[_] => property.setDefault(seq.asJava)
                       case set: Set[_] => property.setDefault(set.asJava)
                       case dv => property.setDefault(dv)
@@ -316,7 +320,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       }
     }
   }
-
 
   private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
     case _: AnnotatedTypeForOption => Seq.empty
