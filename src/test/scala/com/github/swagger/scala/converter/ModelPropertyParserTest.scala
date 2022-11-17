@@ -1,7 +1,7 @@
 package com.github.swagger.scala.converter
 
 import io.swagger.v3.core.converter._
-import io.swagger.v3.core.util.{Json, PrimitiveType}
+import io.swagger.v3.core.util.Json
 import io.swagger.v3.oas.models.media._
 import models.NestingObject.{NestedModelWOptionInt, NoProperties}
 import models._
