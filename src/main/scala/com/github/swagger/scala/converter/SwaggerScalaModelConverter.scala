@@ -151,8 +151,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
                 case Some(_) => property.setName(null)
                 case _ =>
               }
+            } else {
+              setRequired(`type`)
             }
-            setRequired(`type`)
             property
           }
           case None => None.orNull
