@@ -131,10 +131,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       val annotatedOverrides = getRequiredSettings(`type`)
       if (_isOptional(`type`, cls)) {
         val baseType =
-          if (
-            SwaggerScalaModelConverter.isRequiredBasedOnAnnotation
-            && annotatedOverrides.headOption.getOrElse(false)
-          ) new AnnotatedType()
+          if (annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType()
           else new AnnotatedTypeForOption()
         resolve(nextType(baseType, `type`, javaType), context, chain)
       } else if (!annotatedOverrides.headOption.getOrElse(true)) {
@@ -237,9 +234,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               }
             }
             case annotations => {
-              val annotationRequired = getRequiredSettings(annotations).headOption.getOrElse(false)
+              val annotationRequired = getRequiredSettings(annotations).headOption
               if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
-                setRequiredBasedOnAnnotation(schema, propertyName, annotationRequired)
+                setRequiredBasedOnAnnotation(schema, propertyName, annotationRequired.getOrElse(false))
               } else {
                 setRequiredBasedOnType(schema, propertyName, isOptional, hasDefaultValue, annotationRequired)
               }
@@ -286,13 +283,20 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       propertyName: String,
       isOptional: Boolean,
       hasDefaultValue: Boolean,
-      annotationSetting: Boolean
+      annotationSetting: Option[Boolean]
   ): Unit = {
-    val required = if (isOptional) {
-      annotationSetting
-    } else if (SwaggerScalaModelConverter.isRequiredBasedOnDefaultValue) {
-      !hasDefaultValue
-    } else true
+    val required = annotationSetting match {
+      case Some(req) => req
+      case _ => {
+        if (isOptional) {
+          false
+        } else if (SwaggerScalaModelConverter.isRequiredBasedOnDefaultValue) {
+          !hasDefaultValue
+        } else {
+          true
+        }
+      }
+    }
     if (required) addRequiredItem(schema, propertyName)
   }
 
