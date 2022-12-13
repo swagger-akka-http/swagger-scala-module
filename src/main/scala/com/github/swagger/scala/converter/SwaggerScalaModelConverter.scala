@@ -9,6 +9,7 @@ import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
 import io.swagger.v3.oas.models.media.{MapSchema, ObjectSchema, Schema}
 import org.slf4j.LoggerFactory
@@ -326,10 +327,27 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def getRequiredSettings(annotations: Seq[Annotation]): Seq[Boolean] = {
-    annotations.collect {
-      case p: Parameter => p.required()
-      case s: SchemaAnnotation => s.required()
-      case a: ArraySchema => a.arraySchema().required()
+    val flags = annotations.collect {
+      case p: Parameter => if (p.required()) RequiredMode.REQUIRED else RequiredMode.NOT_REQUIRED
+      case s: SchemaAnnotation => {
+        if (s.requiredMode() == RequiredMode.AUTO) {
+          if (s.required()) RequiredMode.REQUIRED else RequiredMode.NOT_REQUIRED
+        } else {
+          s.requiredMode()
+        }
+      }
+      case a: ArraySchema => {
+        if (a.arraySchema().requiredMode() == RequiredMode.AUTO) {
+          if (a.arraySchema().required()) RequiredMode.REQUIRED else RequiredMode.NOT_REQUIRED
+        } else {
+          a.arraySchema().requiredMode()
+        }
+      }
+    }
+    flags.flatMap {
+      case RequiredMode.REQUIRED => Some(true)
+      case RequiredMode.NOT_REQUIRED => Some(false)
+      case _ => None
     }
   }
 
