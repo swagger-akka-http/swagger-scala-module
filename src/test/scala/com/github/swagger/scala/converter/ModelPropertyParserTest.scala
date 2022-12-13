@@ -416,6 +416,33 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     requiredItems shouldBe List("forcedRequired", "required")
   }
 
+  it should "ignore required()=false on Schema annotations when setRequiredBasedOnAnnotation(false)" in new TestScope {
+    SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(false)
+    val schemas = ModelConverters
+      .getInstance()
+      .readAll(classOf[ModelWithOptionAndNonOption3])
+      .asScala
+
+    val model = schemas("ModelWithOptionAndNonOption3")
+    model should not be (null)
+    model.getProperties() should not be (null)
+
+    val optional = model.getProperties().get("optional")
+    optional should not be (null)
+
+    val required = model.getProperties().get("required")
+    required should not be (null)
+
+    val forcedRequired = model.getProperties().get("forcedRequired")
+    forcedRequired should not be (null)
+
+    val forcedOptional = model.getProperties().get("forcedOptional")
+    forcedOptional should not be (null)
+
+    val requiredItems = nullSafeSeq(model.getRequired)
+    requiredItems shouldBe List("forcedOptional", "forcedRequired", "required")
+  }
+
   it should "handle null properties from converters later in the chain" in new TestScope {
     object CustomConverter extends ModelConverter {
       override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: util.Iterator[ModelConverter]): Schema[_] = {
