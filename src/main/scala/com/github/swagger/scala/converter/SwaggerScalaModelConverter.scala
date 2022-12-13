@@ -331,14 +331,26 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       case p: Parameter => if (p.required()) RequiredMode.REQUIRED else RequiredMode.NOT_REQUIRED
       case s: SchemaAnnotation => {
         if (s.requiredMode() == RequiredMode.AUTO) {
-          if (s.required()) RequiredMode.REQUIRED else RequiredMode.NOT_REQUIRED
+          if (s.required()) {
+            RequiredMode.REQUIRED
+          } else if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
+            RequiredMode.NOT_REQUIRED
+          } else {
+            RequiredMode.AUTO
+          }
         } else {
           s.requiredMode()
         }
       }
       case a: ArraySchema => {
         if (a.arraySchema().requiredMode() == RequiredMode.AUTO) {
-          if (a.arraySchema().required()) RequiredMode.REQUIRED else RequiredMode.NOT_REQUIRED
+          if (a.arraySchema().required()) {
+            RequiredMode.REQUIRED
+          } else if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
+            RequiredMode.NOT_REQUIRED
+          } else {
+            RequiredMode.AUTO
+          }
         } else {
           a.arraySchema().requiredMode()
         }
