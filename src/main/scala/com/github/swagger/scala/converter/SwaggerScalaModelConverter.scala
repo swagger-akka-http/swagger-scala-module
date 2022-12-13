@@ -24,7 +24,7 @@ import scala.util.control.NonFatal
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
+  private val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
 
   private var requiredBasedOnAnnotation = true
   private var requiredBasedOnDefaultValue = true
