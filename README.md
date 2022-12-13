@@ -7,6 +7,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 
 | Release | Supports |
 | ------- | -------- |
+| 2.8.x | Builds on the 2.7.x changes |
 | 2.7.x | Scala 2 builds reintroduce scala-reflect dependency and can now introspect better on inner types. See section on `Treatment of Option` below. This has turned into a series with many experimantal changes. If you are happy on an older version there is no need to upgrade to this series of releases. |
 | 2.6.x/2.5.x | First releases to support Scala 3. Jackson 2.13, [jakarta](https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Getting-started) namespace jars. [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
 | 2.4.x | First releases to support [jakarta](https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Getting-started) namespace jars. Jackson 2.12, [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
@@ -17,7 +18,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 To enable the swagger-scala-module, include the appropriate version in your project:
 
 ```
-  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.7.8"
+  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.8.2"
 ```
 
 ## How does it work?
@@ -39,8 +40,6 @@ v2.7 takes default values into account - either those specified in Scala contruc
 If you don't use swagger annotations, and would like not like to infer the `required` value based on the default value, then you can set `SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue` to `false`
 
 If you use swagger annotations and don't want to explicity set the `required` value and allow this lib to infer the value, then you can set [SwaggerScalaModelConverter.setRequiredBasedOnAnnotation](https://github.com/swagger-akka-http/swagger-scala-module/blob/564c7c7fb879c1b93b7c913af2219dc4b550ad95/src/main/scala/com/github/swagger/scala/converter/SwaggerScalaModelConverter.scala#L39).
-
-v2.7 is still a little bit unstable and it recommended that the users who are happy with the latest v2.6 release should stick with that.
 
 ## Sealed Traits
 
