@@ -9,6 +9,7 @@ import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode
 import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
 import io.swagger.v3.oas.models.media.{MapSchema, ObjectSchema, Schema}
 import org.slf4j.LoggerFactory
@@ -130,10 +131,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       val annotatedOverrides = getRequiredSettings(`type`)
       if (_isOptional(`type`, cls)) {
         val baseType =
-          if (
-            SwaggerScalaModelConverter.isRequiredBasedOnAnnotation
-            && annotatedOverrides.headOption.getOrElse(false)
-          ) new AnnotatedType()
+          if (annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType()
           else new AnnotatedTypeForOption()
         resolve(nextType(baseType, `type`, javaType), context, chain)
       } else if (!annotatedOverrides.headOption.getOrElse(true)) {
@@ -236,12 +234,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               }
             }
             case annotations => {
-              val annotationRequired = getRequiredSettings(annotations).headOption.getOrElse(false)
-              if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
-                setRequiredBasedOnAnnotation(schema, propertyName, annotationRequired)
-              } else {
-                setRequiredBasedOnType(schema, propertyName, isOptional, hasDefaultValue, annotationRequired)
-              }
+              val annotationRequired = getRequiredSettings(annotations).headOption
+              setRequiredBasedOnType(schema, propertyName, isOptional, hasDefaultValue, annotationRequired)
             }
           }
 
@@ -272,26 +266,25 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def setRequiredBasedOnAnnotation(
-      schema: Schema[_],
-      propertyName: String,
-      annotationSetting: Boolean
-  ): Unit = {
-    if (annotationSetting) addRequiredItem(schema, propertyName)
-  }
-
   private def setRequiredBasedOnType(
       schema: Schema[_],
       propertyName: String,
       isOptional: Boolean,
       hasDefaultValue: Boolean,
-      annotationSetting: Boolean
+      annotationSetting: Option[Boolean]
   ): Unit = {
-    val required = if (isOptional) {
-      annotationSetting
-    } else if (SwaggerScalaModelConverter.isRequiredBasedOnDefaultValue) {
-      !hasDefaultValue
-    } else true
+    val required = annotationSetting match {
+      case Some(req) => req
+      case _ => {
+        if (isOptional) {
+          false
+        } else if (SwaggerScalaModelConverter.isRequiredBasedOnDefaultValue) {
+          !hasDefaultValue
+        } else {
+          true
+        }
+      }
+    }
     if (required) addRequiredItem(schema, propertyName)
   }
 
@@ -326,10 +319,39 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   }
 
   private def getRequiredSettings(annotations: Seq[Annotation]): Seq[Boolean] = {
-    annotations.collect {
-      case p: Parameter => p.required()
-      case s: SchemaAnnotation => s.required()
-      case a: ArraySchema => a.arraySchema().required()
+    val flags = annotations.collect {
+      case p: Parameter => if (p.required()) RequiredMode.REQUIRED else RequiredMode.NOT_REQUIRED
+      case s: SchemaAnnotation => {
+        if (s.requiredMode() == RequiredMode.AUTO) {
+          if (s.required()) {
+            RequiredMode.REQUIRED
+          } else if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
+            RequiredMode.NOT_REQUIRED
+          } else {
+            RequiredMode.AUTO
+          }
+        } else {
+          s.requiredMode()
+        }
+      }
+      case a: ArraySchema => {
+        if (a.arraySchema().requiredMode() == RequiredMode.AUTO) {
+          if (a.arraySchema().required()) {
+            RequiredMode.REQUIRED
+          } else if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
+            RequiredMode.NOT_REQUIRED
+          } else {
+            RequiredMode.AUTO
+          }
+        } else {
+          a.arraySchema().requiredMode()
+        }
+      }
+    }
+    flags.flatMap {
+      case RequiredMode.REQUIRED => Some(true)
+      case RequiredMode.NOT_REQUIRED => Some(false)
+      case _ => None
     }
   }
 
