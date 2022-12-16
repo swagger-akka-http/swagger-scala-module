@@ -27,7 +27,7 @@ Including the library in your project allows the swagger extension module to dis
 
 ## Treatment of `Option` and `required`
 
-When users add swagger annotations (Schema, ArraySchema, Parameter), they can override whether a model property is required or not. Whether a model property is required or not, is usually based on the type of the related Scala field (Ie fields of type `Option[T]` are optional - other fields are required).
+When users add swagger annotations (Schema, ArraySchema, Parameter), they can override whether a model property is required or not. Whether a model property is required or not, is usually based on the type of the related Scala field (i.e. fields of type `Option[T]` are optional - other fields are required).
 
 The annotations mentioned above have a `required()` setting which is boolean and defaults to false. It is impossible to know if the user explicitly set false or if the are using the annotations to override other settings but don't intend to affect the required setting.
 
