@@ -83,6 +83,57 @@ object SwaggerScalaModelConverter {
     * @since v2.7.6
     */
   def isRequiredBasedOnDefaultValue: Boolean = requiredBasedOnDefaultValue
+
+  /**
+    * @param annotatedType
+    * @return collection flags based on any Swagger annotations for this type
+    */
+  def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
+    case _: AnnotatedTypeForOption => Seq.empty
+    case _ => getRequiredSettings(nullSafeSeq(annotatedType.getCtxAnnotations))
+  }
+
+  private def getRequiredSettings(annotations: Seq[Annotation]): Seq[Boolean] = {
+    val flags = annotations.collect {
+      case p: Parameter => if (p.required()) RequiredMode.REQUIRED else RequiredMode.NOT_REQUIRED
+      case s: SchemaAnnotation => {
+        if (s.requiredMode() == RequiredMode.AUTO) {
+          if (s.required()) {
+            RequiredMode.REQUIRED
+          } else if (isRequiredBasedOnAnnotation) {
+            RequiredMode.NOT_REQUIRED
+          } else {
+            RequiredMode.AUTO
+          }
+        } else {
+          s.requiredMode()
+        }
+      }
+      case a: ArraySchema => {
+        if (a.arraySchema().requiredMode() == RequiredMode.AUTO) {
+          if (a.arraySchema().required()) {
+            RequiredMode.REQUIRED
+          } else if (isRequiredBasedOnAnnotation) {
+            RequiredMode.NOT_REQUIRED
+          } else {
+            RequiredMode.AUTO
+          }
+        } else {
+          a.arraySchema().requiredMode()
+        }
+      }
+    }
+    flags.flatMap {
+      case RequiredMode.REQUIRED => Some(true)
+      case RequiredMode.NOT_REQUIRED => Some(false)
+      case _ => None
+    }
+  }
+
+  private def nullSafeSeq[T](array: Array[T]): Seq[T] = Option(array) match {
+    case None => Seq.empty[T]
+    case Some(arr) => arr.toList
+  }
 }
 
 class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverter.objectMapper) {
@@ -128,7 +179,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     val cls = javaType.getRawClass
     matchScalaPrimitives(`type`, cls).getOrElse {
       // Unbox scala options
-      val annotatedOverrides = getRequiredSettings(`type`)
+      val annotatedOverrides = SwaggerScalaModelConverter.getRequiredSettings(`type`)
       if (_isOptional(`type`, cls)) {
         val baseType =
           if (annotatedOverrides.headOption.getOrElse(false)) new AnnotatedType()
@@ -234,7 +285,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               }
             }
             case annotations => {
-              val annotationRequired = getRequiredSettings(annotations).headOption
+              val annotationRequired = SwaggerScalaModelConverter.getRequiredSettings(annotations).headOption
               setRequiredBasedOnType(schema, propertyName, isOptional, hasDefaultValue, annotationRequired)
             }
           }
@@ -310,48 +361,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           correctedSchema
         }.toOption.getOrElse(itemSchema)
       }
-    }
-  }
-
-  private def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
-    case _: AnnotatedTypeForOption => Seq.empty
-    case _ => getRequiredSettings(nullSafeSeq(annotatedType.getCtxAnnotations))
-  }
-
-  private def getRequiredSettings(annotations: Seq[Annotation]): Seq[Boolean] = {
-    val flags = annotations.collect {
-      case p: Parameter => if (p.required()) RequiredMode.REQUIRED else RequiredMode.NOT_REQUIRED
-      case s: SchemaAnnotation => {
-        if (s.requiredMode() == RequiredMode.AUTO) {
-          if (s.required()) {
-            RequiredMode.REQUIRED
-          } else if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
-            RequiredMode.NOT_REQUIRED
-          } else {
-            RequiredMode.AUTO
-          }
-        } else {
-          s.requiredMode()
-        }
-      }
-      case a: ArraySchema => {
-        if (a.arraySchema().requiredMode() == RequiredMode.AUTO) {
-          if (a.arraySchema().required()) {
-            RequiredMode.REQUIRED
-          } else if (SwaggerScalaModelConverter.isRequiredBasedOnAnnotation) {
-            RequiredMode.NOT_REQUIRED
-          } else {
-            RequiredMode.AUTO
-          }
-        } else {
-          a.arraySchema().requiredMode()
-        }
-      }
-    }
-    flags.flatMap {
-      case RequiredMode.REQUIRED => Some(true)
-      case RequiredMode.NOT_REQUIRED => Some(false)
-      case _ => None
     }
   }
 
@@ -456,7 +465,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def setRequired(annotatedType: AnnotatedType): Unit = annotatedType match {
     case _: AnnotatedTypeForOption => // not required
     case _ => {
-      val reqSettings = getRequiredSettings(annotatedType)
+      val reqSettings = SwaggerScalaModelConverter.getRequiredSettings(annotatedType)
       val required = reqSettings.headOption.getOrElse(true)
       if (required) {
         Option(annotatedType.getParent).foreach { parent =>
@@ -534,11 +543,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def isScalaClass(cls: Class[_]): Boolean = {
     val classW = ClassW(cls)
     classW.extendsScalaClass(true) || (!cls.getName.startsWith("scala.") && classW.hasSignature)
-  }
-
-  private def nullSafeSeq[T](array: Array[T]): Seq[T] = Option(array) match {
-    case None => Seq.empty[T]
-    case Some(arr) => arr.toList
   }
 
   private def nullSafeMap[K, V](map: java.util.Map[K, V]): Map[K, V] = Option(map) match {
