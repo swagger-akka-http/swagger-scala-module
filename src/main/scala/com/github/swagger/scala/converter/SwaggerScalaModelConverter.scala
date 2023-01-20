@@ -84,9 +84,9 @@ object SwaggerScalaModelConverter {
     */
   def isRequiredBasedOnDefaultValue: Boolean = requiredBasedOnDefaultValue
 
-  /**
-    * @param annotatedType
-    * @return collection flags based on any Swagger annotations for this type
+  /** @param annotatedType
+    * @return
+    *   collection flags based on any Swagger annotations for this type
     */
   def getRequiredSettings(annotatedType: AnnotatedType): Seq[Boolean] = annotatedType match {
     case _: AnnotatedTypeForOption => Seq.empty
