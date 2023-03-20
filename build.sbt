@@ -88,7 +88,7 @@ libraryDependencies ++= Seq(
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.8",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.15.0-rc1",
   "org.scalatest" %% "scalatest" % "3.2.15" % Test,
-  "org.slf4j" % "slf4j-simple" % "2.0.6" % Test
+  "org.slf4j" % "slf4j-simple" % "2.0.7" % Test
 )
 libraryDependencies ++= {
   if (scalaReleaseVersion.value == 2) {
