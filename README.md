@@ -9,7 +9,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 | ------- | -------- |
 | 2.9.x | Refactor to support Swagger Schema annotation requiredMode. Jackson 2.14. |
 | 2.8.x | Builds on the 2.7.x changes. Jackson 2.14. |
-| 2.7.x | Scala 2 builds reintroduce scala-reflect dependency and can now introspect better on inner types. See section on `Treatment of Option` below. This has turned into a series with many experimental changes. It is probably best to upgrade to 2.8.x releases. |
+| 2.7.x | Scala 2 builds reintroduce scala-reflect dependency and can now introspect better on inner types. See section on `Treatment of Option` below. This has turned into a series with many experimental changes. It is probably best to upgrade to 2.8.x or later releases. |
 | 2.6.x/2.5.x | First releases to support Scala 3. Jackson 2.13, [jakarta](https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Getting-started) namespace jars. [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
 | 2.4.x | First releases to support [jakarta](https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Getting-started) namespace jars. Jackson 2.12, [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
 | 2.3.x | [OpenAPI 3.0.1](https://github.com/OAI/OpenAPI-Specification) / [Swagger-Core](https://github.com/swagger-api/swagger-core) 2.0.x. |
@@ -31,7 +31,7 @@ When users add swagger annotations (Schema, ArraySchema, Parameter), they can ov
 
 The annotations mentioned above have a `required()` setting which is boolean and defaults to false. It is impossible to know if the user explicitly set false or if the are using the annotations to override other settings but don't intend to affect the required setting.
 
-swagger v2.2.5 introduces a `requiredMode()` setting on the Schema and ArraySchema annotations. The modes are Required, Not_Required and Auto - the latter is the default. This is better - but the `required()` setting, while deprecated, is still there and is set independently of the `requiredMode()`.
+Swagger v2.2.5 introduces a `requiredMode()` setting on the Schema and ArraySchema annotations. The modes are Required, Not_Required and Auto - the latter is the default. This is better - but the `required()` setting, while deprecated, is still there and is set independently of the `requiredMode()`.
 
 The treatment of `required()=false` prior to v2.9 is described in the below. [SwaggerScalaModelConverter.setRequiredBasedOnAnnotation](https://github.com/swagger-akka-http/swagger-scala-module/blob/bf97024492d07d7a293f72e4f113e9f378465bc2/src/main/scala/com/github/swagger/scala/converter/SwaggerScalaModelConverter.scala#L44) and [SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue](https://github.com/swagger-akka-http/swagger-scala-module/blob/bf97024492d07d7a293f72e4f113e9f378465bc2/src/main/scala/com/github/swagger/scala/converter/SwaggerScalaModelConverter.scala#L58) will continue to affect how `required()=false` is interpreted.
 
@@ -53,7 +53,7 @@ With Collections (and Options), scala primitives are affected by type erasure. Y
 case class AddOptionRequest(number: Int, @Schema(required = false, implementation = classOf[Int]) number2: Option[Int] = None)
 ```
 
-Alternatively, you can non-primitive types like BigInt to avoid this requirement.
+Alternatively, you can use non-primitive types like BigInt to avoid this requirement.
 
 Since the v2.7 releases, Scala 2 builds use scala-reflect jar to try to work out the class information for the inner types. Since v2.7.5, Scala 3 builds use a lib that supports runtime reflection. See https://github.com/swagger-akka-http/swagger-scala-module/issues/117. One issue affacting Scala 3 users is https://github.com/gzoller/scala-reflection/issues/40.
 
