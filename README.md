@@ -19,7 +19,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 To enable the swagger-scala-module, include the appropriate version in your project:
 
 ```
-  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.8.2"
+  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.9.1"
 ```
 
 ## How does it work?
