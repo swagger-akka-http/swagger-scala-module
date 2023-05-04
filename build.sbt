@@ -54,7 +54,6 @@ pomExtra := {
   )
 }
 
-ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.Equals(Ref.Branch("develop")),
   RefPredicate.Equals(Ref.Branch("1.5")),

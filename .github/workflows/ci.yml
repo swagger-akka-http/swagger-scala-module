@@ -17,51 +17,68 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
+concurrency:
+  group: ${{ github.workflow }} @ ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build and Test
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.11.12, 2.12.15, 2.13.6, 3.0.2]
-        java: [adopt@1.8]
+        scala: [2.11, 2.12, 2.13, 3]
+        java: [temurin@11]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     steps:
       - name: Checkout current branch (full)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
+      - name: Download Java (temurin@11)
+        id: download-java-temurin-11
+        if: matrix.java == 'temurin@11'
+        uses: typelevel/download-java@v2
         with:
-          java-version: ${{ matrix.java }}
+          distribution: temurin
+          java-version: 11
 
-      - name: Cache sbt
-        uses: actions/cache@v2
+      - name: Setup Java (temurin@11)
+        id: setup-java-temurin-11
+        if: matrix.java == 'temurin@11'
+        uses: actions/setup-java@v3
         with:
-          path: |
-            ~/.sbt
-            ~/.ivy2/cache
-            ~/.coursier/cache/v1
-            ~/.cache/coursier/v1
-            ~/AppData/Local/Coursier/Cache/v1
-            ~/Library/Caches/Coursier/v1
-          key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+          distribution: jdkfile
+          java-version: 11
+          jdkFile: ${{ steps.download-java-temurin-11.outputs.jdkFile }}
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@11' && steps.setup-java-temurin-11.outputs.cache-hit == 'false'
+        run: sbt '++ ${{ matrix.scala }}' reload +update
 
       - name: Check that workflows are up to date
-        run: sbt ++${{ matrix.scala }} githubWorkflowCheck
+        run: sbt githubWorkflowCheck
 
       - name: Build project
-        run: sbt ++${{ matrix.scala }} test
+        run: sbt '++ ${{ matrix.scala }}' test
+
+      - name: Make target directories
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/1.5' || startsWith(github.ref, 'refs/tags/v'))
+        run: mkdir -p target project/target
 
       - name: Compress target directories
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/1.5' || startsWith(github.ref, 'refs/tags/v'))
         run: tar cf targets.tar target project/target
 
       - name: Upload target directories
-        uses: actions/upload-artifact@v2
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/1.5' || startsWith(github.ref, 'refs/tags/v'))
+        uses: actions/upload-artifact@v3
         with:
-          name: target-${{ matrix.os }}-${{ matrix.scala }}-${{ matrix.java }}
+          name: target-${{ matrix.os }}-${{ matrix.java }}-${{ matrix.scala }}
           path: targets.tar
 
   publish:
@@ -71,68 +88,73 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.6]
-        java: [adopt@1.8]
+        scala: [2.13.10]
+        java: [temurin@11]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
+      - name: Download Java (temurin@11)
+        id: download-java-temurin-11
+        if: matrix.java == 'temurin@11'
+        uses: typelevel/download-java@v2
         with:
-          java-version: ${{ matrix.java }}
+          distribution: temurin
+          java-version: 11
 
-      - name: Cache sbt
-        uses: actions/cache@v2
+      - name: Setup Java (temurin@11)
+        id: setup-java-temurin-11
+        if: matrix.java == 'temurin@11'
+        uses: actions/setup-java@v3
         with:
-          path: |
-            ~/.sbt
-            ~/.ivy2/cache
-            ~/.coursier/cache/v1
-            ~/.cache/coursier/v1
-            ~/AppData/Local/Coursier/Cache/v1
-            ~/Library/Caches/Coursier/v1
-          key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+          distribution: jdkfile
+          java-version: 11
+          jdkFile: ${{ steps.download-java-temurin-11.outputs.jdkFile }}
+          cache: sbt
 
-      - name: Download target directories (2.11.12)
-        uses: actions/download-artifact@v2
+      - name: sbt update
+        if: matrix.java == 'temurin@11' && steps.setup-java-temurin-11.outputs.cache-hit == 'false'
+        run: sbt '++ ${{ matrix.scala }}' reload +update
+
+      - name: Download target directories (2.11)
+        uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-2.11.12-${{ matrix.java }}
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.11
 
-      - name: Inflate target directories (2.11.12)
+      - name: Inflate target directories (2.11)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.15)
-        uses: actions/download-artifact@v2
+      - name: Download target directories (2.12)
+        uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-2.12.15-${{ matrix.java }}
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12
 
-      - name: Inflate target directories (2.12.15)
+      - name: Inflate target directories (2.12)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.13.6)
-        uses: actions/download-artifact@v2
+      - name: Download target directories (2.13)
+        uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-2.13.6-${{ matrix.java }}
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13
 
-      - name: Inflate target directories (2.13.6)
+      - name: Inflate target directories (2.13)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (3.0.2)
-        uses: actions/download-artifact@v2
+      - name: Download target directories (3)
+        uses: actions/download-artifact@v3
         with:
-          name: target-${{ matrix.os }}-3.0.2-${{ matrix.java }}
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3
 
-      - name: Inflate target directories (3.0.2)
+      - name: Inflate target directories (3)
         run: |
           tar xf targets.tar
           rm targets.tar
@@ -142,4 +164,4 @@ jobs:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-        run: sbt ++${{ matrix.scala }} ci-release
+        run: sbt '++ ${{ matrix.scala }}' ci-release
