@@ -5,9 +5,9 @@ import Keys._
 
 organization := "com.github.swagger-akka-http"
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.10"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.6", "3.0.2")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.10", "3.0.2")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -19,9 +19,9 @@ pomIncludeRepository := { x => false }
 
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.36",
-  "io.swagger" % "swagger-core" % "1.6.3",
-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.3",
-  "org.scalatest" %% "scalatest" % "3.2.11" % Test,
+  "io.swagger" % "swagger-core" % "1.6.8",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.5",
+  "org.scalatest" %% "scalatest" % "3.2.15" % Test,
   "org.slf4j" % "slf4j-simple" % "1.7.36" % Test
 )
 
