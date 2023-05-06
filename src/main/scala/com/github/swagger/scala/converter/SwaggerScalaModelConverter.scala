@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory
 import java.lang.annotation.Annotation
 import java.lang.reflect.ParameterizedType
 import java.util
+import java.util.List
 import scala.collection.JavaConverters._
-import scala.collection.Seq
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -279,7 +279,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             case Seq() => {
               val requiredFlag = !isOptional && (!SwaggerScalaModelConverter.isRequiredBasedOnDefaultValue || !hasDefaultValue)
               if (!requiredFlag && Option(schema.getRequired).isDefined && schema.getRequired.contains(propertyName)) {
-                schema.getRequired.remove(propertyName)
+                val requiredFields = new util.ArrayList[String](schema.getRequired)
+                requiredFields.remove(propertyName)
+                schema.setRequired(requiredFields)
               } else if (requiredFlag && schema.getEnum == null) {
                 addRequiredItem(schema, propertyName)
               }
