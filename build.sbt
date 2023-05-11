@@ -130,6 +130,8 @@ pomExtra := {
   )
 }
 
+MetaInfLicenseCopy.settings
+
 ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep
     .Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2.13 build"), cond = Some("startsWith(matrix.scala, '2.13')")),
