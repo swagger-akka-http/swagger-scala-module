@@ -7,9 +7,10 @@ import org.typelevel.sbt.gha.UseRef.Public
 
 organization := "com.github.swagger-akka-http"
 
+ThisBuild / version := "2.10.0-SNAPSHOT"
 ThisBuild / scalaVersion := "2.13.10"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.10", "3.2.2")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.10", "3.3.0")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
@@ -95,7 +96,7 @@ libraryDependencies ++= {
     Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   } else {
     Seq(
-      "com.github.pjfanning" %% "scala3-reflection" % "1.2.0",
+      "com.github.pjfanning" %% "scala3-reflection" % "1.3.0",
       "org.scala-lang" %% "scala3-staging" % scalaVersion.value
     )
   }
