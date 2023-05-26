@@ -3,11 +3,9 @@ import xml.Group
 import sbt._
 import Keys._
 import org.typelevel.sbt.gha.JavaSpec.Distribution.Zulu
-import org.typelevel.sbt.gha.UseRef.Public
 
 organization := "com.github.swagger-akka-http"
 
-ThisBuild / version := "2.10.0-SNAPSHOT"
 ThisBuild / scalaVersion := "2.13.10"
 
 ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.17", "2.13.10", "3.3.0")
