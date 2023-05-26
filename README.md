@@ -7,6 +7,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 
 | Release | Supports |
 | ------- | -------- |
+| 2.10.x | Scala 3.3 support. Jackson 2.14. |
 | 2.9.x | Refactor to support Swagger Schema annotation requiredMode. Jackson 2.14. |
 | 2.8.x | Builds on the 2.7.x changes. Jackson 2.14. |
 | 2.7.x | Scala 2 builds reintroduce scala-reflect dependency and can now introspect better on inner types. See section on `Treatment of Option` below. This has turned into a series with many experimental changes. It is probably best to upgrade to 2.8.x or later releases. |
@@ -19,7 +20,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 To enable the swagger-scala-module, include the appropriate version in your project:
 
 ```
-  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.9.1"
+  "com.github.swagger-akka-http" %% "swagger-scala-module" % "2.10.0"
 ```
 
 ## How does it work?
