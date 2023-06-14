@@ -7,6 +7,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 
 | Release | Supports |
 | ------- | -------- |
+| 2.11.x | Jackson 2.15. |
 | 2.10.x | Scala 3.3 support. Jackson 2.14. |
 | 2.9.x | Refactor to support Swagger Schema annotation requiredMode. Jackson 2.14. |
 | 2.8.x | Builds on the 2.7.x changes. Jackson 2.14. |
