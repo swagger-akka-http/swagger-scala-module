@@ -84,7 +84,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.11]
         java: [zulu@8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -104,7 +103,7 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'zulu@8' && steps.setup-java-zulu-8.outputs.cache-hit == 'false'
-        run: sbt '++ ${{ matrix.scala }}' reload +update
+        run: sbt reload +update
 
       - name: Download target directories (2.11)
         uses: actions/download-artifact@v3
@@ -152,4 +151,4 @@ jobs:
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-        run: sbt '++ ${{ matrix.scala }}' ci-release
+        run: sbt ci-release
