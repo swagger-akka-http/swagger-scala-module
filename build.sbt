@@ -6,9 +6,9 @@ import org.typelevel.sbt.gha.JavaSpec.Distribution.Zulu
 
 organization := "com.github.swagger-akka-http"
 
-ThisBuild / scalaVersion := "2.13.11"
+ThisBuild / scalaVersion := "2.13.12"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.18", "2.13.11", "3.3.1")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.18", "2.13.12", "3.3.1")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
