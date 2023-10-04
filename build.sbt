@@ -94,7 +94,7 @@ libraryDependencies ++= {
     Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   } else {
     Seq(
-      "com.github.pjfanning" %% "scala3-reflection" % "1.3.0",
+      "com.github.pjfanning" %% "scala3-reflection" % "1.3.1",
       "org.scala-lang" %% "scala3-staging" % scalaVersion.value
     )
   }
