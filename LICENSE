@@ -199,3 +199,10 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+-----
+
+Includes code derived from https://github.com/swagger-api/swagger-scala-module
+The original code was also licensed under the Apache License, Version 2.0.
+
+Copyright 2016 SmartBear Software, Inc.
