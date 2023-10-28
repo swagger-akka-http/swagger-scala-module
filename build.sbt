@@ -2,7 +2,7 @@
 import xml.Group
 import sbt._
 import Keys._
-import org.typelevel.sbt.gha.JavaSpec.Distribution.Zulu
+import sbtghactions.JavaSpec.Distribution.Zulu
 
 organization := "com.github.swagger-akka-http"
 
@@ -131,7 +131,6 @@ pomExtra := {
 
 MetaInfLicenseCopy.settings
 
-ThisBuild / tlSonatypeUseLegacyHost := true
 ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep
     .Sbt(List("coverage", "test", "coverageReport"), name = Some("Scala 2.13 build"), cond = Some("startsWith(matrix.scala, '2.13')")),
@@ -139,6 +138,7 @@ ThisBuild / githubWorkflowBuild := Seq(
 )
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec(Zulu, "8"))
+ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.Equals(Ref.Branch("develop")),
   RefPredicate.Equals(Ref.Branch("1.5")),
