@@ -10,14 +10,13 @@ import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode
-import io.swagger.v3.oas.annotations.media.{ArraySchema, Schema => SchemaAnnotation}
-import io.swagger.v3.oas.models.media.{MapSchema, ObjectSchema, Schema}
+import io.swagger.v3.oas.annotations.media.{ArraySchema => ArraySchemaAnnotation, Schema => SchemaAnnotation}
+import io.swagger.v3.oas.models.media.{ArraySchema, MapSchema, ObjectSchema, Schema}
 import org.slf4j.LoggerFactory
 
 import java.lang.annotation.Annotation
 import java.lang.reflect.ParameterizedType
 import java.util
-import java.util.List
 import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -109,7 +108,7 @@ object SwaggerScalaModelConverter {
           s.requiredMode()
         }
       }
-      case a: ArraySchema => {
+      case a: ArraySchemaAnnotation => {
         if (a.arraySchema().requiredMode() == RequiredMode.AUTO) {
           if (a.arraySchema().required()) {
             RequiredMode.REQUIRED
@@ -350,6 +349,11 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private[converter] def tryCorrectSchema(itemSchema: Schema[_], primitiveType: PrimitiveType): Schema[_] = {
     itemSchema match {
       case ms: MapSchema => ms
+      case as: ArraySchema => {
+        val correctedSchema = tryCorrectSchema(as.getItems, primitiveType)
+        as.setItems(correctedSchema)
+        as
+      }
       case _ => {
         Try {
           val primitiveProperty = primitiveType.createProperty()
