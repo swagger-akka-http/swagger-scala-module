@@ -86,6 +86,18 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val itemSchema = values.asInstanceOf[ArraySchema].getItems
     itemSchema shouldBe an[IntegerSchema]
     itemSchema.asInstanceOf[IntegerSchema].getFormat shouldBe "int64"
+    itemSchema.asInstanceOf[IntegerSchema].getRequired shouldBe null
+  }
+
+  it should "process Option[Seq[Option[Long]]] as string" in new PropertiesScope[OptionSeqOptionLong] {
+    val values = model.value.getProperties().get("values")
+    values should not be (null)
+    values shouldBe an[ArraySchema]
+    values.getRequired shouldBe null
+    val itemSchema = values.asInstanceOf[ArraySchema].getItems
+    itemSchema shouldBe an[IntegerSchema]
+    itemSchema.asInstanceOf[IntegerSchema].getFormat shouldBe "int64"
+    itemSchema.asInstanceOf[IntegerSchema].getRequired shouldBe null
   }
 
   it should "process Option[Model] as Model" in new PropertiesScope[ModelWOptionModel] {
