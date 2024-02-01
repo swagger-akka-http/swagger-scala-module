@@ -28,8 +28,9 @@ private[converter] object ErasureHelper {
           if (signature.typeSymbol.isClass) {
             signature.typeArgs.headOption match {
               case Some(typeArg) => {
-                val resultType = nestedTypeArg(typeArg)
-                if (resultType.toString == "String") None else Option(mirror.runtimeClass(resultType))
+                val resultType: universe.Type = nestedTypeArg(typeArg)
+                val resultClass = mirror.runtimeClass(resultType)
+                if (resultClass.isPrimitive) Option(resultClass) else None
               }
               case _ => Option(mirror.runtimeClass(signature))
             }

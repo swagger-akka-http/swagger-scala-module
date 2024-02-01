@@ -19,11 +19,14 @@ private[converter] object ErasureHelper {
           val results = classInfo.fields.flatMap { fieldInfo =>
             fieldInfo.fieldType match {
               case optionInfo: ScalaOptionInfo =>
-                Some(fieldInfo.name -> getInnerType(optionInfo.optionParamType).infoClass)
+                val innerClass = getInnerType(optionInfo.optionParamType).infoClass
+                if (innerClass.isPrimitive) Some(fieldInfo.name -> innerClass) else None
               case mapInfo: MapLikeInfo =>
-                Some(fieldInfo.name -> getInnerType(mapInfo.elementType2).infoClass)
+                val innerClass = getInnerType(mapInfo.elementType2).infoClass
+                if (innerClass.isPrimitive) Some(fieldInfo.name -> innerClass) else None
               case seqInfo: CollectionRType =>
-                Some(fieldInfo.name -> getInnerType(seqInfo.elementType).infoClass)
+                val innerClass = getInnerType(seqInfo.elementType).infoClass
+                if (innerClass.isPrimitive) Some(fieldInfo.name -> innerClass) else None
               case _ =>
                 None
             }
