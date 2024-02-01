@@ -341,7 +341,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     if (required) addRequiredItem(schema, propertyName)
   }
 
-  private def updateTypeOnItemsSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]) = {
+  private def updateTypeOnItemsSchema(primitiveType: PrimitiveType, propertySchema: Schema[_]): Schema[_] = {
     val updatedSchema = tryCorrectSchema(propertySchema.getItems, primitiveType)
     propertySchema.setItems(updatedSchema)
     propertySchema
