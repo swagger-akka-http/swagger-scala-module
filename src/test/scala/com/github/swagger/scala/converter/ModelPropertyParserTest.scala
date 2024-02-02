@@ -186,6 +186,17 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     // arraySchema.getItems shouldBe an[IntegerSchema]
   }
 
+  it should "process AddRequestOldStyleAnnotation" in new PropertiesScope[AddRequestOldStyleAnnotation] {
+    val numbers = model.value.getProperties().get("numbers")
+    numbers should not be (null)
+    numbers shouldBe an[ArraySchema]
+    val arraySchema = numbers.asInstanceOf[ArraySchema]
+    arraySchema.getMinItems shouldEqual 2
+    arraySchema.getMaxItems shouldEqual 10
+    // TODO - this should be an IntegerSchema but the @ArraySchema annotation items schema is not being picked up
+    // arraySchema.getItems shouldBe an[IntegerSchema]
+  }
+
   it should "process Model without any properties" in new TestScope {
     val schemas = converter.readAll(classOf[NoProperties]).asScala.toMap
     val model = schemas.get("NoProperties")
