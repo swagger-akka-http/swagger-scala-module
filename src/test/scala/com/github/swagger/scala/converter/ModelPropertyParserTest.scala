@@ -137,7 +137,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     model should be(defined)
     model.value.getProperties should not be (null)
     val field = model.value.getProperties().get("field")
-    field shouldBe a[IntegerSchema]
+    field shouldBe an[IntegerSchema]
     nullSafeSeq(model.value.getRequired) should not be empty
   }
 
@@ -151,14 +151,14 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option BigInt" in new PropertiesScope[ModelWOptionBigInt] {
     val optBigInt = model.value.getProperties().get("optBigInt")
     optBigInt should not be (null)
-    optBigInt shouldBe a[IntegerSchema]
+    optBigInt shouldBe an[IntegerSchema]
     model.value.getRequired shouldBe null
   }
 
   it should "process Model with Scala Option Int" in new PropertiesScope[ModelWOptionInt] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    optInt shouldBe a[IntegerSchema]
+    optInt shouldBe an[IntegerSchema]
     optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     model.value.getRequired shouldBe null
   }
@@ -167,12 +167,23 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
     if (RuntimeUtil.isScala3()) {
-      optInt shouldBe a[ObjectSchema]
+      optInt shouldBe an[ObjectSchema]
     } else {
-      optInt shouldBe a[IntegerSchema]
+      optInt shouldBe an[IntegerSchema]
       optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     }
     model.value.getRequired shouldBe null
+  }
+
+  it should "process AddRequest" in new PropertiesScope[AddRequest] {
+    val numbers = model.value.getProperties().get("numbers")
+    numbers should not be (null)
+    numbers shouldBe an[ArraySchema]
+    val arraySchema = numbers.asInstanceOf[ArraySchema]
+    arraySchema.getMinItems shouldEqual 2
+    arraySchema.getMaxItems shouldEqual 10
+    // TODO - this should be an IntegerSchema but the @ArraySchema annotation items schema is not being picked up
+    // arraySchema.getItems shouldBe an[IntegerSchema]
   }
 
   it should "process Model without any properties" in new TestScope {
@@ -187,7 +198,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with nested Scala Option Int with Schema Override" in new PropertiesScope[ModelWOptionIntSchemaOverride] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    optInt shouldBe a[IntegerSchema]
+    optInt shouldBe an[IntegerSchema]
     optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     optInt.getDescription shouldBe "This is an optional int"
     model.value.getRequired shouldBe null
@@ -196,7 +207,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Int with Schema Override" in new PropertiesScope[ModelWOptionIntSchemaOverride] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    optInt shouldBe a[IntegerSchema]
+    optInt shouldBe an[IntegerSchema]
     optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     optInt.getDescription shouldBe "This is an optional int"
     model.value.getRequired shouldBe null
@@ -334,7 +345,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Long (Some Default)" in new PropertiesScope[ModelWOptionLongWithSomeDefault] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    optLong shouldBe a[IntegerSchema]
+    optLong shouldBe an[IntegerSchema]
     optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
     optLong.getDefault shouldEqual Long.MaxValue
     model.value.getRequired shouldBe null
@@ -343,7 +354,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Long" in new PropertiesScope[ModelWOptionLong] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    optLong shouldBe a[IntegerSchema]
+    optLong shouldBe an[IntegerSchema]
     optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
     model.value.getRequired shouldBe null
   }
@@ -351,7 +362,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Long with Schema Override" in new PropertiesScope[ModelWOptionLongSchemaOverride] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    optLong shouldBe a[IntegerSchema]
+    optLong shouldBe an[IntegerSchema]
     optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
     model.value.getRequired shouldBe null
   }
@@ -359,7 +370,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with Scala Option Long with Schema Int Override" in new PropertiesScope[ModelWOptionLongSchemaIntOverride] {
     val optLong = model.value.getProperties().get("optLong")
     optLong should not be (null)
-    optLong shouldBe a[IntegerSchema]
+    optLong shouldBe an[IntegerSchema]
     optLong.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     model.value.getRequired shouldBe null
   }
@@ -572,7 +583,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems shouldBe null
     arraySchema.getRequired shouldBe null
-    arraySchema.getItems shouldBe a[ObjectSchema] // probably type erasure - ideally this would eval as StringSchema
+    arraySchema.getItems shouldBe an[ObjectSchema] // probably type erasure - ideally this would eval as StringSchema
     // next line used to fail (https://github.com/swagger-akka-http/swagger-akka-http/issues/171)
     Json.mapper().writeValueAsString(model.value)
   }
@@ -620,7 +631,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    arraySchema.getItems shouldBe a[IntegerSchema]
+    arraySchema.getItems shouldBe an[IntegerSchema]
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     nullSafeSeq(arraySchema.getRequired()) shouldBe empty
   }
@@ -633,7 +644,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     stringsField shouldBe a[ArraySchema]
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
-    arraySchema.getItems shouldBe a[IntegerSchema]
+    arraySchema.getItems shouldBe an[IntegerSchema]
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     arraySchema.getRequired() shouldBe null
   }
@@ -645,7 +656,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
 
-    arraySchema.getItems shouldBe a[IntegerSchema]
+    arraySchema.getItems shouldBe an[IntegerSchema]
     arraySchema.getItems.getDescription shouldBe "These are ints"
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     arraySchema.getRequired() shouldBe null
@@ -658,7 +669,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val arraySchema = stringsField.asInstanceOf[ArraySchema]
     arraySchema.getUniqueItems() shouldBe (null)
 
-    arraySchema.getItems shouldBe a[IntegerSchema]
+    arraySchema.getItems shouldBe an[IntegerSchema]
     arraySchema.getItems.getDescription shouldBe "These are ints"
     nullSafeMap(arraySchema.getProperties()) shouldBe empty
     arraySchema.getRequired() shouldBe null
@@ -726,9 +737,9 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
 
   it should "process EchoList" in new PropertiesScope[EchoList] {
     val val1Field = model.value.getProperties.get("val1")
-    val1Field shouldBe a[IntegerSchema]
+    val1Field shouldBe an[IntegerSchema]
     val val2Field = model.value.getProperties.get("val2")
-    val2Field shouldBe a[IntegerSchema]
+    val2Field shouldBe an[IntegerSchema]
     model.value.getRequired().asScala shouldEqual Seq("val1", "val2")
   }
 
@@ -736,7 +747,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val props = nullSafeMap(model.value.getProperties)
     props should have size 1
     val amountField = props.get("amount").value
-    amountField shouldBe a[IntegerSchema]
+    amountField shouldBe an[IntegerSchema]
     amountField.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
 
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("amount")
@@ -746,7 +757,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val props = nullSafeMap(model.value.getProperties)
     props should have size 1
     val amountField = props.get("amount").value
-    amountField shouldBe a[IntegerSchema]
+    amountField shouldBe an[IntegerSchema]
     amountField.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
 
     model.value.getRequired shouldBe null
@@ -756,7 +767,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val props = nullSafeMap(model.value.getProperties)
     props should have size 1
     val amountField = props.get("amount").value
-    amountField shouldBe a[IntegerSchema]
+    amountField shouldBe an[IntegerSchema]
     amountField.asInstanceOf[IntegerSchema].getFormat shouldEqual "int64"
 
     nullSafeSeq(model.value.getRequired) shouldEqual Seq("amount")
@@ -803,7 +814,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val catProps = nullSafeMap(catModel.value.getProperties)
     catProps should have size 3
     catProps.get("name").value shouldBe a[StringSchema]
-    catProps.get("age").value shouldBe a[IntegerSchema]
+    catProps.get("age").value shouldBe an[IntegerSchema]
     catProps.get("animalType").value shouldBe a[StringSchema]
     nullSafeSeq(catModel.value.getRequired) shouldEqual Seq("age", "animalType", "name")
     val dogModel = findModel(schemas, "Dog")

@@ -63,7 +63,7 @@ class ScalaModelTest extends AnyFlatSpec with Matchers {
     val schemas = ModelConverters.getInstance().readAll(classOf[SimpleUser]).asScala
     val userSchema = schemas("SimpleUser")
     val id = userSchema.getProperties().get("id")
-    id shouldBe a[IntegerSchema]
+    id shouldBe an[IntegerSchema]
 
     val name = userSchema.getProperties().get("name")
     name shouldBe a[StringSchema]
