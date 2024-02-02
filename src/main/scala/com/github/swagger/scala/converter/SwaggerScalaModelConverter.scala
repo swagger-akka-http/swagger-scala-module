@@ -234,7 +234,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             val classOption: Option[Class[_]] = if (s.implementation() == VoidClass) None else Option(s.implementation())
             classOption
           }
-          val arraySchemaOverrideClass = if (schemaOverride.isEmpty) {
+          val arraySchemaOverrideClass = if (schemaOverride.nonEmpty) {
             None
           } else {
             val arraySchemaOverride = propertyAnnotations.collectFirst { case as: ArraySchemaAnnotation => as }
