@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
 import com.fasterxml.jackson.module.scala.util.ClassW
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
+import com.github.swagger.scala.converter.SwaggerScalaModelConverter.nullSafeSeq
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
@@ -233,6 +234,20 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             val classOption: Option[Class[_]] = if (s.implementation() == VoidClass) None else Option(s.implementation())
             classOption
           }
+          val arraySchemaOverrideClass = if (schemaOverride.nonEmpty) {
+            None
+          } else {
+            val arraySchemaOverride = propertyAnnotations.collectFirst { case as: ArraySchemaAnnotation => as }
+            arraySchemaOverride.flatMap { as =>
+              val itemSchema = if (as.items() == null || as.items().implementation() == VoidClass) as.schema() else as.items()
+              val classOption: Option[Class[_]] = if (itemSchema == null || itemSchema.implementation() == VoidClass) {
+                None
+              } else {
+                Option(itemSchema.implementation())
+              }
+              classOption
+            }
+          }
           val maybeDefault = property.param.flatMap(_.defaultValue)
           val schemaDefaultValue = schemaOverride.flatMap { s =>
             Option(s.defaultValue()).flatMap(str => if (str.isEmpty) None else Some(str))
@@ -260,7 +275,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             }
           }
 
-          if (schemaProperties.nonEmpty && schemaOverrideClass.isEmpty) {
+          val overrideClass = schemaOverrideClass.orElse(arraySchemaOverrideClass)
+          if (schemaProperties.nonEmpty && overrideClass.isEmpty) {
             erasedProperties.get(propertyName).foreach { erasedType =>
               schemaProperties.get(propertyName).foreach { property =>
                 Option(PrimitiveType.fromType(erasedType)).foreach { primitiveType =>

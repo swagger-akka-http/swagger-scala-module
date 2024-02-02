@@ -182,7 +182,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val arraySchema = numbers.asInstanceOf[ArraySchema]
     arraySchema.getMinItems shouldEqual 2
     arraySchema.getMaxItems shouldEqual 10
-    // TODO - this should be an IntegerSchema but the @ArraySchema annotation items schema is not being picked up
+    // assertion disabled due to https://github.com/swagger-api/swagger-core/issues/4610
     // arraySchema.getItems shouldBe an[IntegerSchema]
   }
 
@@ -193,8 +193,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val arraySchema = numbers.asInstanceOf[ArraySchema]
     arraySchema.getMinItems shouldEqual 2
     arraySchema.getMaxItems shouldEqual 10
-    // TODO - this should be an IntegerSchema but the @ArraySchema annotation items schema is not being picked up
-    // arraySchema.getItems shouldBe an[IntegerSchema]
+    arraySchema.getItems shouldBe an[IntegerSchema]
   }
 
   it should "process Model without any properties" in new TestScope {
