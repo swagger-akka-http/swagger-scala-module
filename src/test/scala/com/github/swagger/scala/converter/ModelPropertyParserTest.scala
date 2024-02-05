@@ -182,8 +182,7 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     val arraySchema = numbers.asInstanceOf[ArraySchema]
     arraySchema.getMinItems shouldEqual 2
     arraySchema.getMaxItems shouldEqual 10
-    // assertion disabled due to https://github.com/swagger-api/swagger-core/issues/4610
-    // arraySchema.getItems shouldBe an[IntegerSchema]
+    arraySchema.getItems shouldBe a[NumberSchema]
   }
 
   it should "process AddRequestOldStyleAnnotation" in new PropertiesScope[AddRequestOldStyleAnnotation] {
