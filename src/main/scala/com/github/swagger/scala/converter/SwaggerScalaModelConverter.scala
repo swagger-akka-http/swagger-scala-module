@@ -239,7 +239,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           } else {
             val arraySchemaOverride = propertyAnnotations.collectFirst { case as: ArraySchemaAnnotation => as }
             arraySchemaOverride.flatMap { as =>
-              val itemSchema = if (as.items() == null || as.items().implementation() == VoidClass) as.schema() else as.items()
+              val itemSchema = as.schema()
               val classOption: Option[Class[_]] = if (itemSchema == null || itemSchema.implementation() == VoidClass) {
                 None
               } else {
