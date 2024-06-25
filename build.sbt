@@ -86,7 +86,7 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "2.0.13",
   "io.swagger.core.v3" % "swagger-core-jakarta" % "2.2.22",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.17.1",
-  "org.scalatest" %% "scalatest" % "3.2.18" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.19" % Test,
   "org.slf4j" % "slf4j-simple" % "2.0.13" % Test
 )
 libraryDependencies ++= {
