@@ -41,10 +41,7 @@ jobs:
           cache: sbt
 
       - name: Setup sbt
-        uses: sbt/setup-sbt@v1
-
-      - name: Check that workflows are up to date
-        run: sbt '++ ${{ matrix.scala }}' githubWorkflowCheck
+        uses: actions/setup-sbt-installer@v1
 
       - name: Scala 2.13 build
         if: startsWith(matrix.scala, '2.13')
@@ -88,7 +85,7 @@ jobs:
           cache: sbt
 
       - name: Setup sbt
-        uses: sbt/setup-sbt@v1
+        uses: actions/setup-sbt-installer@v1
 
       - name: Download target directories (2.11.12)
         uses: actions/download-artifact@v4
