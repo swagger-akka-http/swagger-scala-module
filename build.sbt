@@ -8,7 +8,7 @@ organization := "com.github.swagger-akka-http"
 
 ThisBuild / scalaVersion := "2.13.16"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.20", "2.13.16", "3.3.4")
+ThisBuild / crossScalaVersions := Seq("2.11.12", "2.12.20", "2.13.16", "3.3.5")
 
 ThisBuild / organizationHomepage := Some(url("https://github.com/swagger-akka-http/swagger-scala-module"))
 
