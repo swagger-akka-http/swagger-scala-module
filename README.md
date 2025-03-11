@@ -7,6 +7,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 
 | Release | Supports |
 | ------- | -------- |
+| 2.13.x | Jackson 2.18. |
 | 2.12.x | Jackson 2.16. |
 | 2.11.x | Jackson 2.15. |
 | 2.10.x | Scala 3.3 support. Jackson 2.14. |
