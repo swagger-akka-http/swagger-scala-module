@@ -1,7 +1,7 @@
 # Swagger Scala Module
 
 ![Build Status](https://github.com/swagger-akka-http/swagger-scala-module/actions/workflows/ci.yml/badge.svg)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.13/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.github.swagger-akka-http/swagger-scala-module_2.13)
+[![Maven Central](https://maven-badges.sml.io/sonatype-central/com.github.swagger-akka-http/swagger-scala-module_2.13/badge.svg?style=plastic)](https://maven-badges.sml.io/sonatype-central/com.github.swagger-akka-http/swagger-scala-module_2.13)
 
 This is a fork of https://github.com/swagger-api/swagger-scala-module.
 
