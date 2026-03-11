@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
 import com.fasterxml.jackson.module.scala.util.ClassW
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
-import com.github.swagger.scala.converter.SwaggerScalaModelConverter.nullSafeSeq
 import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
@@ -26,6 +25,9 @@ class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
   private val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
+  // https://github.com/swagger-api/swagger-core/issues/5076
+  // hardcode here to avoid having an explicit dependence on the new DEFAULT_SENTINEL field in swagger-annotations
+  private val DEFAULT_SENTINEL = "##default"
 
   private var requiredBasedOnAnnotation = true
   private var requiredBasedOnDefaultValue = true
@@ -250,7 +252,12 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
           }
           val maybeDefault = property.param.flatMap(_.defaultValue)
           val schemaDefaultValue = schemaOverride.flatMap { s =>
-            Option(s.defaultValue()).flatMap(str => if (str.isEmpty) None else Some(str))
+            Option(s.defaultValue()).flatMap { str =>
+              if (str.isEmpty || str == SwaggerScalaModelConverter.DEFAULT_SENTINEL)
+                None
+              else
+                Some(str)
+            }
           }
           val hasDefaultValue = schemaDefaultValue.nonEmpty || maybeDefault.nonEmpty
 
