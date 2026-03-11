@@ -255,7 +255,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             Option(s.defaultValue()).flatMap { str =>
               if (str.isEmpty || str == SwaggerScalaModelConverter.DEFAULT_SENTINEL)
                 None
-              else Some(str)
+              else
+                Some(str)
             }
           }
           val hasDefaultValue = schemaDefaultValue.nonEmpty || maybeDefault.nonEmpty
