@@ -287,7 +287,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
               schemaProperties.get(propertyName).foreach { property =>
                 Option(PrimitiveType.fromType(erasedType)).foreach { primitiveType =>
                   if (isOptional) {
-                    println(s"optional val correcting $propertyName")
                     schema.addProperty(propertyName, tryCorrectSchema(property, primitiveType))
                   }
                   if (isIterable(propertyClass) && !isMap(propertyClass)) {
