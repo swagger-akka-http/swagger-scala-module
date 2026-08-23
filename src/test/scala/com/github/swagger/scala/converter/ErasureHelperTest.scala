@@ -10,6 +10,9 @@ object ErasureHelperTest {
 }
 
 class ErasureHelperTest extends AnyFlatSpec with Matchers {
+  TestModelRegistration.register()
+  ScalaModelRegistry.register[ErasureHelperTest.SuperType]
+
   "ErasureHelper" should "handle MyTrait" in {
     ErasureHelper.erasedOptionalPrimitives(classOf[ErasureHelperTest.SuperType]) shouldBe empty
   }
@@ -20,8 +23,7 @@ class ErasureHelperTest extends AnyFlatSpec with Matchers {
     ErasureHelper.erasedOptionalPrimitives(classOf[OptionSeqLong]) shouldBe Map("values" -> classOf[Long])
   }
   it should "handle Nested.OptionSeqLong" in {
-    val expected = if (RuntimeUtil.isScala3()) Map.empty[String, Class[_]] else Map("values" -> classOf[Long])
-    ErasureHelper.erasedOptionalPrimitives(classOf[Nested.OptionSeqLong]) shouldBe expected
+    ErasureHelper.erasedOptionalPrimitives(classOf[Nested.OptionSeqLong]) shouldBe Map("values" -> classOf[Long])
   }
   it should "handle SeqOptionLong" in {
     ErasureHelper.erasedOptionalPrimitives(classOf[SeqOptionLong]) shouldBe Map("values" -> classOf[Long])
