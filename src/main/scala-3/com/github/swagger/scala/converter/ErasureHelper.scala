@@ -11,7 +11,7 @@ private[converter] object ErasureHelper {
     ScalaModelRegistry.infoFor(cls) match {
       case Some(info) => info.erasedPrimitives
       case None =>
-        if (MissingTypeInfo.hasErasedGenericFields(cls)) MissingTypeInfo.warnOnce(cls)
+        MissingTypeInfo.warnIfErased(cls)
         Map.empty[String, Class[?]]
     }
   }

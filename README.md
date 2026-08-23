@@ -7,7 +7,7 @@ This is a fork of https://github.com/swagger-api/swagger-scala-module.
 
 | Release | Supports |
 | ------- | -------- |
-| 2.16.x | Scala 3 builds no longer depend on `scala3-reflection` - see section on Scala 3 type information below. Jackson 2.22. |
+| 2.16.x | Scala 3 builds no longer depend on `scala3-reflection` - see section on Scala 3 type information below. Per class introspection is now cached. Jackson 2.22. |
 | 2.15.x | Jackson 2.21. |
 | 2.14.x | Jackson 2.19. |
 | 2.13.x | Jackson 2.18. |
@@ -31,6 +31,19 @@ To enable the swagger-scala-module, include the appropriate version in your proj
 
 ## How does it work?
 Including the library in your project allows the swagger extension module to discover this module, bringing in the appropriate jackson library in the process.  You can then use scala classes and objects in your swagger project.
+
+## Caching
+
+Working out the properties of a model class, their types and their annotations is by far the most expensive thing this module does per resolve - most of it inside jackson-module-scala's `BeanIntrospector` - and none of it can change while an application is running. Since v2.16.0 it is worked out once per class and cached, which roughly halves what this module adds to a `readAll` call.
+
+The cache holds 1000 classes by default and evicts the least recently used, like the caches jackson keeps for its own class lookups. It can be resized, or turned off with a size of zero, and emptied if the classes it holds have to be released - when an application is redeployed without its classloader being discarded, for instance:
+
+```scala
+SwaggerScalaModelConverter.setIntrospectionCacheSize(2000)
+SwaggerScalaModelConverter.clearIntrospectionCache()
+```
+
+Anything that can change while the application runs stays outside the cache and is worked out on each resolve: the settings described below, and the Scala 3 type information, so that a class registered after its schema has been generated still takes effect.
 
 ## Treatment of `Option` and `required`
 

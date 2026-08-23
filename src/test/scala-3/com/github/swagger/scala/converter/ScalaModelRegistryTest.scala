@@ -1,7 +1,7 @@
 package com.github.swagger.scala.converter
 
 import io.swagger.v3.core.converter.ModelConverters
-import io.swagger.v3.oas.models.media.{IntegerSchema, ObjectSchema}
+import io.swagger.v3.oas.models.media.{IntegerSchema, ObjectSchema, Schema}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -26,6 +26,8 @@ object ScalaModelRegistryTest {
     def iterator: Iterator[Long] = Iterator.empty
   }
   case class HoldsLongList(values: LongList, optLong: Option[Long])
+
+  case class LateRegistered(optInt: Option[Int])
 }
 
 class ScalaModelRegistryTest extends AnyFlatSpec with Matchers {
@@ -66,6 +68,15 @@ class ScalaModelRegistryTest extends AnyFlatSpec with Matchers {
     ScalaModelRegistry.isRegistered(classOf[Unregistered]) shouldBe false
     ErasureHelper.erasedOptionalPrimitives(classOf[Unregistered]) shouldBe empty
     SubtypeHelper.findSubtypes(classOf[UnregisteredShape]) shouldBe empty
+  }
+
+  it should "apply to a class that has already been introspected" in {
+    // the class introspection is cached, so registering a class after its schema has been generated has to still take effect
+    def optIntSchema(): Schema[?] =
+      ModelConverters.getInstance().readAll(classOf[LateRegistered]).asScala("LateRegistered").getProperties.asScala("optInt")
+    optIntSchema() shouldBe an[ObjectSchema]
+    ScalaModelRegistry.register[LateRegistered]
+    optIntSchema() shouldBe an[IntegerSchema]
   }
 
   it should "generate accurate schemas for registered classes" in {

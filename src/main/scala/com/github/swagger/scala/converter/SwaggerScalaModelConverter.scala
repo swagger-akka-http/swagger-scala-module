@@ -2,7 +2,6 @@ package com.github.swagger.scala.converter
 
 import com.fasterxml.jackson.databind.`type`.ReferenceType
 import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
-import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
 import com.fasterxml.jackson.module.scala.util.ClassW
 import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JsonScalaEnumeration}
 import io.swagger.v3.core.converter._
@@ -85,6 +84,29 @@ object SwaggerScalaModelConverter {
     * @since v2.7.6
     */
   def isRequiredBasedOnDefaultValue: Boolean = requiredBasedOnDefaultValue
+
+  /** What this module works out about a model class by reflection - its properties, their types and their annotations - is cached, because
+    * none of it can change while the application is running, and introspecting a class is by far the most expensive thing this module does.
+    * This sets how many classes the cache holds.
+    *
+    * @param value
+    *   1000 by default. Zero introspects a class on every resolve, as this module did before v2.16.0.
+    * @since v2.16.0
+    */
+  def setIntrospectionCacheSize(value: Int): Unit = ClassIntrospection.setMaxEntries(value)
+
+  /** @return
+    *   how many classes the introspection cache holds
+    * @since v2.16.0
+    */
+  def getIntrospectionCacheSize: Int = ClassIntrospection.getMaxEntries
+
+  /** Empties the introspection cache. Only needed if the classes it holds have to be released, e.g. when an application is redeployed
+    * without its classloader being discarded.
+    *
+    * @since v2.16.0
+    */
+  def clearIntrospectionCache(): Unit = ClassIntrospection.clear()
 
   /** @param annotatedType
     * @return
@@ -221,45 +243,19 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   ): Option[Schema[_]] = {
     if (chain.hasNext) {
       Option(chain.next().resolve(`type`, context, chain)).map { schema =>
-        val introspector = BeanIntrospector(cls)
-        filterUnwantedProperties(schema, introspector.properties)
+        // worked out once per class - see ClassIntrospection
+        val introspection = ClassIntrospection.of(cls)
+        filterUnwantedProperties(schema, introspection)
+        // not part of the introspection: a class can be registered after it has first been introspected
         val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
         val schemaProperties = nullSafeMap(schema.getProperties)
-        introspector.properties.foreach { property =>
+        introspection.properties.foreach { property =>
           val propertyName = property.name
-          val propertyClass = getPropertyClass(property)
-          val propertyAnnotations = getPropertyAnnotations(property)
-          val isOptional = isOption(propertyClass)
-          val schemaOverride = propertyAnnotations.collectFirst { case s: SchemaAnnotation => s }
-          val schemaOverrideClass = schemaOverride.flatMap { s =>
-            // this form is needed by the Scala 2.11 compiler
-            val classOption: Option[Class[_]] = if (s.implementation() == VoidClass) None else Option(s.implementation())
-            classOption
-          }
-          val arraySchemaOverrideClass = if (schemaOverride.nonEmpty) {
-            None
-          } else {
-            val arraySchemaOverride = propertyAnnotations.collectFirst { case as: ArraySchemaAnnotation => as }
-            arraySchemaOverride.flatMap { as =>
-              val itemSchema = as.schema()
-              val classOption: Option[Class[_]] = if (itemSchema == null || itemSchema.implementation() == VoidClass) {
-                None
-              } else {
-                Option(itemSchema.implementation())
-              }
-              classOption
-            }
-          }
-          val maybeDefault = property.param.flatMap(_.defaultValue)
-          val schemaDefaultValue = schemaOverride.flatMap { s =>
-            Option(s.defaultValue()).flatMap { str =>
-              if (str.isEmpty || str == SwaggerScalaModelConverter.DEFAULT_SENTINEL)
-                None
-              else
-                Some(str)
-            }
-          }
-          val hasDefaultValue = schemaDefaultValue.nonEmpty || maybeDefault.nonEmpty
+          val propertyAnnotations = property.annotations
+          val isOptional = property.isOption
+          val maybeDefault = property.defaultValue
+          val schemaDefaultValue = property.schemaDefaultValue
+          val hasDefaultValue = property.hasDefaultValue
 
           if (schemaDefaultValue.isEmpty) {
             // default values set in annotation leads to default values set in Scala constructor being ignored
@@ -282,16 +278,15 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
             }
           }
 
-          val overrideClass = schemaOverrideClass.orElse(arraySchemaOverrideClass)
-          if (schemaProperties.nonEmpty && overrideClass.isEmpty) {
+          if (schemaProperties.nonEmpty && property.overrideClass.isEmpty) {
             erasedProperties.get(propertyName).foreach { erasedType =>
-              schemaProperties.get(propertyName).foreach { property =>
+              schemaProperties.get(propertyName).foreach { propertySchema =>
                 Option(PrimitiveType.fromType(erasedType)).foreach { primitiveType =>
                   if (isOptional) {
-                    schema.addProperty(propertyName, tryCorrectSchema(property, primitiveType))
+                    schema.addProperty(propertyName, tryCorrectSchema(propertySchema, primitiveType))
                   }
-                  if (isIterable(propertyClass) && !isMap(propertyClass)) {
-                    schema.addProperty(propertyName, updateTypeOnItemsSchema(primitiveType, property))
+                  if (property.isIterable && !property.isMap) {
+                    schema.addProperty(propertyName, updateTypeOnItemsSchema(primitiveType, propertySchema))
                   }
                 }
               }
@@ -322,22 +317,14 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
-  private def filterUnwantedProperties(schema: Schema[_], propertiesToKeep: Seq[PropertyDescriptor]): Unit = {
-    val propNamesSet = propertiesToKeep.map(getAnnotatedPropertyName).toSet
+  private def filterUnwantedProperties(schema: Schema[_], introspection: ClassIntrospection): Unit = {
+    val propNamesSet = introspection.annotatedNames
     val originalProps = nullSafeMap(schema.getProperties)
     val newProps = originalProps.filter { case (key, _) =>
       propNamesSet.contains(key)
     }
     if (originalProps.size > newProps.size) {
       schema.setProperties(new util.LinkedHashMap(newProps.asJava))
-    }
-  }
-
-  private def getAnnotatedPropertyName(property: PropertyDescriptor): String = {
-    val propertyAnnotations = getPropertyAnnotations(property)
-    propertyAnnotations.collectFirst { case s: SchemaAnnotation => s } match {
-      case Some(ann) if ann.name().nonEmpty => ann.name()
-      case _ => property.name
     }
   }
 
@@ -504,65 +491,6 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         }
       }
     }
-  }
-
-  private def getPropertyClass(property: PropertyDescriptor): Class[_] = {
-    property.param match {
-      case Some(constructorParameter) =>
-        val types = constructorParameter.constructor.getParameterTypes
-        val index = constructorParameter.index
-        if (index > types.size) {
-          AnyClass
-        } else {
-          types(index)
-        }
-      case _ =>
-        property.field match {
-          case Some(field) => field.getType
-          case _ =>
-            property.setter match {
-              case Some(setter) if setter.getParameterCount == 1 => {
-                setter.getParameterTypes()(0)
-              }
-              case _ =>
-                property.beanSetter match {
-                  case Some(setter) if setter.getParameterCount == 1 => {
-                    setter.getParameterTypes()(0)
-                  }
-                  case _ => AnyClass
-                }
-            }
-        }
-    }
-  }
-
-  private def getPropertyAnnotations(property: PropertyDescriptor): Seq[Annotation] = {
-    val fieldAnnotations = property.field match {
-      case Some(field) => field.getAnnotations.toSeq
-      case _ => Seq.empty
-    }
-    val setterAnnotations = property.setter match {
-      case Some(setter) => setter.getAnnotations.toSeq
-      case _ => Seq.empty
-    }
-    val beanSetterAnnotations = property.beanSetter match {
-      case Some(beanSetter) => beanSetter.getAnnotations.toSeq
-      case _ => Seq.empty
-    }
-    val paramAnnotations = property.param match {
-      case Some(constructorParameter) => {
-        val types = constructorParameter.constructor.getParameterTypes
-        val annotations = constructorParameter.constructor.getParameterAnnotations
-        val index = constructorParameter.index
-        if (index > types.size || index > annotations.size) {
-          Seq.empty
-        } else {
-          annotations(index).toIndexedSeq
-        }
-      }
-      case _ => Seq.empty
-    }
-    (paramAnnotations ++ fieldAnnotations ++ setterAnnotations ++ beanSetterAnnotations).distinct
   }
 
   private def isOption(cls: Class[_]): Boolean = cls == OptionClass
