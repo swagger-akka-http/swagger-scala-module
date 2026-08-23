@@ -20,9 +20,9 @@ private[converter] object MissingTypeInfo {
   def warnOnce(cls: Class[?]): Unit = {
     if (warned.add(cls.getName)) {
       logger.warn(
-        s"No Scala 3 type information is registered for ${cls.getName} - its schema may be missing the element types of its Option and " +
-          s"collection fields, as well as its sealed subtypes. Call ScalaModelRegistry.register[${cls.getSimpleName}] before generating " +
-          "schemas to make this information available."
+        s"No Scala 3 type information is available for ${cls.getName} - its schema may be missing the element types of its Option and " +
+          s"collection fields, as well as its sealed subtypes. Add `derives ScalaTypeInfo` to the class, or call " +
+          s"ScalaModelRegistry.register[${cls.getSimpleName}] before generating schemas, to make this information available."
       )
     }
   }

@@ -3,24 +3,27 @@ package com.github.swagger.scala.converter
 import scala.collection.concurrent.TrieMap
 import scala.quoted.*
 
-/** Registry of Scala 3 type information that is not available at runtime.
+/** Registry of the Scala 3 type information that is not available at runtime.
   *
   * The JVM erases the element types of generic Scala types - `Option[Long]` is compiled to `Option<Object>` - and Scala 3 does not record
   * `sealed` hierarchies in the class file. That information only exists in the TASTy files and in the compiler, so it has to be captured at
-  * compile time. [[ScalaModelRegistry.register]] is a macro that reads it from the type you give it and stores it here for the converter to
-  * use at runtime.
+  * compile time. There are two ways of doing that, and they can be mixed:
   *
-  * Register the model classes used in your API before any schema is generated, for example:
-  * {{{
-  * ScalaModelRegistry.register[PetOwner]
-  * ScalaModelRegistry.registerAll[(Order, Invoice)]
-  * }}}
+  *   - derive [[ScalaTypeInfo]] on the model class itself, which needs nothing else to be called:
+  *     {{{
+  *     case class Pet(name: String, age: Option[Int]) derives ScalaTypeInfo
+  *     }}}
+  *   - register the class here, which is what classes that cannot be given a `derives` clause need:
+  *     {{{
+  *     ScalaModelRegistry.register[PetOwner]
+  *     ScalaModelRegistry.registerAll[(Order, Invoice)]
+  *     }}}
   *
-  * Registration is recursive: the field types, collection element types, base classes and sealed subtypes of the type you register are
-  * registered too, so in practice only the top level model classes need to be listed.
+  * Both are recursive: the field types, collection element types, base classes and sealed subtypes of the type are registered too, so in
+  * practice only the top level model classes need to be covered. Registration has to happen before the schemas are generated.
   *
-  * Unregistered classes still get schemas, but `Option[Int]` and `Seq[Int]` fields are typed as objects rather than integers and sealed
-  * hierarchies do not get an `anyOf` schema. A warning is logged the first time such a class is seen.
+  * Classes that are neither derived nor registered still get schemas, but `Option[Int]` and `Seq[Int]` fields are typed as objects rather
+  * than integers and sealed hierarchies do not get an `anyOf` schema. A warning is logged the first time such a class is seen.
   *
   * This object also exists in the Scala 2 build, where all methods are no-ops, so that cross built code compiles unchanged. Scala 2 gets
   * the same information from `scala-reflect` at runtime.
@@ -28,8 +31,11 @@ import scala.quoted.*
   * @since v2.16.0
   */
 object ScalaModelRegistry {
-  private val erasedPrimitivesByClass = TrieMap[Class[?], Map[String, Class[?]]]()
-  private val subtypesByClass = TrieMap[Class[?], Seq[Class[?]]]()
+
+  /** Holds the type information of the classes that have been registered, and the outcome of looking up the classes that have not - the
+    * lookup is by Java reflection, so it is worth not repeating it.
+    */
+  private val infoByClass = TrieMap[Class[?], Option[ScalaTypeInfo[?]]]()
 
   /** Captures the type information of `T` (and of everything reachable from it) so that the converter can generate accurate schemas for it.
     */
@@ -38,27 +44,33 @@ object ScalaModelRegistry {
   /** Same as [[register]] for each member of a tuple of types, e.g. `registerAll[(Cat, Dog)]`. */
   inline def registerAll[T <: Tuple]: Unit = ${ ScalaModelRegistryMacros.registerAllImpl[T] }
 
-  /** @return true if the type information for this class has been registered */
-  def isRegistered(cls: Class[?]): Boolean = erasedPrimitivesByClass.contains(cls)
+  /** @return true if the type information of this class is available, whether it was registered or derived */
+  def isRegistered(cls: Class[?]): Boolean = infoFor(cls).isDefined
 
-  /** @return the classes that have been registered so far */
-  def registeredClasses: Set[Class[?]] = erasedPrimitivesByClass.keySet.toSet
+  /** @return the classes whose type information is available so far */
+  def registeredClasses: Set[Class[?]] = infoByClass.iterator.collect { case (cls, Some(_)) => cls }.toSet
 
-  /** Removes all registered type information. */
-  def clear(): Unit = {
-    erasedPrimitivesByClass.clear()
-    subtypesByClass.clear()
+  /** Removes all registered type information. Type information that was derived on the class itself is found again when it is next needed.
+    */
+  def clear(): Unit = infoByClass.clear()
+
+  /** Called by the code that [[register]] and [[ScalaTypeInfo.derived]] generate - not intended to be called directly. */
+  def registerType(info: ScalaTypeInfo[?]): Unit = {
+    infoByClass.put(info.modelClass, Some(info))
+    info.related.foreach(registerType)
   }
 
-  /** Called by the code that [[register]] generates - not intended to be called directly. */
-  def registerType(cls: Class[?], erasedPrimitives: Map[String, Class[?]], subtypes: Seq[Class[?]]): Unit = {
-    erasedPrimitivesByClass.put(cls, erasedPrimitives)
-    subtypesByClass.put(cls, subtypes)
+  /** The type information of this class, either registered or derived on the class itself. */
+  private[converter] def infoFor(cls: Class[?]): Option[ScalaTypeInfo[?]] = {
+    infoByClass.getOrElseUpdate(
+      cls, {
+        val derived = ScalaTypeInfo.findDerived(cls)
+        // a derived instance carries the types reachable from the class, which are worth keeping now that it has been read
+        derived.foreach(info => info.related.foreach(registerType))
+        derived
+      }
+    )
   }
-
-  private[converter] def erasedPrimitives(cls: Class[?]): Option[Map[String, Class[?]]] = erasedPrimitivesByClass.get(cls)
-
-  private[converter] def subtypes(cls: Class[?]): Option[Seq[Class[?]]] = subtypesByClass.get(cls)
 }
 
 private[converter] object ScalaModelRegistryMacros {
@@ -66,7 +78,19 @@ private[converter] object ScalaModelRegistryMacros {
 
   def registerImpl[T: Type](using Quotes): Expr[Unit] = {
     import quotes.reflect.*
-    registerTypes(List(TypeRepr.of[T]))
+    Expr.block(registrations(List(TypeRepr.of[T])), '{ () })
+  }
+
+  /** The type information of `T`, carrying that of the types reachable from `T`. */
+  def derivedImpl[T: Type](using Quotes): Expr[ScalaTypeInfo[T]] = {
+    import quotes.reflect.*
+    val tpe = TypeRepr.of[T]
+    // the expressions are built here, outside of the quote, because the TypeRepr of this Quotes instance is not in scope inside it
+    val modelClass = classExpr(tpe)
+    val erasedPrimitives = erasedPrimitiveEntries(tpe)
+    val subtypes = subtypeClasses(tpe)
+    val related = Expr.ofList(reachableInfos(relatedTypes(tpe), Set(tpe.typeSymbol.fullName)))
+    '{ new ScalaTypeInfo[T]($modelClass, Map($erasedPrimitives*), $subtypes, $related) }
   }
 
   def registerAllImpl[T <: Tuple: Type](using Quotes): Expr[Unit] = {
@@ -78,50 +102,65 @@ private[converter] object ScalaModelRegistryMacros {
       case other => other.typeArgs
     }
 
-    registerTypes(tupleTypes(TypeRepr.of[T]))
+    Expr.block(registrations(tupleTypes(TypeRepr.of[T])), '{ () })
   }
 
-  private def registerTypes(using Quotes)(types: List[quotes.reflect.TypeRepr]): Expr[Unit] = {
+  /** A registration call for each of these types and for the types reachable from them. */
+  private def registrations(using Quotes)(types: List[quotes.reflect.TypeRepr]): List[Expr[Unit]] = {
+    reachableInfos(types, Set.empty).map(info => '{ ScalaModelRegistry.registerType($info) })
+  }
+
+  /** The type information of each of these types and of the types reachable from them. */
+  private def reachableInfos(using
+      Quotes
+  )(types: List[quotes.reflect.TypeRepr], alreadyVisited: Set[String]): List[Expr[ScalaTypeInfo[?]]] = {
     import quotes.reflect.*
 
-    val statements = List.newBuilder[Expr[Unit]]
-    val visited = collection.mutable.Set.empty[String]
+    val infos = List.newBuilder[Expr[ScalaTypeInfo[?]]]
+    val visited = collection.mutable.Set.from(alreadyVisited)
 
     def visit(tpe: TypeRepr): Unit = {
       val dealiased = tpe.dealias
-      val sym = dealiased.typeSymbol
-      if (isModelType(dealiased) && visited.add(sym.fullName)) {
-        statements += registerStatement(dealiased)
+      if (isModelType(dealiased) && visited.add(dealiased.typeSymbol.fullName)) {
+        infos += typeInfoExpr(dealiased)
         relatedTypes(dealiased).foreach(visit)
       }
     }
 
     types.foreach(visit)
-    Expr.block(statements.result(), '{ () })
+    infos.result()
   }
 
-  /** The runtime registration call for a single class. */
-  private def registerStatement(using Quotes)(tpe: quotes.reflect.TypeRepr): Expr[Unit] = {
-    import quotes.reflect.*
+  private def typeInfoExpr(using Quotes)(tpe: quotes.reflect.TypeRepr): Expr[ScalaTypeInfo[?]] = {
+    // the expressions are built here, outside of the quote, because the TypeRepr of this Quotes instance is not in scope inside it
+    val modelClass = classExpr(tpe)
+    val erasedPrimitives = erasedPrimitiveEntries(tpe)
+    val subtypes = subtypeClasses(tpe)
+    tpe.asType match {
+      case '[t] => '{ new ScalaTypeInfo[t]($modelClass, Map($erasedPrimitives*), $subtypes) }
+    }
+  }
 
-    // the class and the entries have to be turned into expressions here, outside of the quote, because the TypeRepr of this Quotes
-    // instance is not in scope inside it
-    val entries = Expr.ofList(fieldsOf(tpe).flatMap { case (name, fieldType) =>
+  /** The name and erased primitive type of each field that has one. */
+  private def erasedPrimitiveEntries(using Quotes)(tpe: quotes.reflect.TypeRepr): Expr[List[(String, Class[?])]] = {
+    Expr.ofList(fieldsOf(tpe).flatMap { case (name, fieldType) =>
       erasedPrimitiveOf(fieldType).map { primitive =>
         val nameExpr = Expr(name)
         val primitiveExpr = classExpr(primitive)
         '{ Tuple2($nameExpr, $primitiveExpr) }
       }
     })
-    val subtypes = Expr.ofList(
+  }
+
+  /** The classes of the direct subtypes of a sealed trait or class - a `case object` is represented by its module class. */
+  private def subtypeClasses(using Quotes)(tpe: quotes.reflect.TypeRepr): Expr[List[Class[?]]] = {
+    import quotes.reflect.*
+    Expr.ofList(
       tpe.typeSymbol.children
         .map(child => if (child.flags.is(Flags.Module)) child.moduleClass.typeRef else child.typeRef)
         .sortBy(_.typeSymbol.fullName)
         .map(classExpr)
     )
-    val registeredClass = classExpr(tpe)
-
-    '{ ScalaModelRegistry.registerType($registeredClass, Map($entries*), $subtypes) }
   }
 
   /** `classOf[tpe]` - `Literal(ClassOfConstant(...))` is used because `classOf` needs a class type known to the compiler. */
@@ -175,17 +214,16 @@ private[converter] object ScalaModelRegistryMacros {
 
   private def isPrimitive(using Quotes)(tpe: quotes.reflect.TypeRepr): Boolean = {
     import quotes.reflect.*
-    val primitives =
-      Seq(
-        TypeRepr.of[Boolean],
-        TypeRepr.of[Byte],
-        TypeRepr.of[Char],
-        TypeRepr.of[Short],
-        TypeRepr.of[Int],
-        TypeRepr.of[Long],
-        TypeRepr.of[Float],
-        TypeRepr.of[Double]
-      )
+    val primitives = Seq(
+      TypeRepr.of[Boolean],
+      TypeRepr.of[Byte],
+      TypeRepr.of[Char],
+      TypeRepr.of[Short],
+      TypeRepr.of[Int],
+      TypeRepr.of[Long],
+      TypeRepr.of[Float],
+      TypeRepr.of[Double]
+    )
     primitives.exists(_ =:= tpe.dealias)
   }
 
