@@ -80,6 +80,9 @@ object TestModelRegistration {
     ScalaModelRegistry.registerAll[(ModelWithVector, ModelWithIntVector, ModelWithBooleanVector)]
     ScalaModelRegistry.registerAll[(OptionLong, OptionSeqLong, OptionSeqOptionLong, OptionSetString, SeqOptionLong)]
     ScalaModelRegistry.register[Nested.OptionSeqLong]
+    // registering two instantiations of the same generic class has to be order independent - see ErasureHelperTest
+    ScalaModelRegistry.register[PagedReply[String]]
+    ScalaModelRegistry.register[PagedReply[Long]]
     ScalaModelRegistry.register[SimpleUser]
   }
 }

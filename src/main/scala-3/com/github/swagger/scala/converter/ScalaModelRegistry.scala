@@ -38,6 +38,10 @@ object ScalaModelRegistry {
   private val infoByClass = TrieMap[Class[?], Option[ScalaTypeInfo[?]]]()
 
   /** Captures the type information of `T` (and of everything reachable from it) so that the converter can generate accurate schemas for it.
+    *
+    * A generic class has one runtime class for all of its type arguments, so the element types that depend on one of its type parameters
+    * are not recorded - `register[ListReply[String]]` and `register[ListReply[Long]]` record the same thing, and registering both, in any
+    * order, is safe.
     */
   inline def register[T]: Unit = ${ ScalaModelRegistryMacros.registerImpl[T] }
 
@@ -143,7 +147,7 @@ private[converter] object ScalaModelRegistryMacros {
 
   /** The name and erased primitive type of each field that has one. */
   private def erasedPrimitiveEntries(using Quotes)(tpe: quotes.reflect.TypeRepr): Expr[List[(String, Class[?])]] = {
-    Expr.ofList(fieldsOf(tpe).flatMap { case (name, fieldType) =>
+    Expr.ofList(fieldsOf(classTypeOf(tpe)).flatMap { case (name, fieldType) =>
       erasedPrimitiveOf(fieldType).map { primitive =>
         val nameExpr = Expr(name)
         val primitiveExpr = classExpr(primitive)
@@ -167,6 +171,15 @@ private[converter] object ScalaModelRegistryMacros {
   private def classExpr(using Quotes)(tpe: quotes.reflect.TypeRepr): Expr[Class[?]] = {
     import quotes.reflect.*
     Literal(ClassOfConstant(tpe)).asExprOf[Class[?]]
+  }
+
+  /** The type to read the fields of a class from. The registry is keyed by class, and a class has one class for all of its type arguments,
+    * so only what holds for every instantiation of a generic class can be recorded: the type reference of the class itself leaves its type
+    * parameters abstract, which drops the fields whose element type is one of them. `Seq[T]` is as unknowable at runtime as it is on Scala
+    * 2, whereas `Seq[Long]` of a `class LongSeq extends Seq[Long]` is still resolved, because that is true of the class.
+    */
+  private def classTypeOf(using Quotes)(tpe: quotes.reflect.TypeRepr): quotes.reflect.TypeRepr = {
+    if (tpe.typeArgs.isEmpty) tpe else tpe.typeSymbol.typeRef
   }
 
   /** The fields of a class by the name that Jackson uses for them: the constructor parameters and the (possibly inherited) vals. */

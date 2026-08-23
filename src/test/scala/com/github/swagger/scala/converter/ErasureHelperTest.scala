@@ -31,6 +31,12 @@ class ErasureHelperTest extends AnyFlatSpec with Matchers {
   it should "handle OptionSeqOptionLong" in {
     ErasureHelper.erasedOptionalPrimitives(classOf[OptionSeqOptionLong]) shouldBe Map("values" -> classOf[Long])
   }
+  it should "handle a generic class" in {
+    // a class has one runtime class for all of its type arguments, so the element types that depend on a type parameter
+    // cannot be resolved - only limit, whose type is the same for every instantiation of PagedReply
+    ErasureHelper.erasedOptionalPrimitives(classOf[PagedReply[_]]) shouldBe Map("limit" -> classOf[Int])
+  }
+
   it should "handle OptionSetString" in {
     ErasureHelper.erasedOptionalPrimitives(classOf[OptionSetString]) shouldBe Map.empty
   }

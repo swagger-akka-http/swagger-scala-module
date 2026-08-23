@@ -19,6 +19,13 @@ object ScalaModelRegistryTest {
 
   sealed trait UnregisteredShape
   case class Triangle(base: Double) extends UnregisteredShape
+
+  class LongList extends Seq[Long] {
+    def apply(i: Int): Long = 0L
+    def length: Int = 0
+    def iterator: Iterator[Long] = Iterator.empty
+  }
+  case class HoldsLongList(values: LongList, optLong: Option[Long])
 }
 
 class ScalaModelRegistryTest extends AnyFlatSpec with Matchers {
@@ -48,6 +55,11 @@ class ScalaModelRegistryTest extends AnyFlatSpec with Matchers {
 
   it should "record the subtypes of a registered sealed trait" in {
     SubtypeHelper.findSubtypes(classOf[RegisteredShape]) shouldBe Seq(classOf[Circle], Square.getClass)
+  }
+
+  it should "record the element type a class fixes for itself" in {
+    ScalaModelRegistry.register[HoldsLongList]
+    ErasureHelper.erasedOptionalPrimitives(classOf[HoldsLongList]) shouldBe Map("values" -> classOf[Long], "optLong" -> classOf[Long])
   }
 
   it should "have no type information for an unregistered class" in {

@@ -107,7 +107,17 @@ ScalaModelRegistry.registerAll[(Order, Invoice)]
 
 Both are recursive: the field types, collection element types, base classes and sealed subtypes of the type are covered too, so in practice only the top level model classes of your API need a `derives` clause or a `register` call.
 
-Classes with type parameters cannot be derived - the compiler asks for a `ScalaTypeInfo` of each type parameter - and their element types are not known for the class as a whole anyway.
+### Classes with type parameters
+
+A generic class has one runtime class for all of its type arguments, so the element types that depend on a type parameter cannot be recorded. For
+
+```scala
+case class ListReply[T](items: List[T], limit: Option[Int])
+```
+
+`items` resolves to an object schema, exactly as it does on Scala 2, while `limit` is recorded because its type is the same for every instantiation. `register[ListReply[String]]` and `register[ListReply[Long]]` therefore record the same thing, and registering both, in any order, is safe. An element type that the class fixes for itself, as in `class LongList extends Seq[Long]`, is resolved as usual.
+
+Such a class cannot be derived at all - the compiler asks for a `ScalaTypeInfo` of each type parameter, so the companion object holds no instance that can be found by class. Register it instead, or annotate the field with `@Schema` / `@ArraySchema` to declare the element type explicitly.
 
 Classes that are neither derived nor registered still get schemas - the `Option` and collection fields whose element type is a Scala primitive (`Int`, `Long`, `Double`, `Boolean` and so on) are typed as objects, and sealed hierarchies do not get an `anyOf` schema. A warning is logged the first time such a class is seen. As before, you can also avoid the issue for a given field by annotating it, e.g. `@Schema(implementation = classOf[Int])`, or by using non-primitive types such as `BigInt`.
 
