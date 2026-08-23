@@ -11,13 +11,27 @@ import scala.util.control.NonFatal
   */
 private[converter] object MissingTypeInfo {
   private val logger = LoggerFactory.getLogger(MissingTypeInfo.getClass)
+  // the probes are Java reflection and a class is resolved many times over the life of an application, so each one is run once per
+  // class - they are separate, because whichever helper is called first must not stop the other one from ever probing
+  private val erasureChecked = ConcurrentHashMap.newKeySet[String]()
+  private val subtypesChecked = ConcurrentHashMap.newKeySet[String]()
   private val warned = ConcurrentHashMap.newKeySet[String]()
   private val ObjectClass = classOf[Object]
   private val OptionClass = classOf[Option[?]]
   private val IterableClass = classOf[scala.collection.Iterable[?]]
   private val MapClass = classOf[scala.collection.Map[?, ?]]
 
-  def warnOnce(cls: Class[?]): Unit = {
+  /** Warns if this class has fields whose element type has been erased and no type information to put it back. */
+  def warnIfErased(cls: Class[?]): Unit = {
+    if (erasureChecked.add(cls.getName) && hasErasedGenericFields(cls)) warnOnce(cls)
+  }
+
+  /** Warns if this class could be a sealed Scala 3 type whose subtypes are not known. */
+  def warnIfSealed(cls: Class[?]): Unit = {
+    if (subtypesChecked.add(cls.getName) && couldBeSealed(cls)) warnOnce(cls)
+  }
+
+  private def warnOnce(cls: Class[?]): Unit = {
     if (warned.add(cls.getName)) {
       logger.warn(
         s"No Scala 3 type information is available for ${cls.getName} - its schema may be missing the element types of its Option and " +

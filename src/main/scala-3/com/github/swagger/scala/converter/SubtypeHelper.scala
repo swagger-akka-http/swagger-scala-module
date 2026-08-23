@@ -11,7 +11,7 @@ object SubtypeHelper {
     ScalaModelRegistry.infoFor(cls) match {
       case Some(info) => info.subtypes
       case None =>
-        if (MissingTypeInfo.couldBeSealed(cls)) MissingTypeInfo.warnOnce(cls)
+        MissingTypeInfo.warnIfSealed(cls)
         Seq.empty
     }
   }
