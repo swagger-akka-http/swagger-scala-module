@@ -11,6 +11,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class ScalaModelTest extends AnyFlatSpec with Matchers {
+  TestModelRegistration.register()
+
   it should "extract a scala enum" in {
     val schemas = ModelConverters.getInstance().readAll(classOf[SModelWithEnum]).asScala
     val userSchema = schemas("SModelWithEnum")

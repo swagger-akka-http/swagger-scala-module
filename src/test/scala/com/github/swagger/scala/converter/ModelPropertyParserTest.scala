@@ -14,6 +14,8 @@ import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 
 class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with Matchers with OptionValues {
+  TestModelRegistration.register()
+
   override protected def beforeEach() = {
     SwaggerScalaModelConverter.setRequiredBasedOnAnnotation(true)
     SwaggerScalaModelConverter.setRequiredBasedOnDefaultValue(true)
@@ -166,12 +168,8 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
   it should "process Model with nested Scala Option Int" in new PropertiesScope[NestedModelWOptionInt] {
     val optInt = model.value.getProperties().get("optInt")
     optInt should not be (null)
-    if (RuntimeUtil.isScala3()) {
-      optInt shouldBe an[ObjectSchema]
-    } else {
-      optInt shouldBe an[IntegerSchema]
-      optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
-    }
+    optInt shouldBe an[IntegerSchema]
+    optInt.asInstanceOf[IntegerSchema].getFormat shouldEqual "int32"
     model.value.getRequired shouldBe null
   }
 
