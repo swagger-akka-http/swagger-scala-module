@@ -24,9 +24,7 @@ import scala.util.control.NonFatal
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  // A private copy of swagger-core's mapper with the Scala module added. Json.mapper() itself is left untouched: in Jackson 3 it is
-  // immutable, and the equivalent of this line there is Json.mapper().rebuild().addModule(DefaultScalaModule).build().
-  private val objectMapper: ObjectMapper = Json.mapper().copy().registerModule(DefaultScalaModule)
+  private var objectMapperCustomizer: ObjectMapper => ObjectMapper = identity
   // https://github.com/swagger-api/swagger-core/issues/5076
   // hardcode here to avoid having an explicit dependence on the new DEFAULT_SENTINEL field in swagger-annotations
   private val DEFAULT_SENTINEL = "##default"
@@ -61,6 +59,29 @@ object SwaggerScalaModelConverter {
     */
   def setRequiredBasedOnDefaultValue(value: Boolean = true): Unit = {
     requiredBasedOnDefaultValue = value
+  }
+
+  /** Registers a function that customizes the Jackson [[ObjectMapper]] this converter uses to introspect classes. The function is given a
+    * copy of swagger-core's `Json.mapper()` with `DefaultScalaModule` already registered, and the mapper it returns is the one used. A
+    * typical use is `_.addMixIn(classOf[MyModel], classOf[MyMixIn])`, to attach Jackson or Swagger annotations to classes you cannot edit.
+    *
+    * The mapper is created when the converter instance is created, so call this before swagger-core first instantiates the converter,
+    * typically before the first call to `ModelConverters.getInstance()`; call `ModelConverters.reset()` afterwards if it has already been
+    * created.
+    *
+    * @param customizer
+    *   identity by default
+    * @since v2.16.0
+    */
+  def setObjectMapperCustomizer(customizer: ObjectMapper => ObjectMapper = identity): Unit = {
+    objectMapperCustomizer = customizer
+  }
+
+  /** A private copy of swagger-core's mapper with the Scala module added, passed through the customizer. Json.mapper() itself is left
+    * untouched: in Jackson 3 it is immutable, and the equivalent of this there is Json.mapper().rebuild().addModule(DefaultScalaModule).
+    */
+  private[converter] def createObjectMapper(): ObjectMapper = {
+    objectMapperCustomizer(Json.mapper().copy().registerModule(DefaultScalaModule))
   }
 
   /** If you use swagger annotations to override what is automatically derived, then be aware that
@@ -140,7 +161,7 @@ object SwaggerScalaModelConverter {
   }
 }
 
-class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverter.objectMapper) {
+class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverter.createObjectMapper()) {
 
   private val logger = LoggerFactory.getLogger(classOf[SwaggerScalaModelConverter])
   private val VoidClass = classOf[Void]
@@ -382,8 +403,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       case _ => {
         Try {
           val primitiveProperty = primitiveType.createProperty()
-          val propAsString = objectMapper.writeValueAsString(itemSchema)
-          val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
+          val propAsString = _mapper.writeValueAsString(itemSchema)
+          val correctedSchema = _mapper.readValue(propAsString, primitiveProperty.getClass)
           correctedSchema.setType(primitiveProperty.getType)
           Option(itemSchema.getFormat) match {
             case Some(_) =>
