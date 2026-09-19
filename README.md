@@ -49,6 +49,10 @@ applied when swagger-core creates the converter, so set it before the first call
 `ModelConverters.reset()` afterwards. Releases before 2.16 registered `DefaultScalaModule` on `Json.mapper()` as a side effect;
 if you relied on that to serialize Scala objects with swagger-core's mapper, register the module on your own mapper instead.
 
+If you write your own `ModelResolver` subclass to sit alongside this module, build it on
+`SwaggerScalaModelConverter.createObjectMapper()` (available since 2.16.1) rather than `Json.mapper()`, so it introspects with the same
+Scala-aware, customized mapper.
+
 ## Treatment of `Option` and `required`
 
 When users add swagger annotations (Schema, ArraySchema, Parameter), they can override whether a model property is required or not. Whether a model property is required or not, is usually based on the type of the related Scala field (i.e. fields of type `Option[T]` are optional - other fields are required).

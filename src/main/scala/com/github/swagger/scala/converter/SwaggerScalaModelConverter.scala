@@ -77,10 +77,17 @@ object SwaggerScalaModelConverter {
     objectMapperCustomizer = customizer
   }
 
-  /** A private copy of swagger-core's mapper with the Scala module added, passed through the customizer. Json.mapper() itself is left
-    * untouched: in Jackson 3 it is immutable, and the equivalent of this there is Json.mapper().rebuild().addModule(DefaultScalaModule).
+  /** Creates the Jackson [[ObjectMapper]] this converter introspects with: a private copy of swagger-core's `Json.mapper()` with
+    * `DefaultScalaModule` added, passed through the customizer registered via [[setObjectMapperCustomizer]]. `Json.mapper()` itself is left
+    * untouched: in Jackson 3 it is immutable, and the equivalent of this there is `Json.mapper().rebuild().addModule(DefaultScalaModule)`.
+    *
+    * Companion converters that extend swagger-core's `ModelResolver` (for example swagger-enumeratum-module and swagger-scala3-enum-module)
+    * should build on this rather than `Json.mapper()`, so that they see the same Scala-aware, customized mapper as this converter. Each
+    * call returns a new mapper.
+    *
+    * @since v2.16.1
     */
-  private[converter] def createObjectMapper(): ObjectMapper = {
+  def createObjectMapper(): ObjectMapper = {
     objectMapperCustomizer(Json.mapper().copy().registerModule(DefaultScalaModule))
   }
 
