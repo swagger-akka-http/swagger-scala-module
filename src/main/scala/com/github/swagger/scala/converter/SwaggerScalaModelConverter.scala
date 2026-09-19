@@ -225,8 +225,12 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         filterUnwantedProperties(schema, introspector.properties)
         val erasedProperties = ErasureHelper.erasedOptionalPrimitives(cls)
         val schemaProperties = nullSafeMap(schema.getProperties)
-        introspector.properties.foreach { property =>
-          val propertyName = property.name
+        // Properties the resolver left out (e.g. @JsonIgnore, hidden) must not be touched, and in particular must not be marked required.
+        for {
+          property <- introspector.properties
+          propertyName = getAnnotatedPropertyName(property)
+          if schemaProperties.contains(propertyName)
+        } {
           val propertyClass = getPropertyClass(property)
           val propertyAnnotations = getPropertyAnnotations(property)
           val isOptional = isOption(propertyClass)
