@@ -752,6 +752,20 @@ class ModelPropertyParserTest extends AnyFlatSpec with BeforeAndAfterEach with M
     model.value.getRequired().asScala shouldEqual Seq("val1", "val2")
   }
 
+  it should "not mark a JsonIgnore'd constructor parameter as required" in new PropertiesScope[ModelWJsonIgnoredParam] {
+    val props = nullSafeMap(model.value.getProperties)
+    props.keySet shouldEqual Set("name", "count")
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("name")
+  }
+
+  it should "use the Schema annotation name when marking a renamed property as required" in new PropertiesScope[ModelWRenamedParam](
+    requiredBasedAnnotation = false
+  ) {
+    val props = nullSafeMap(model.value.getProperties)
+    props.keySet shouldEqual Set("renamed", "other")
+    nullSafeSeq(model.value.getRequired) shouldEqual Seq("renamed")
+  }
+
   it should "process ModelWGetFunction" in new PropertiesScope[ModelWGetFunction] {
     val props = nullSafeMap(model.value.getProperties)
     props should have size 1
