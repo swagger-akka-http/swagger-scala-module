@@ -31,6 +31,10 @@ To enable the swagger-scala-module, include the appropriate version in your proj
 ## How does it work?
 Including the library in your project allows the swagger extension module to discover this module, bringing in the appropriate jackson library in the process.  You can then use scala classes and objects in your swagger project.
 
+This module introspects your classes with its own Jackson `ObjectMapper`, which has `DefaultScalaModule` registered. It does not
+modify swagger-core's `Json.mapper()`. Releases before 2.16 registered `DefaultScalaModule` on `Json.mapper()` as a side effect;
+if you relied on that to serialize Scala objects with swagger-core's mapper, register the module on your own mapper instead.
+
 ## Treatment of `Option` and `required`
 
 When users add swagger annotations (Schema, ArraySchema, Parameter), they can override whether a model property is required or not. Whether a model property is required or not, is usually based on the type of the related Scala field (i.e. fields of type `Option[T]` are optional - other fields are required).

@@ -1,6 +1,7 @@
 package com.github.swagger.scala.converter
 
 import com.fasterxml.jackson.databind.`type`.ReferenceType
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
 import com.fasterxml.jackson.module.scala.util.ClassW
@@ -24,7 +25,9 @@ import scala.util.control.NonFatal
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  private val objectMapper: ObjectMapper = Json.mapper().registerModule(DefaultScalaModule)
+  // Used only to introspect user classes. It is deliberately not swagger-core's Json.mapper(): that mapper is for
+  // (de)serializing swagger's own model classes, and in Jackson 3 it is immutable, so no modules can be added to it.
+  private val objectMapper: ObjectMapper = JsonMapper.builder().addModule(DefaultScalaModule).build()
   // https://github.com/swagger-api/swagger-core/issues/5076
   // hardcode here to avoid having an explicit dependence on the new DEFAULT_SENTINEL field in swagger-annotations
   private val DEFAULT_SENTINEL = "##default"
@@ -157,9 +160,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
         val javaType = _mapper.constructType(typeType)
         val subtypes = SubtypeHelper.findSubtypes(javaType.getRawClass)
         if (subtypes.isEmpty) {
-          resolveWithoutSubtypes(javaType, `type`, context, chain)
+          resolveWithoutSubtypes(javaType, `type`, context, scalaAwareChain(chain))
         } else {
-          val converters = chain.asScala.toSeq
+          val converters = scalaAwareChain(chain).asScala.toSeq
           val schema = new ObjectSchema
           val subSchemas = subtypes.map { subtype =>
             val javaSubType = _mapper.constructType(subtype)
@@ -380,8 +383,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       case _ => {
         Try {
           val primitiveProperty = primitiveType.createProperty()
-          val propAsString = objectMapper.writeValueAsString(itemSchema)
-          val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
+          // swagger-core's mapper carries the mixins needed to round-trip its Schema classes
+          val propAsString = Json.mapper().writeValueAsString(itemSchema)
+          val correctedSchema = Json.mapper().readValue(propAsString, primitiveProperty.getClass)
           correctedSchema.setType(primitiveProperty.getType)
           Option(itemSchema.getFormat) match {
             case Some(_) =>
@@ -478,6 +482,30 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       .resolveAsRef(`type`.isResolveAsRef)
       .jsonViewAnnotation(`type`.getJsonViewAnnotation)
       .skipOverride(`type`.isSkipOverride)
+  }
+
+  /** swagger-core's default [[ModelResolver]] is built from `Json.mapper()`, which knows nothing about Scala types, so a chain that ends in
+    * it would introspect a case class as a Java bean and find no properties. Stand in for it with this converter's own (Scala-aware)
+    * [[ModelResolver]] behaviour, leaving every other converter in the chain untouched.
+    */
+  private def scalaAwareChain(chain: util.Iterator[ModelConverter]): util.Iterator[ModelConverter] = {
+    chain.asScala.map { converter =>
+      if (converter.getClass == classOf[ModelResolver]) defaultResolverStandIn else converter
+    }.asJava
+  }
+
+  private val defaultResolverStandIn: ModelConverter = new ModelConverter {
+    override def resolve(`type`: AnnotatedType, context: ModelConverterContext, chain: util.Iterator[ModelConverter]): Schema[_] = {
+      resolveAsModelResolver(`type`, context, chain)
+    }
+  }
+
+  private def resolveAsModelResolver(
+      `type`: AnnotatedType,
+      context: ModelConverterContext,
+      chain: util.Iterator[ModelConverter]
+  ): Schema[_] = {
+    super.resolve(`type`, context, chain)
   }
 
   override def _isOptionalType(propType: JavaType): Boolean = {
