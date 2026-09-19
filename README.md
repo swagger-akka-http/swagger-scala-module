@@ -90,6 +90,17 @@ If you don't use swagger annotations, and would like not like to infer the `requ
 
 If you use swagger annotations and don't want to explicity set the `required` value and allow this lib to infer the value, then you can set [SwaggerScalaModelConverter.setRequiredBasedOnAnnotation](https://github.com/swagger-akka-http/swagger-scala-module/blob/bf97024492d07d7a293f72e4f113e9f378465bc2/src/main/scala/com/github/swagger/scala/converter/SwaggerScalaModelConverter.scala#L44).
 
+## Scala 3 Enums
+
+Since v2.17.0, the Scala 3 build of swagger-scala-module treats a Scala 3 `enum` like any other Scala type it knows about: a property
+of an enum type is modelled as a string schema whose `enum` values are the names of the enum's singleton cases, in ordinal order.
+Parameterized cases (e.g. `case Mix(rgb: Int)`) have no fixed name and are left out. `Option[MyEnum]` and collections of enums work as
+they do for other types, and `@Schema`/`@Parameter` annotations on the property (`description`, `example`, `defaultValue`, `deprecated`,
+`accessMode`, `requiredMode`) are honoured.
+
+This support was merged in from [swagger-scala3-enum-module](https://github.com/swagger-akka-http/swagger-scala3-enum-module), which is no
+longer needed alongside this module; remove it from your dependencies when you upgrade.
+
 ## Sealed Traits
 
 Since v2.7.5, swagger-scala-module tries to handle sealed traits and classes. If an API method uses a sealed trait/class as a parameter or return type, the OpenAPI model for that type should be a schema with an `anyOf` construct that contains the schemas for all the classes that extend the selaed trait/class. 
