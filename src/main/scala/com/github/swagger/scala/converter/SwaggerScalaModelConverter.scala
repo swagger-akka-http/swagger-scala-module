@@ -9,7 +9,7 @@ import io.swagger.v3.core.converter._
 import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.core.util.{Json, PrimitiveType}
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.Schema.RequiredMode
+import io.swagger.v3.oas.annotations.media.Schema.{AccessMode, RequiredMode}
 import io.swagger.v3.oas.annotations.media.{ArraySchema => ArraySchemaAnnotation, Schema => SchemaAnnotation}
 import io.swagger.v3.oas.models.media.{ArraySchema, MapSchema, ObjectSchema, Schema}
 import org.slf4j.LoggerFactory
@@ -81,9 +81,8 @@ object SwaggerScalaModelConverter {
     * `DefaultScalaModule` added, passed through the customizer registered via [[setObjectMapperCustomizer]]. `Json.mapper()` itself is left
     * untouched: in Jackson 3 it is immutable, and the equivalent of this there is `Json.mapper().rebuild().addModule(DefaultScalaModule)`.
     *
-    * Companion converters that extend swagger-core's `ModelResolver` (for example swagger-enumeratum-module and swagger-scala3-enum-module)
-    * should build on this rather than `Json.mapper()`, so that they see the same Scala-aware, customized mapper as this converter. Each
-    * call returns a new mapper.
+    * Companion converters that extend swagger-core's `ModelResolver` (for example swagger-enumeratum-module) should build on this rather
+    * than `Json.mapper()`, so that they see the same Scala-aware, customized mapper as this converter. Each call returns a new mapper.
     *
     * @since v2.16.1
     */
@@ -185,7 +184,9 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     Option(`type`.getType) match {
       case Some(typeType) => {
         val javaType = _mapper.constructType(typeType)
-        val subtypes = SubtypeHelper.findSubtypes(javaType.getRawClass)
+        val cls = javaType.getRawClass
+        // a Scala 3 enum is a sealed hierarchy of its cases, but it is modelled as a string enum rather than as an anyOf of them
+        val subtypes = if (EnumHelper.isScala3Enum(cls)) Seq.empty else SubtypeHelper.findSubtypes(cls)
         if (subtypes.isEmpty) {
           resolveWithoutSubtypes(javaType, `type`, context, scalaAwareChain(chain))
         } else {
@@ -468,6 +469,14 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
                 val ip = PrimitiveType.INT.createProperty()
                 setRequired(`type`)
                 Some(ip)
+              } else if (EnumHelper.isScala3Enum(cls)) {
+                val sp: Schema[String] = PrimitiveType.STRING.createProperty().asInstanceOf[Schema[String]]
+                setRequired(`type`)
+                EnumHelper.scala3EnumValues(cls).foreach { v =>
+                  sp.addEnumItemObject(v)
+                }
+                applySchemaAnnotations(sp, annotations)
+                Some(sp)
               } else {
                 None
               }
@@ -478,10 +487,41 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
     }
   }
 
+  /** swagger-core only applies the members of `@Schema`/`@Parameter` to schemas it resolves itself, so a schema this converter builds
+    * directly has to pick them up here.
+    */
+  private def applySchemaAnnotations(schema: Schema[_], annotations: Seq[Annotation]): Unit = {
+    annotations.foreach {
+      case p: Parameter => {
+        annotationValue(p.name).foreach(schema.setName)
+        annotationValue(p.description).foreach(schema.setDescription)
+        annotationValue(p.example).foreach(schema.setExample)
+        if (p.deprecated) schema.setDeprecated(true)
+      }
+      case s: SchemaAnnotation => {
+        annotationValue(s.name).foreach(schema.setName)
+        annotationValue(s.description).foreach(schema.setDescription)
+        annotationValue(s.example).foreach(schema.setExample)
+        annotationValue(s.defaultValue).foreach(schema.setDefault)
+        if (s.deprecated) schema.setDeprecated(true)
+        s.accessMode match {
+          case AccessMode.READ_ONLY => schema.setReadOnly(true)
+          case AccessMode.WRITE_ONLY => schema.setWriteOnly(true)
+          case _ =>
+        }
+      }
+      case _ =>
+    }
+  }
+
+  private def annotationValue(value: String): Option[String] = {
+    Option(value).filter(str => str.nonEmpty && str != SwaggerScalaModelConverter.DEFAULT_SENTINEL)
+  }
+
   private def getMainClass(clazz: Class[_]): Class[_] = {
     val cname = clazz.getName
     if (cname.endsWith("$")) {
-      Try(Class.forName(cname.substring(0, cname.length - 1), true, Thread.currentThread.getContextClassLoader)).getOrElse(clazz)
+      Try(Class.forName(cname.substring(0, cname.length - 1), false, Thread.currentThread.getContextClassLoader)).getOrElse(clazz)
     } else {
       clazz
     }

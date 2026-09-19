@@ -32,16 +32,7 @@ object SubtypeHelper {
   }
 
   private def getClass(rtype: RType): Class[_] = rtype match {
-    case objectInfo: ObjectInfo => getCompanionObjectClass(objectInfo.infoClass)
+    case objectInfo: ObjectInfo => ReflectionUtil.companionObjectClass(objectInfo.infoClass)
     case rt => rt.infoClass
-  }
-
-  private def getCompanionObjectClass(cls: Class[_]): Class[_] = {
-    val cn = cls.getName
-    if (cn.endsWith("$")) {
-      cls
-    } else {
-      Class.forName(cn + '$', true, Thread.currentThread().getContextClassLoader)
-    }
   }
 }
