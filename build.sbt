@@ -112,7 +112,7 @@ pomExtra := {
   pomExtra.value ++ Group(
     <issueManagement>
         <system>github</system>
-        <url>https://github.com/swagger-api/swagger-scala-module/issues</url>
+        <url>https://github.com/swagger-akka-http/swagger-scala-module/issues</url>
       </issueManagement>
       <developers>
         <developer>
