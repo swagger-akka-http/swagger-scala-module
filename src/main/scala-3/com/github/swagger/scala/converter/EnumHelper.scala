@@ -32,7 +32,7 @@ object EnumHelper {
   /** `values` is only generated for enums whose cases are all singletons. */
   private def valuesFromCompanion(cls: Class[_]): Option[Seq[String]] = {
     Try {
-      val companion = companionObject(cls)
+      val companion = ReflectionUtil.companionObject(cls)
       val values = companion.getClass.getDeclaredMethod("values").invoke(companion).asInstanceOf[Array[Enum]]
       values.sortBy(_.ordinal).map(_.toString).toSeq
     }.toOption
@@ -40,7 +40,7 @@ object EnumHelper {
 
   /** `fromOrdinal` exists on every enum companion and throws NoSuchElementException once the ordinal is past the singleton cases. */
   private def valuesFromOrdinals(cls: Class[_]): Seq[String] = {
-    val companion = companionObject(cls)
+    val companion = ReflectionUtil.companionObject(cls)
     val fromOrdinal = companion.getClass.getMethod("fromOrdinal", IntClass)
     val matched = Seq.newBuilder[String]
     var i = 0
@@ -61,10 +61,5 @@ object EnumHelper {
       i += 1
     }
     matched.result()
-  }
-
-  private def companionObject(cls: Class[_]): AnyRef = {
-    val companionClass = Class.forName(cls.getName + "$", true, Thread.currentThread.getContextClassLoader)
-    companionClass.getField("MODULE$").get(None.orNull)
   }
 }

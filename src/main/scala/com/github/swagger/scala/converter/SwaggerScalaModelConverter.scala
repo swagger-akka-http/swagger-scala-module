@@ -521,7 +521,7 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
   private def getMainClass(clazz: Class[_]): Class[_] = {
     val cname = clazz.getName
     if (cname.endsWith("$")) {
-      Try(Class.forName(cname.substring(0, cname.length - 1), true, Thread.currentThread.getContextClassLoader)).getOrElse(clazz)
+      Try(Class.forName(cname.substring(0, cname.length - 1), false, Thread.currentThread.getContextClassLoader)).getOrElse(clazz)
     } else {
       clazz
     }
