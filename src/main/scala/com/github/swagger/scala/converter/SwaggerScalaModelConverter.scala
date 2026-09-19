@@ -1,7 +1,6 @@
 package com.github.swagger.scala.converter
 
 import com.fasterxml.jackson.databind.`type`.ReferenceType
-import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.{JavaType, ObjectMapper}
 import com.fasterxml.jackson.module.scala.introspect.{BeanIntrospector, PropertyDescriptor}
 import com.fasterxml.jackson.module.scala.util.ClassW
@@ -25,9 +24,9 @@ import scala.util.control.NonFatal
 class AnnotatedTypeForOption extends AnnotatedType
 
 object SwaggerScalaModelConverter {
-  // Used only to introspect user classes. It is deliberately not swagger-core's Json.mapper(): that mapper is for
-  // (de)serializing swagger's own model classes, and in Jackson 3 it is immutable, so no modules can be added to it.
-  private val objectMapper: ObjectMapper = JsonMapper.builder().addModule(DefaultScalaModule).build()
+  // A private copy of swagger-core's mapper with the Scala module added. Json.mapper() itself is left untouched: in Jackson 3 it is
+  // immutable, and the equivalent of this line there is Json.mapper().rebuild().addModule(DefaultScalaModule).build().
+  private val objectMapper: ObjectMapper = Json.mapper().copy().registerModule(DefaultScalaModule)
   // https://github.com/swagger-api/swagger-core/issues/5076
   // hardcode here to avoid having an explicit dependence on the new DEFAULT_SENTINEL field in swagger-annotations
   private val DEFAULT_SENTINEL = "##default"
@@ -383,9 +382,8 @@ class SwaggerScalaModelConverter extends ModelResolver(SwaggerScalaModelConverte
       case _ => {
         Try {
           val primitiveProperty = primitiveType.createProperty()
-          // swagger-core's mapper carries the mixins needed to round-trip its Schema classes
-          val propAsString = Json.mapper().writeValueAsString(itemSchema)
-          val correctedSchema = Json.mapper().readValue(propAsString, primitiveProperty.getClass)
+          val propAsString = objectMapper.writeValueAsString(itemSchema)
+          val correctedSchema = objectMapper.readValue(propAsString, primitiveProperty.getClass)
           correctedSchema.setType(primitiveProperty.getType)
           Option(itemSchema.getFormat) match {
             case Some(_) =>
